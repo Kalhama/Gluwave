@@ -22,6 +22,9 @@ export const Menu = () => {
       <Link className="hover:underline" href="/insulin/list">
         List
       </Link>
+      <Link className="hover:underline" href="/settings">
+        Settings
+      </Link>
     </>
   )
   return (

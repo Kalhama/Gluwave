@@ -76,10 +76,10 @@ export default async function InsulinListByDate({
   const today = startOfDay(new Date())
 
   return (
-    <main className="w-full flex flex-col justify-center items-center gap-4 py-4">
+    <div className="space-y-4">
       <InsulinListDatePicker date={date} />
       <ListInsulinTable date={date} />
       <AddInsulinDialog />
-    </main>
+    </div>
   )
 }
