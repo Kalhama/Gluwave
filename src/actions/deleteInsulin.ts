@@ -4,7 +4,7 @@ import { db } from '@/db'
 import { wrapServerAction } from '@/lib/wrap-server-action'
 import { insulin } from '@/schema'
 import { eq } from 'drizzle-orm'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 const deleteInsulinSchema = z.object({

@@ -27,7 +27,9 @@ export const Menu = () => {
   return (
     <div>
       <div className="flex justify-between items-center p-4">
-        <h1>App logo</h1>
+        <Link href="/">
+          <h1>App logo</h1>
+        </Link>
         <div className="block md:hidden">
           <Drawer direction="right">
             <DrawerTrigger asChild>

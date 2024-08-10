@@ -3,11 +3,10 @@
 import { db } from '@/db'
 import { wrapServerAction } from '@/lib/wrap-server-action'
 import { insulin } from '@/schema'
+import { addInsulinSchema } from '@/schemas/addInsulinSchema'
 import { addMinutes } from 'date-fns'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-
-import { addInsulinSchema } from '../schemas/addInsulinSchema'
 
 export const addInsulinAction = wrapServerAction(
   async (data: z.infer<typeof addInsulinSchema>) => {

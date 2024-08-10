@@ -1,7 +1,6 @@
 'use client'
 
-import { addInsulinAction } from '@/app/actions/addInsulin'
-import { addInsulinSchema } from '@/app/schemas/addInsulinSchema'
+import { addInsulinAction } from '@/actions/addInsulin'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -30,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useServerAction } from '@/lib/use-server-action'
+import { addInsulinSchema } from '@/schemas/addInsulinSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CircleFadingPlus, Trash2 } from 'lucide-react'
 import * as React from 'react'
