@@ -16,14 +16,11 @@ import * as React from 'react'
 export const Menu = () => {
   const links = (
     <>
-      <Link className="hover:underline" href="/1">
-        Link 1
+      <Link className="hover:underline" href="/insulin/chart">
+        Chart
       </Link>
-      <Link className="hover:underline" href="/2">
-        Link 2
-      </Link>
-      <Link className="hover:underline" href="/3">
-        Link 3
+      <Link className="hover:underline" href="/insulin/list">
+        List
       </Link>
     </>
   )
