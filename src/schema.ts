@@ -11,5 +11,5 @@ import {
 export const insulin = pgTable('insulin', {
   id: serial('id').primaryKey(),
   timestamp: timestamp('timestamp').notNull(),
-  injected: integer('injected').notNull(), // in units (U)
+  amount: integer('amount').notNull(),
 })
