@@ -1,10 +1,12 @@
-import { db } from '@/db'
-import { settings } from '@/schema'
+import { validateRequest } from '@/auth'
+import { notFound } from 'next/navigation'
 
 import { Settings } from './Settings'
 
 export default async function SettingsProvider() {
-  const defaultValues = (await db.select().from(settings).limit(1))[0]
+  const { user } = await validateRequest()
 
-  return <Settings defaultValues={defaultValues} />
+  if (!user) return notFound()
+
+  return <Settings defaultValues={user} />
 }

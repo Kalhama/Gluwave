@@ -5,5 +5,5 @@ export const updateSettingsSchema = z.object({
   adjustmentRate: z.number().gt(0),
   target: z.number().gte(4).lte(13),
   insulinOnBoardOffset: z.number(),
-  id: z.number(),
+  id: z.string(),
 })
