@@ -16,7 +16,7 @@ interface Props {
   }[]
 }
 
-export const InsulinOnBoard = ({ data }: Props) => {
+export const CarbsOnBoard = ({ data }: Props) => {
   const formattedData = data.map((d) => {
     return {
       x: d.timestamp,
@@ -27,8 +27,8 @@ export const InsulinOnBoard = ({ data }: Props) => {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Insulin on board</CardTitle>
-          <CardDescription>Insulin on board over time</CardDescription>
+          <CardTitle>Carbs on board</CardTitle>
+          <CardDescription>Carbs on board over time</CardDescription>
         </CardHeader>
         <CardContent>
           <VictoryChart theme={VictoryTheme.material}>

@@ -16,7 +16,7 @@ import * as React from 'react'
 export const Menu = () => {
   const links = (
     <>
-      <Link className="hover:underline" href="/insulin/chart">
+      <Link className="hover:underline" href="/">
         Chart
       </Link>
       <Link className="hover:underline" href="/insulin/list">
