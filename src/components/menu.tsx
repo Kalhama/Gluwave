@@ -20,7 +20,10 @@ export const Menu = () => {
         Chart
       </Link>
       <Link className="hover:underline" href="/insulin/list">
-        List
+        Insulin
+      </Link>
+      <Link className="hover:underline" href="/carbs/list">
+        Carbs
       </Link>
       <Link className="hover:underline" href="/settings">
         Settings

@@ -1,5 +1,6 @@
 import {
   doublePrecision,
+  integer,
   pgTable,
   serial,
   text,
@@ -10,6 +11,16 @@ export const insulin = pgTable('insulin', {
   id: serial('id').primaryKey(),
   timestamp: timestamp('timestamp').notNull(),
   amount: doublePrecision('amount').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => userTable.id),
+})
+
+export const carb = pgTable('carb', {
+  id: serial('id').primaryKey(),
+  timestamp: timestamp('timestamp').notNull(),
+  amount: doublePrecision('amount').notNull(),
+  decay: integer('decay').notNull(),
   userId: text('user_id')
     .notNull()
     .references(() => userTable.id),
