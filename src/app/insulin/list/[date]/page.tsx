@@ -1,3 +1,4 @@
+import { validateRequest } from '@/auth'
 import {
   Table,
   TableBody,
@@ -9,7 +10,7 @@ import {
 import { db } from '@/db'
 import { insulin } from '@/schema'
 import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
-import { and, asc, gte, lt } from 'drizzle-orm'
+import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import * as React from 'react'
 
@@ -22,13 +23,19 @@ interface Props {
 }
 
 async function ListInsulinTable({ date }: Props) {
+  const { user } = await validateRequest()
+  if (!user) {
+    throw new Error('not authorized')
+  }
+
   const results = await db
     .select()
     .from(insulin)
     .where(
       and(
         gte(insulin.timestamp, startOfDay(date)),
-        lt(insulin.timestamp, endOfDay(date))
+        lt(insulin.timestamp, endOfDay(date)),
+        eq(insulin.userId, user.id)
       )
     )
     .orderBy(asc(insulin.timestamp))
@@ -73,7 +80,6 @@ export default async function InsulinListByDate({
   if (!isValid(date)) {
     notFound()
   }
-  const today = startOfDay(new Date())
 
   return (
     <div className="space-y-4">
