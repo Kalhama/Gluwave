@@ -116,6 +116,13 @@ export function Settings({ defaultValues }: Props) {
             </FormItem>
           )}
         />
+        <Button
+          onClick={() => form.reset()}
+          variant="secondary"
+          className="mr-2"
+        >
+          Cancel
+        </Button>
         <Button disabled={loading} type="submit">
           Submit
         </Button>
