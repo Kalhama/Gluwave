@@ -1,6 +1,6 @@
 # Nextjs template
 
-A NextJS template with Prisma, variety of utility functions, and more.
+A NextJS template with drizzle, variety of utility functions, and more.
 
 ## How to start developing
 
@@ -9,16 +9,16 @@ POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres`
 
 - Optional: Install pgadmin: `docker run -p 5050:5050 -e 'PGADMIN_LISTEN_PORT=5050' -e 'PGADMIN_DEFAULT_EMAIL=admin@admin.com' -e 'PGADMIN_DEFAULT_PASSWORD=admin' -d --name pgadmin4 dpage/pgadmin4` Then use 172.17.0.1:5432 to access database at host
 
-2. Create .env file which has got all the fields from `src/config.mjs`. If you want to disable some of the OAuth providers you can do it first. DATABASE_URL should be [Prisma connection URL](https://www.prisma.io/docs/orm/reference/connection-urls)
+2. Create .env file which has got all the fields from `src/config.mjs`. If you want to disable some of the OAuth providers you can do it first.
 3. `pnpm install`
-4. `pnpm exec prisma db push`
+4. `pnpm exec drizzle-orm push`
 5. `pnpm dev`
 6. Go to [localhost:3000](http://localhost:3000) to see server running
 
 ## Tech
 
 - framework: [Next.js](https://nextjs.org/docs)
-- orm: [Prisma](https://www.prisma.io/docs/orm) + postgres
+- orm: Drizzle + postgres
 - forms: [react-hook-form](https://react-hook-form.com/)
 - validation: [zod](https://github.com/colinhacks/zod)
 - styles: [tailwindcss](https://tailwindcss.com/), sass, normalize.css
@@ -108,46 +108,6 @@ const routeOrPage = () => {
 
     // Proceed with authenticated user
 }
-```
-
-## `handlePrismaError` for 404 errors
-
-```typescript
-import { db } from '@/lib/db.ts'
-import { getCurrentUser } from '@/lib/auth.ts'
-import { handlePrismaError } from '@/lib/handle-prisma-error.ts'
-
-const getUserSettings = async (userId: string) => {
-  return db.userSettings.findFirstOrThrow({ where: { id: userId } })
-}
-
-export default function UserData() {
-  const { user } = await getCurrentUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const settings = await getUserSettings(user.id).catch(handlePrismaError) // returns 404 if entity was not found
-
-  return (
-    <div>...</div>
-  )
-}
-
-```
-
-## Prisma ORM utility function
-
-Use PrismaClient singleton. It's exported as `db` from `@/lib/db.ts`
-
-```typescript
-import { db } from `@/lib/db.ts`
-
-(async () => {
-  // db is PrismaClient
-  const users = await db.users.findMany()
-})()
 ```
 
 ## Server action utlities (wrapServerAction and ServerActionError)
