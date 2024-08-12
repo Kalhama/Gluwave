@@ -1,1 +1,5 @@
 - graphs should be scrollable and by default have smaller x axis. Maybe also zoomable, or then we should have buttons. timeframe length could be a button like it is in nightscout
+- it would be nice for charts to scale y axis
+- it would be nice if panning any chart would pan every chart
+- buttons for changing chart x pan
+- It would be nice to know the current value of chart (in chart footer maybe?)

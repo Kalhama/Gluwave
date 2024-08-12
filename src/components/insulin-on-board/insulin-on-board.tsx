@@ -8,7 +8,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { calculateUserInsulinData } from '@/lib/sql_utils'
-import { VictoryChart, VictoryLine, VictoryTheme } from 'victory'
+import { addHours, subHours } from 'date-fns'
+import {
+  VictoryChart,
+  VictoryLine,
+  VictoryTheme,
+  VictoryZoomContainer,
+} from 'victory'
 
 interface Props {
   data: Awaited<ReturnType<typeof calculateUserInsulinData>>
@@ -21,6 +27,8 @@ export const InsulinOnBoard = ({ data }: Props) => {
       y: d.insulinOnBoard,
     }
   })
+  const now = new Date()
+
   return (
     <div className="space-y-4">
       <Card>
@@ -29,7 +37,30 @@ export const InsulinOnBoard = ({ data }: Props) => {
           <CardDescription>Insulin on board over time</CardDescription>
         </CardHeader>
         <CardContent>
-          <VictoryChart theme={VictoryTheme.material}>
+          <VictoryChart
+            containerComponent={
+              <VictoryZoomContainer
+                allowZoom={false}
+                zoomDomain={{
+                  x: [subHours(new Date(), 2), addHours(new Date(), 2)],
+                }}
+              />
+            }
+            theme={VictoryTheme.material}
+          >
+            <VictoryLine
+              style={{
+                data: {
+                  strokeDasharray: '2 2',
+                  strokeWidth: 1,
+                  stroke: '#c43a31',
+                },
+              }}
+              data={[
+                { x: now, y: 0 },
+                { x: now, y: 10 },
+              ]}
+            />
             <VictoryLine
               style={{
                 data: { stroke: '#c43a31' },
