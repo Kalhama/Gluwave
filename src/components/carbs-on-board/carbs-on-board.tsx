@@ -12,7 +12,7 @@ import { VictoryChart, VictoryLine, VictoryTheme } from 'victory'
 interface Props {
   data: {
     timestamp: Date
-    insulinOnBoard: string
+    carbsOnBoard: string
   }[]
 }
 
@@ -20,7 +20,7 @@ export const CarbsOnBoard = ({ data }: Props) => {
   const formattedData = data.map((d) => {
     return {
       x: d.timestamp,
-      y: parseFloat(d.insulinOnBoard),
+      y: parseFloat(d.carbsOnBoard),
     }
   })
   return (
