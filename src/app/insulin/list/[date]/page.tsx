@@ -11,7 +11,7 @@ import { db } from '@/db'
 import { insulin } from '@/schema'
 import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
 import { and, asc, eq, gte, lt } from 'drizzle-orm'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
 
 import { AddInsulinDialog } from './AddInsulinDialog'
@@ -25,7 +25,7 @@ interface Props {
 async function ListInsulinTable({ date }: Props) {
   const { user } = await validateRequest()
   if (!user) {
-    throw new Error('not authorized')
+    redirect('/login')
   }
 
   const results = await db

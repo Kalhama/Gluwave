@@ -1,5 +1,6 @@
 'use client'
 
+import { validateRequest } from '@/auth'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -13,8 +14,12 @@ import { Menu as MenuIcon } from 'lucide-react'
 import Link from 'next/link'
 import * as React from 'react'
 
-export const Menu = () => {
-  const links = (
+interface Props {
+  authenticated: boolean
+}
+
+export const Menu = ({ authenticated }: Props) => {
+  let links = (
     <>
       <Link className="hover:underline" href="/">
         Chart
@@ -28,8 +33,22 @@ export const Menu = () => {
       <Link className="hover:underline" href="/settings">
         Settings
       </Link>
+      <a className="hover:underline" href="/logout">
+        Logout
+      </a>
     </>
   )
+
+  if (!authenticated) {
+    links = (
+      <>
+        <Link className="hover:underline" href="/login">
+          Login
+        </Link>
+      </>
+    )
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center p-4">
