@@ -8,7 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { db } from '@/db'
-import { carb, insulin } from '@/schema'
+import { carbs, insulin } from '@/schema'
 import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
 import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
@@ -29,15 +29,15 @@ async function ListCarbTable({ date }: Props) {
   }
   const results = await db
     .select()
-    .from(carb)
+    .from(carbs)
     .where(
       and(
-        gte(carb.timestamp, startOfDay(date)),
-        lt(carb.timestamp, endOfDay(date)),
-        eq(carb.userId, user.id)
+        gte(carbs.timestamp, startOfDay(date)),
+        lt(carbs.timestamp, endOfDay(date)),
+        eq(carbs.userId, user.id)
       )
     )
-    .orderBy(asc(carb.timestamp))
+    .orderBy(asc(carbs.timestamp))
 
   return (
     <div className="border rounded-sm">

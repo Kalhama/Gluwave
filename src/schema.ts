@@ -16,7 +16,7 @@ export const insulin = pgTable('insulin', {
     .references(() => userTable.id),
 })
 
-export const carb = pgTable('carb', {
+export const carbs = pgTable('carbs', {
   id: serial('id').primaryKey(),
   timestamp: timestamp('timestamp').notNull(),
   amount: doublePrecision('amount').notNull(),

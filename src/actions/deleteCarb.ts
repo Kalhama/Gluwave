@@ -4,7 +4,7 @@ import { validateRequest } from '@/auth'
 import { db } from '@/db'
 import { ServerActionError } from '@/lib/server-action-error'
 import { wrapServerAction } from '@/lib/wrap-server-action'
-import { carb, insulin } from '@/schema'
+import { carbs } from '@/schema'
 import { and, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -23,8 +23,8 @@ export const deleteCarb = wrapServerAction(
     }
 
     await db
-      .delete(carb)
-      .where(and(eq(carb.id, parsed.id), eq(carb.userId, user.id)))
+      .delete(carbs)
+      .where(and(eq(carbs.id, parsed.id), eq(carbs.userId, user.id)))
 
     revalidatePath('/carb/list')
   }

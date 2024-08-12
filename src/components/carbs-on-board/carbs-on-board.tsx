@@ -7,20 +7,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { calculateUserCarbsData } from '@/lib/sql_utils'
 import { VictoryChart, VictoryLine, VictoryTheme } from 'victory'
 
 interface Props {
-  data: {
-    timestamp: Date
-    carbsOnBoard: string
-  }[]
+  data: Awaited<ReturnType<typeof calculateUserCarbsData>>
 }
 
 export const CarbsOnBoard = ({ data }: Props) => {
   const formattedData = data.map((d) => {
     return {
       x: d.timestamp,
-      y: parseFloat(d.carbsOnBoard),
+      y: d.carbsOnBoard,
     }
   })
   return (

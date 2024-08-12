@@ -7,20 +7,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { calculateUserInsulinData } from '@/lib/sql_utils'
 import { VictoryChart, VictoryLine, VictoryTheme } from 'victory'
 
 interface Props {
-  data: {
-    timestamp: Date
-    insulinOnBoard: string
-  }[]
+  data: Awaited<ReturnType<typeof calculateUserInsulinData>>
 }
 
 export const InsulinOnBoard = ({ data }: Props) => {
   const formattedData = data.map((d) => {
     return {
       x: d.timestamp,
-      y: parseFloat(d.insulinOnBoard),
+      y: d.insulinOnBoard,
     }
   })
   return (
