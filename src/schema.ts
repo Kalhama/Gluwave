@@ -26,6 +26,15 @@ export const carbs = pgTable('carbs', {
     .references(() => userTable.id),
 })
 
+export const glucose = pgTable('glucose', {
+  id: serial('id').primaryKey(),
+  timestamp: timestamp('timestamp').notNull(),
+  value: doublePrecision('amount').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => userTable.id),
+})
+
 export const userTable = pgTable('user', {
   id: text('id').primaryKey(),
   githubId: text('github_id').notNull().unique(),

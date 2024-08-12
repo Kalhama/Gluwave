@@ -1,11 +1,13 @@
+import BloodGlucoseProvider from '@/components/blood-glucose'
 import CarbsOnBoardProvider from '@/components/carbs-on-board'
 import InsulinOnBoardProvider from '@/components/insulin-on-board'
 
 export default async function App() {
   return (
-    <main className="w-full h-screen flex flex-col justify-center items-center gap-4">
+    <div className="flex flex-col gap-4 items-center w-full">
       <InsulinOnBoardProvider />
       <CarbsOnBoardProvider />
-    </main>
+      <BloodGlucoseProvider />
+    </div>
   )
 }

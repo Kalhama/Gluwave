@@ -24,6 +24,9 @@ export const Menu = ({ authenticated }: Props) => {
       <Link className="hover:underline" href="/">
         Chart
       </Link>
+      <Link className="hover:underline" href="/glucose/list">
+        Blood glucose
+      </Link>
       <Link className="hover:underline" href="/insulin/list">
         Insulin
       </Link>

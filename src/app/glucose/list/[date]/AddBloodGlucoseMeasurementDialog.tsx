@@ -1,6 +1,6 @@
 'use client'
 
-import { addInsulinAction } from '@/actions/addInsulin'
+import { addGlucosenAction } from '@/actions/addGlucose'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -29,25 +29,25 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useServerAction } from '@/lib/use-server-action'
-import { addInsulinSchema } from '@/schemas/addInsulinSchema'
+import { addGlucoseSchema } from '@/schemas/addGlucoseSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CircleFadingPlus, Trash2 } from 'lucide-react'
+import { CircleFadingPlus } from 'lucide-react'
 import * as React from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-export function AddInsulinDialog() {
-  const { action, loading, data, message } = useServerAction(addInsulinAction)
-  const form = useForm<z.infer<typeof addInsulinSchema>>({
-    resolver: zodResolver(addInsulinSchema),
+export function AddBloodGlucoseMeasurementDialog() {
+  const { action, loading, data, message } = useServerAction(addGlucosenAction)
+  const form = useForm<z.infer<typeof addGlucoseSchema>>({
+    resolver: zodResolver(addGlucoseSchema),
     defaultValues: {
-      amount: 0,
+      value: 7,
       timedelta: 0,
     },
   })
 
-  async function onSubmit(values: z.infer<typeof addInsulinSchema>) {
+  async function onSubmit(values: z.infer<typeof addGlucoseSchema>) {
     console.log(values)
     await action(values)
     form.reset()
@@ -66,12 +66,12 @@ export function AddInsulinDialog() {
     >
       <DialogTrigger asChild>
         <Button>
-          <CircleFadingPlus className="h-4 w-4 mr-2" /> Add insulin
+          <CircleFadingPlus className="h-4 w-4 mr-2" /> Add glucose measurement
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add insulin</DialogTitle>
+          <DialogTitle>Add glucose measurement manually</DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -113,10 +113,10 @@ export function AddInsulinDialog() {
             />
             <FormField
               control={form.control}
-              name="amount"
+              name="value"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel>Value</FormLabel>
                   <FormControl>
                     <Input
                       id="amount"
