@@ -2,7 +2,6 @@ import { db } from '@/db'
 import { parseISO } from 'date-fns'
 import { sql } from 'drizzle-orm'
 
-// TODO should filter by user
 export const IOB = async () => {
   const data = await db.execute(
     sql`

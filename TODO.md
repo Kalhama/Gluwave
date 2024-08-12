@@ -1,0 +1,2 @@
+- COB and IOB should filter by user
+- graphs should be scrollable and by default have smaller x axis. Maybe also zoomable, or then we should have buttons. timeframe length could be a button like it is in nightscout
