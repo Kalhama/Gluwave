@@ -3,3 +3,11 @@
 - it would be nice if panning any chart would pan every chart
 - buttons for changing chart x pan
 - It would be nice to know the current value of chart (in chart footer maybe?)
+- loopista voi apinoida lisää graffaa päänäytölle
+- päänäytön linkkaukset chartista data sivuille
+- päänäytölt pari todo data ei näy kohtaa
+- menu alas
+- iob ja cob chartteihi vois heittää pallot aina ku tulle lisää tavaraa sisää
+- bg charttii ois kova ku sais väritetttyy tavoitealueen
+- viivojen ja pallojen paksuus vois olla vähä kovempi
+- bg vois näkyy ylhääl isol samal taval ku loopis
