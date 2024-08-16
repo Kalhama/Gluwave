@@ -1,6 +1,8 @@
 import { validateRequest } from '@/auth'
 import { db } from '@/db'
+import { getData2 } from '@/lib/sql_utils'
 import { glucose } from '@/schema'
+import { addHours } from 'date-fns'
 import { eq } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
@@ -12,7 +14,7 @@ export default async function BloodGlucoseProvider() {
     redirect('/login')
   }
 
-  const data = await db
+  const bloodGlucoseData = await db
     .select({
       timestamp: glucose.timestamp,
       value: glucose.value,
@@ -21,5 +23,18 @@ export default async function BloodGlucoseProvider() {
     .where(eq(glucose.userId, user.id))
     .orderBy(glucose.timestamp)
 
-  return <BloodGlucose data={data} />
+  const latestBloodGlucoseData = bloodGlucoseData[bloodGlucoseData.length - 1]
+
+  const predictionData2 = await getData2(
+    latestBloodGlucoseData.timestamp,
+    addHours(latestBloodGlucoseData.timestamp, 9),
+    user.id
+  )
+
+  return (
+    <BloodGlucose
+      bloodGlucoseData={bloodGlucoseData}
+      predictionData2={predictionData2}
+    />
+  )
 }

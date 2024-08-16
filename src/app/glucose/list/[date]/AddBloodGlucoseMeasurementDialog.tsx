@@ -42,7 +42,7 @@ export function AddBloodGlucoseMeasurementDialog() {
   const form = useForm<z.infer<typeof addGlucoseSchema>>({
     resolver: zodResolver(addGlucoseSchema),
     defaultValues: {
-      value: 7,
+      value: '7',
       timedelta: 0,
     },
   })
@@ -123,11 +123,7 @@ export function AddBloodGlucoseMeasurementDialog() {
                       type="text"
                       className="col-span-3"
                       value={field.value}
-                      onChange={(val) =>
-                        field.onChange(
-                          parseFloat(val.target.value.replace(',', '.'))
-                        )
-                      }
+                      onChange={(val) => field.onChange(val.target.value)}
                     />
                   </FormControl>
                   <FormDescription />

@@ -4,10 +4,10 @@ import InsulinOnBoardProvider from '@/components/insulin-on-board'
 
 export default async function App() {
   return (
-    <div className="flex flex-col gap-4 items-center w-full">
+    <div className="space-y-2 w-full">
+      <BloodGlucoseProvider />
       <InsulinOnBoardProvider />
       <CarbsOnBoardProvider />
-      <BloodGlucoseProvider />
     </div>
   )
 }
