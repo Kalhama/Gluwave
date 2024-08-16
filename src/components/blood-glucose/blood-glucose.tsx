@@ -3,7 +3,7 @@
 import { getData, getData2 } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
 import {
-  Background,
+  DomainTuple,
   VictoryChart,
   VictoryLine,
   VictoryScatter,
@@ -36,19 +36,38 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
   const now = new Date()
 
   const lastBloodGlucoseData = bloodGlucoseData[bloodGlucoseData.length - 1]
-  const lastBloodGlucosePrediction = predictionData2[predictionData2.length - 1]
+
+  const yDomain = [
+    2,
+    Math.max(12, ...bloodGlucoseData.map((bg) => bg.value)),
+  ] as DomainTuple
+
+  const eventually =
+    lastBloodGlucoseData.value -
+    predictionData2[0].totalEffect +
+    predictionData2[predictionData2.length - 1].totalEffect
 
   return (
     <div className="space-y-4">
       <div className="border rounded-sm">
         <div className="flex flex-row justify-between items-center pt-4 px-4">
           <h2 className="font-semibold">Blood glucose</h2>
-          <span className="mt-0 text-sm">Eventually TODO mmol/l</span>
+          <span className="mt-0 text-sm">
+            Eventually{' '}
+            {eventually.toLocaleString(undefined, {
+              maximumFractionDigits: 1,
+              minimumFractionDigits: 1,
+            })}{' '}
+            mmol/l
+          </span>
         </div>
         <div className="p-2">
           <VictoryChart
-            padding={{ top: 30, bottom: 30, left: 30, right: 15 }}
+            padding={{ top: 15, bottom: 30, left: 30, right: 15 }}
             height={200}
+            domain={{
+              y: yDomain,
+            }}
             containerComponent={
               <VictoryZoomContainer
                 allowZoom={false}
@@ -69,7 +88,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
               }}
               data={[
                 { x: now, y: 0 },
-                { x: now, y: 16 },
+                { x: now, y: 100 },
               ]}
             />
             <VictoryScatter

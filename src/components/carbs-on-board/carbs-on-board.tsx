@@ -10,6 +10,7 @@ import {
 import { calculateUserCarbsData } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
 import {
+  DomainTuple,
   VictoryChart,
   VictoryLine,
   VictoryTheme,
@@ -28,15 +29,26 @@ export const CarbsOnBoard = ({ data }: Props) => {
       y: d.carbsOnBoard,
     }
   })
+
+  const yDomain = [
+    0,
+    Math.max(10, ...data.map((carb) => carb.carbsOnBoard)),
+  ] as DomainTuple
+
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Carbs on board</CardTitle>
-          <CardDescription>Carbs on board over time</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="border rounded-sm">
+        <div className="flex flex-row justify-between items-center pt-4 px-4">
+          <h2 className="font-semibold">Carbs</h2>
+          <span className="mt-0 text-sm">TODO g</span>
+        </div>
+        <div className="p-2">
           <VictoryChart
+            padding={{ top: 15, bottom: 30, left: 30, right: 15 }}
+            height={200}
+            domain={{
+              y: yDomain,
+            }}
             containerComponent={
               <VictoryZoomContainer
                 allowZoom={false}
@@ -68,9 +80,8 @@ export const CarbsOnBoard = ({ data }: Props) => {
               data={formattedData}
             />
           </VictoryChart>
-        </CardContent>
-        {/* <CardFooter></CardFooter> */}
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

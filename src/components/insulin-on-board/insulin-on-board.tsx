@@ -10,6 +10,7 @@ import {
 import { calculateUserInsulinData } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
 import {
+  DomainTuple,
   VictoryChart,
   VictoryLine,
   VictoryTheme,
@@ -29,15 +30,25 @@ export const InsulinOnBoard = ({ data }: Props) => {
   })
   const now = new Date()
 
+  const yDomain = [
+    2,
+    Math.max(5, ...formattedData.map((insulin) => insulin.y)),
+  ] as DomainTuple
+
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Insulin on board</CardTitle>
-          <CardDescription>Insulin on board over time</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="border rounded-sm">
+        <div className="flex flex-row justify-between items-center pt-4 px-4">
+          <h2 className="font-semibold">Insulin on board</h2>
+          <span className="mt-0 text-sm">TODO U</span>
+        </div>
+        <div className="p-2">
           <VictoryChart
+            padding={{ top: 15, bottom: 30, left: 30, right: 15 }}
+            height={200}
+            domain={{
+              y: yDomain,
+            }}
             containerComponent={
               <VictoryZoomContainer
                 allowZoom={false}
@@ -69,9 +80,8 @@ export const InsulinOnBoard = ({ data }: Props) => {
               data={formattedData}
             />
           </VictoryChart>
-        </CardContent>
-        {/* <CardFooter></CardFooter> */}
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
