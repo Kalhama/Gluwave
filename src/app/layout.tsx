@@ -21,8 +21,8 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <main className="p-2 pb-16">{children}</main>
         <Menu authenticated={!!user} />
-        <main className="p-2">{children}</main>
       </body>
     </html>
   )

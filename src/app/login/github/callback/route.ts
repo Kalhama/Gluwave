@@ -12,7 +12,12 @@ export async function GET(request: Request): Promise<Response> {
   const code = url.searchParams.get('code')
   const state = url.searchParams.get('state')
   const storedState = cookies().get('github_oauth_state')?.value ?? null
+
   if (!code || !state || !storedState || state !== storedState) {
+    console.error(
+      'wrong code, state, storedState, or state did not match storedState'
+    )
+
     return new Response(null, {
       status: 400,
     })
@@ -20,6 +25,7 @@ export async function GET(request: Request): Promise<Response> {
 
   try {
     const tokens = await github.validateAuthorizationCode(code)
+
     const githubUserResponse = await fetch('https://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${tokens.accessToken}`,
@@ -75,12 +81,13 @@ export async function GET(request: Request): Promise<Response> {
     })
   } catch (e) {
     // the specific error message depends on the provider
+    console.error(e)
     if (e instanceof OAuth2RequestError) {
-      // invalid code
       return new Response(null, {
         status: 400,
       })
     }
+
     return new Response(null, {
       status: 500,
     })

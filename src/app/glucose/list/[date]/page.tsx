@@ -14,7 +14,6 @@ import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
 
-import { AddBloodGlucoseMeasurementDialog } from './AddBloodGlucoseMeasurementDialog'
 import { BloodGlucoseListDatePicker } from './BloodGlucoseListDatePicker'
 import { DeleteBloodGlucoseButton } from './DeleteBloodGlucoseButton'
 
@@ -85,7 +84,6 @@ export default async function BloodGlucoseListByDate({
     <div className="space-y-4">
       <BloodGlucoseListDatePicker date={date} />
       <ListBloodGlucoseTable date={date} />
-      <AddBloodGlucoseMeasurementDialog />
     </div>
   )
 }

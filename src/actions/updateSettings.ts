@@ -5,7 +5,7 @@ import { wrapServerAction } from '@/lib/wrap-server-action'
 import { userTable } from '@/schema'
 import { updateSettingsSchema } from '@/schemas/updateSettingsSchema'
 import { eq } from 'drizzle-orm'
-import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 export const updateSettings = wrapServerAction(
@@ -22,6 +22,6 @@ export const updateSettings = wrapServerAction(
       })
       .where(eq(userTable.id, parsed.id))
 
-    revalidatePath('/settings')
+    redirect('/')
   }
 )

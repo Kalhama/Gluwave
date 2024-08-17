@@ -2,6 +2,8 @@
 
 import { getData, getData2 } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
+import { ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 import {
   DomainTuple,
   VictoryChart,
@@ -53,14 +55,19 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
       <div className="border rounded-sm">
         <div className="flex flex-row justify-between items-center pt-4 px-4">
           <h2 className="font-semibold">Blood glucose</h2>
-          <span className="mt-0 text-sm">
-            Eventually{' '}
-            {eventually.toLocaleString(undefined, {
-              maximumFractionDigits: 1,
-              minimumFractionDigits: 1,
-            })}{' '}
-            mmol/l
-          </span>
+          <Link href="/glucose/list">
+            <div className="flex items-center">
+              <span className="mt-0 text-sm">
+                Eventually{' '}
+                {eventually.toLocaleString(undefined, {
+                  maximumFractionDigits: 1,
+                  minimumFractionDigits: 1,
+                })}{' '}
+                mmol/l
+              </span>
+              <ChevronRight />
+            </div>
+          </Link>
         </div>
         <div className="p-2">
           <VictoryChart

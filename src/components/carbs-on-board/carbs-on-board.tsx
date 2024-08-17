@@ -1,14 +1,9 @@
 'use client'
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { calculateUserCarbsData } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
+import { ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 import {
   DomainTuple,
   VictoryChart,
@@ -40,7 +35,12 @@ export const CarbsOnBoard = ({ data }: Props) => {
       <div className="border rounded-sm">
         <div className="flex flex-row justify-between items-center pt-4 px-4">
           <h2 className="font-semibold">Carbs</h2>
-          <span className="mt-0 text-sm">TODO g</span>
+          <Link href="/carbs/list">
+            <div className="flex items-center">
+              <span className="mt-0 text-sm">TODO g</span>
+              <ChevronRight />
+            </div>
+          </Link>
         </div>
         <div className="p-2">
           <VictoryChart

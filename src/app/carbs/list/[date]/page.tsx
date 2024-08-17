@@ -8,13 +8,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { db } from '@/db'
-import { carbs, insulin } from '@/schema'
+import { carbs } from '@/schema'
 import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
 import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
 
-import { AddCarbDialog } from './AddCarbDialog'
 import { CarbListDatePicker } from './CarbListDatePicker'
 import { DeleteCarbButton } from './DeleteCarbButton'
 
@@ -87,7 +86,6 @@ export default async function InsulinListByDate({
     <div className="space-y-4">
       <CarbListDatePicker date={date} />
       <ListCarbTable date={date} />
-      <AddCarbDialog />
     </div>
   )
 }

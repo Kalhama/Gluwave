@@ -36,97 +36,105 @@ export function Settings({ defaultValues }: Props) {
   }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 border rounded-sm p-4"
-      >
-        <h1 className="text-xl font-bold">Update your personal settings</h1>
-        <FormField
-          control={form.control}
-          name="carbsPerUnits"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Carbs per units (g/U)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  value={field.value}
-                  onChange={(val) => field.onChange(Number(val.target.value))}
-                />
-              </FormControl>
-              <FormDescription />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="adjustmentRate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Adjustment rate for high blood glucose (mmol/l / U)
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  value={field.value}
-                  onChange={(val) => field.onChange(Number(val.target.value))}
-                />
-              </FormControl>
-              <FormDescription />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="target"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Target blood glucose (mmol/l)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  value={field.value}
-                  onChange={(val) => field.onChange(Number(val.target.value))}
-                />
-              </FormControl>
-              <FormDescription />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="insulinOnBoardOffset"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Offset for insulin on board target (U)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  value={field.value}
-                  onChange={(val) => field.onChange(Number(val.target.value))}
-                />
-              </FormControl>
-              <FormDescription />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button
-          onClick={() => form.reset()}
-          variant="secondary"
-          className="mr-2"
+    <div className="space-y-4">
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8 border rounded-sm p-4"
         >
-          Cancel
+          <h1 className="text-xl font-bold">Update your personal settings</h1>
+          <FormField
+            control={form.control}
+            name="carbsPerUnits"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Carbs per units (g/U)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    value={field.value}
+                    onChange={(val) => field.onChange(Number(val.target.value))}
+                  />
+                </FormControl>
+                <FormDescription />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="adjustmentRate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Adjustment rate for high blood glucose (mmol/l / U)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    value={field.value}
+                    onChange={(val) => field.onChange(Number(val.target.value))}
+                  />
+                </FormControl>
+                <FormDescription />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="target"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Target blood glucose (mmol/l)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    value={field.value}
+                    onChange={(val) => field.onChange(Number(val.target.value))}
+                  />
+                </FormControl>
+                <FormDescription />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="insulinOnBoardOffset"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Offset for insulin on board target (U)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    value={field.value}
+                    onChange={(val) => field.onChange(Number(val.target.value))}
+                  />
+                </FormControl>
+                <FormDescription />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            onClick={() => form.reset()}
+            variant="secondary"
+            className="mr-2"
+          >
+            Cancel
+          </Button>
+          <Button disabled={loading} type="submit">
+            Submit
+          </Button>
+        </form>
+      </Form>
+      <div className="space-y-4 border rounded-sm p-4">
+        <h1 className="text-xl font-bold">Logout</h1>
+        <Button>
+          <a href="/logout">Logout</a>
         </Button>
-        <Button disabled={loading} type="submit">
-          Submit
-        </Button>
-      </form>
-    </Form>
+      </div>
+    </div>
   )
 }

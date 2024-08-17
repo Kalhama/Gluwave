@@ -31,7 +31,7 @@ import {
 import { useServerAction } from '@/lib/use-server-action'
 import { addGlucoseSchema } from '@/schemas/addGlucoseSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CircleFadingPlus } from 'lucide-react'
+import { Droplet } from 'lucide-react'
 import * as React from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -65,8 +65,8 @@ export function AddBloodGlucoseMeasurementDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <CircleFadingPlus className="h-4 w-4 mr-2" /> Add glucose measurement
+        <Button variant="link">
+          <Droplet />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

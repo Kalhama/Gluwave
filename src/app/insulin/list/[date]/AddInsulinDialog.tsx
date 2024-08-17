@@ -31,7 +31,7 @@ import {
 import { useServerAction } from '@/lib/use-server-action'
 import { addInsulinSchema } from '@/schemas/addInsulinSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CircleFadingPlus, Trash2 } from 'lucide-react'
+import { Syringe } from 'lucide-react'
 import * as React from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -65,8 +65,8 @@ export function AddInsulinDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <CircleFadingPlus className="h-4 w-4 mr-2" /> Add insulin
+        <Button variant="link">
+          <Syringe />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

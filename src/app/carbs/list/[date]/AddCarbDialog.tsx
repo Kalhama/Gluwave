@@ -31,7 +31,7 @@ import {
 import { useServerAction } from '@/lib/use-server-action'
 import { addCarbSchema } from '@/schemas/addCarbSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CircleFadingPlus } from 'lucide-react'
+import { UtensilsCrossed } from 'lucide-react'
 import * as React from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -66,8 +66,8 @@ export function AddCarbDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <CircleFadingPlus className="h-4 w-4 mr-2" /> Add carbs
+        <Button variant="link">
+          <UtensilsCrossed />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

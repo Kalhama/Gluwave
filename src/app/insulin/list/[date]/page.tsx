@@ -14,7 +14,6 @@ import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
 
-import { AddInsulinDialog } from './AddInsulinDialog'
 import { DeleteInsulinButton } from './DeleteInsulinButton'
 import { InsulinListDatePicker } from './InsulinListDatePicker'
 
@@ -85,7 +84,6 @@ export default async function InsulinListByDate({
     <div className="space-y-4">
       <InsulinListDatePicker date={date} />
       <ListInsulinTable date={date} />
-      <AddInsulinDialog />
     </div>
   )
 }
