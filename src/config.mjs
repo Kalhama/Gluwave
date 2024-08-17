@@ -4,7 +4,10 @@
 import { z } from 'zod'
 
 const schema = z.object({
-  NODE_ENV: z.string(),
+  NODE_ENV: z
+    .string()
+    .optional()
+    .transform((v) => v ?? 'development'),
   GITHUB_ID: z.string(),
   GITHUB_SECRET: z.string(),
   DB_HOST: z.string(),

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "prettier": "prettier src/ --write",
-    "prepare": "husky"
+    "prepare": "husky",
+    "migrate": "drizzle-kit migrate",
+    "deploy": "pnpm migrate && pnpm build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
