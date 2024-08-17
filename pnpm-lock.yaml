@@ -68,9 +68,6 @@ importers:
       lucide-react:
         specifier: ^0.344.0
         version: 0.344.0(react@18.2.0)
-      luxon:
-        specifier: ^3.4.4
-        version: 3.4.4
       next:
         specifier: 14.1.2
         version: 14.1.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(sass@1.71.1)
@@ -2781,10 +2778,6 @@ packages:
     resolution: {integrity: sha512-6YyBnn91GB45VuVT96bYCOKElbJzUHqp65vX8cDcu55MQL9T969v4dhGClpljamuI/+KMO9P6w9Acq1CVQGvIQ==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0
-
-  luxon@3.4.4:
-    resolution: {integrity: sha512-zobTr7akeGHnv7eBOXcRgMeCP6+uyYsczwmeRCauvpvaAltgNyTbLH/+VaEAPUeWBT+1GuNmz4wC/6jtQzbbVA==}
-    engines: {node: '>=12'}
 
   memfs-browser@3.5.10302:
     resolution: {integrity: sha512-JJTc/nh3ig05O0gBBGZjTCPOyydaTxNF0uHYBrcc1gHNnO+KIHIvo0Y1FKCJsaei6FCl8C6xfQomXqu+cuzkIw==}
@@ -6385,8 +6378,6 @@ snapshots:
   lucide-react@0.344.0(react@18.2.0):
     dependencies:
       react: 18.2.0
-
-  luxon@3.4.4: {}
 
   memfs-browser@3.5.10302:
     dependencies:
