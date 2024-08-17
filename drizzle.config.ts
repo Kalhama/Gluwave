@@ -6,10 +6,6 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    host: config.DB_HOST,
-    port: config.DB_PORT,
-    user: config.DB_USER,
-    database: config.DB_DATABASE,
-    ssl: config.DB_SSL,
+    url: config.DATABASE_URL_UNPOOLED,
   },
 })

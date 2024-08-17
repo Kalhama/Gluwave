@@ -7,21 +7,11 @@ import config from './config.mjs'
 import * as schema from './schema'
 
 const pool = new Pool({
-  host: config.DB_HOST,
-  port: config.DB_PORT,
-  user: config.DB_USER,
-  password: config.DB_PASSWORD,
-  database: config.DB_DATABASE,
-  ssl: config.DB_SSL,
+  connectionString: config.DATABASE_URL,
 })
 
 export const migrationClient = new Client({
-  host: config.DB_HOST,
-  port: config.DB_PORT,
-  user: config.DB_USER,
-  password: config.DB_PASSWORD,
-  database: config.DB_DATABASE,
-  ssl: config.DB_SSL,
+  connectionString: config.DATABASE_URL_UNPOOLED,
 })
 
 export const db = drizzle(pool, { schema })
