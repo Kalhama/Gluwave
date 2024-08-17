@@ -3,13 +3,15 @@
 import { addCarbAction } from '@/actions/addCarb'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
 import {
   Form,
   FormControl,
@@ -37,7 +39,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-export function AddCarbDialog() {
+export function CarbDialog() {
   const { action, loading, data, message } = useServerAction(addCarbAction)
   const form = useForm<z.infer<typeof addCarbSchema>>({
     resolver: zodResolver(addCarbSchema),
@@ -58,25 +60,28 @@ export function AddCarbDialog() {
   const [open, setOpenChange] = useState(false)
 
   return (
-    <Dialog
+    <Drawer
       open={open}
       onOpenChange={(s) => {
         form.reset()
         setOpenChange(s)
       }}
     >
-      <DialogTrigger asChild>
+      <DrawerTrigger asChild>
         <Button variant="link">
           <UtensilsCrossed />
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add carbs</DialogTitle>
-          <DialogDescription></DialogDescription>
-        </DialogHeader>
+      </DrawerTrigger>
+      <DrawerContent className="sm:max-w-[325px] mx-auto">
+        <DrawerHeader>
+          <DrawerTitle>Add carbs</DrawerTitle>
+          <DrawerDescription></DrawerDescription>
+        </DrawerHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="px-4 space-y-4"
+          >
             <FormField
               control={form.control}
               name="timedelta"
@@ -170,12 +175,17 @@ export function AddCarbDialog() {
                 )
               }}
             />
-            <Button disabled={loading} type="submit">
+            <Button disabled={loading} type="submit" className="w-full">
               Submit
             </Button>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+        <DrawerFooter className="pt-2">
+          <DrawerClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
 }

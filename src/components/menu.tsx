@@ -1,10 +1,11 @@
-import { AddCarbDialog } from '@/app/carbs/list/[date]/AddCarbDialog'
-import { AddBloodGlucoseMeasurementDialog } from '@/app/glucose/list/[date]/AddBloodGlucoseMeasurementDialog'
-import { AddInsulinDialog } from '@/app/insulin/list/[date]/AddInsulinDialog'
 import { Button } from '@/components/ui/button'
 import { Settings } from 'lucide-react'
 import Link from 'next/link'
 import * as React from 'react'
+
+import { BloodGlucoseDialog } from './bloodglucose-dialog'
+import { CarbDialog } from './carb-dialog'
+import { InsulinDialog } from './insulin-dialog'
 
 interface Props {
   authenticated: boolean
@@ -17,9 +18,9 @@ export const Menu = ({ authenticated }: Props) => {
 
   return (
     <div className="fixed bottom-0 bg-white w-full flex p-4 gap-4 border-t justify-center">
-      <AddBloodGlucoseMeasurementDialog />
-      <AddInsulinDialog />
-      <AddCarbDialog />
+      <BloodGlucoseDialog />
+      <InsulinDialog />
+      <CarbDialog />
       <Button variant="link">
         <Link href="/settings">
           <Settings />

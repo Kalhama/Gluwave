@@ -1,15 +1,17 @@
 'use client'
 
-import { addGlucosenAction } from '@/actions/addGlucose'
+import { addInsulinAction } from '@/actions/addInsulin'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
 import {
   Form,
   FormControl,
@@ -29,25 +31,25 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useServerAction } from '@/lib/use-server-action'
-import { addGlucoseSchema } from '@/schemas/addGlucoseSchema'
+import { addInsulinSchema } from '@/schemas/addInsulinSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Droplet } from 'lucide-react'
+import { Syringe } from 'lucide-react'
 import * as React from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-export function AddBloodGlucoseMeasurementDialog() {
-  const { action, loading, data, message } = useServerAction(addGlucosenAction)
-  const form = useForm<z.infer<typeof addGlucoseSchema>>({
-    resolver: zodResolver(addGlucoseSchema),
+export function InsulinDialog() {
+  const { action, loading, data, message } = useServerAction(addInsulinAction)
+  const form = useForm<z.infer<typeof addInsulinSchema>>({
+    resolver: zodResolver(addInsulinSchema),
     defaultValues: {
-      value: '7',
+      amount: 0,
       timedelta: 0,
     },
   })
 
-  async function onSubmit(values: z.infer<typeof addGlucoseSchema>) {
+  async function onSubmit(values: z.infer<typeof addInsulinSchema>) {
     console.log(values)
     await action(values)
     form.reset()
@@ -57,25 +59,28 @@ export function AddBloodGlucoseMeasurementDialog() {
   const [open, setOpenChange] = useState(false)
 
   return (
-    <Dialog
+    <Drawer
       open={open}
       onOpenChange={(s) => {
         form.reset()
         setOpenChange(s)
       }}
     >
-      <DialogTrigger asChild>
+      <DrawerTrigger asChild>
         <Button variant="link">
-          <Droplet />
+          <Syringe />
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add glucose measurement manually</DialogTitle>
-          <DialogDescription></DialogDescription>
-        </DialogHeader>
+      </DrawerTrigger>
+      <DrawerContent className="sm:max-w-[325px] mx-auto">
+        <DrawerHeader>
+          <DrawerTitle>Add insulin</DrawerTitle>
+          <DrawerDescription></DrawerDescription>
+        </DrawerHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="px-4 space-y-4"
+          >
             <FormField
               control={form.control}
               name="timedelta"
@@ -113,17 +118,21 @@ export function AddBloodGlucoseMeasurementDialog() {
             />
             <FormField
               control={form.control}
-              name="value"
+              name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Value</FormLabel>
+                  <FormLabel>Amount</FormLabel>
                   <FormControl>
                     <Input
                       id="amount"
                       type="text"
                       className="col-span-3"
                       value={field.value}
-                      onChange={(val) => field.onChange(val.target.value)}
+                      onChange={(val) =>
+                        field.onChange(
+                          parseFloat(val.target.value.replace(',', '.'))
+                        )
+                      }
                     />
                   </FormControl>
                   <FormDescription />
@@ -131,12 +140,17 @@ export function AddBloodGlucoseMeasurementDialog() {
                 </FormItem>
               )}
             />
-            <Button disabled={loading} type="submit">
+            <Button disabled={loading} type="submit" className="w-full">
               Submit
             </Button>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+        <DrawerFooter className="pt-2">
+          <DrawerClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
 }
