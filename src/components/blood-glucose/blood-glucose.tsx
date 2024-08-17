@@ -35,7 +35,8 @@ type PredictionDataElement2 = ArrayElement<PredictionData2>
 export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
   const now = new Date()
 
-  const lastBloodGlucoseData = bloodGlucoseData[bloodGlucoseData.length - 1]
+  const lastBloodGlucose =
+    bloodGlucoseData[bloodGlucoseData.length - 1]?.value ?? 0
 
   const yDomain = [
     2,
@@ -43,7 +44,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
   ] as DomainTuple
 
   const eventually =
-    lastBloodGlucoseData.value -
+    lastBloodGlucose -
     predictionData2[0].totalEffect +
     predictionData2[predictionData2.length - 1].totalEffect
 
@@ -110,7 +111,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
               y={(d: PredictionDataElement2) =>
                 d.cumulativeInsulinEffect -
                 predictionData2[0].cumulativeInsulinEffect +
-                lastBloodGlucoseData.value
+                lastBloodGlucose
               }
             />
             <VictoryLine
@@ -123,7 +124,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
               y={(d: PredictionDataElement2) =>
                 d.totalEffect -
                 predictionData2[0].totalEffect +
-                lastBloodGlucoseData.value
+                lastBloodGlucose
               }
             />
             <VictoryLine
@@ -136,7 +137,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
               y={(d: PredictionDataElement2) =>
                 d.cumulativeCarbsEffect -
                 predictionData2[0].cumulativeCarbsEffect +
-                lastBloodGlucoseData.value
+                lastBloodGlucose
               }
             />
           </VictoryChart>

@@ -23,11 +23,12 @@ export default async function BloodGlucoseProvider() {
     .where(eq(glucose.userId, user.id))
     .orderBy(glucose.timestamp)
 
-  const latestBloodGlucoseData = bloodGlucoseData[bloodGlucoseData.length - 1]
+  const latestBloodGlucose =
+    bloodGlucoseData[bloodGlucoseData.length - 1]?.timestamp ?? new Date()
 
   const predictionData2 = await getData2(
-    latestBloodGlucoseData.timestamp,
-    addHours(latestBloodGlucoseData.timestamp, 9),
+    latestBloodGlucose,
+    addHours(latestBloodGlucose, 9),
     user.id
   )
 
