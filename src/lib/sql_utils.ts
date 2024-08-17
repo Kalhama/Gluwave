@@ -1,6 +1,5 @@
-import { validateRequest } from '@/auth'
 import { db } from '@/db'
-import { carbs, insulin } from '@/schema'
+import { carbs, insulin, userTable } from '@/schema'
 import { startOfMinute, subHours } from 'date-fns'
 import { and, eq, sql } from 'drizzle-orm'
 
@@ -112,68 +111,14 @@ export const calculateUserCarbsData = async (userId: string) => {
   return carbs_on_board
 }
 
-export const getData = async (from: Date, to: Date, userId: string) => {
-  // TODO move this as param
-  const { user } = await validateRequest()
-
-  const minutes = db.$with('minutes').as(
-    db
-      .select({
-        timestamp: sql<Date>`timestamp`
-          .mapWith(insulin.timestamp)
-          .as('timestamp'),
-      })
-      .from(
-        sql`
-    generate_series(
-        ${subHours(startOfMinute(from), 0)}, 
-        ${to}, 
-        '00:01:00'::interval) AS "timestamp"
-  `
-      ) // todo test if we need to subhours
-  )
-
-  // WARNING: this does not essentially start form 0
-  const cumulativeInsulinEffect = db.$with('cumulative_insulin_effect').as(
-    db
-      .with(minutes)
-      .select({
-        timestamp: sql`minutes.timestamp`
-          .mapWith(carbs.timestamp)
-          .as('timestamp'),
-        cumulativeInsulinEffect:
-          sql`COALESCE(SUM(((((EXTRACT(EPOCH FROM minutes.timestamp - insulin.timestamp)/60/55)+1) * EXP(-((EXTRACT(EPOCH FROM minutes.timestamp - insulin.timestamp)/60/55)))) - 1) * insulin.amount), 0) * ${user?.adjustmentRate}`
-            .mapWith(insulin.amount)
-            .as('insulin_decay'),
-      })
-      .from(minutes)
-      .leftJoin(
-        insulin,
-        and(
-          sql`insulin."timestamp" <= minutes."timestamp"`,
-          sql`insulin."timestamp" >= (${from}::timestamp - interval '8 hours')`,
-          eq(insulin.userId, userId)
-        )
-      )
-      .groupBy(
-        sql`minutes.timestamp` /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */
-      )
-      .orderBy(
-        sql`minutes.timestamp` /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */
-      )
-  )
-
-  const results = await db
-    .with(cumulativeInsulinEffect)
-    .select()
-    .from(cumulativeInsulinEffect)
-
-  return results
-}
-
 export const getData2 = async (from: Date, to: Date, userId: string) => {
-  // TODO move this as param
-  const { user } = await validateRequest()
+  const user = (
+    await db.select().from(userTable).where(eq(userTable.id, userId)).limit(1)
+  )[0]
+
+  if (!user) {
+    throw new Error('did not find user with userId')
+  }
 
   const minutes = db.$with('minutes').as(
     db

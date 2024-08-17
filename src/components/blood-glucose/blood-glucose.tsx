@@ -1,6 +1,6 @@
 'use client'
 
-import { getData, getData2 } from '@/lib/sql_utils'
+import { getData2 } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -21,13 +21,11 @@ interface Props {
   predictionData2: PredictionData2
 }
 
-type PredictionData = Awaited<ReturnType<typeof getData>>
 type PredictionData2 = Awaited<ReturnType<typeof getData2>>
 
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never
 
-type PredictionDataElement = ArrayElement<PredictionData>
 type PredictionDataElement2 = ArrayElement<PredictionData2>
 
 // function sum(arr) {
