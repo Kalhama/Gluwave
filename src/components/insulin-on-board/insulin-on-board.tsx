@@ -31,7 +31,7 @@ export const InsulinOnBoard = ({ data }: Props) => {
   const now = new Date()
 
   const yDomain = [
-    2,
+    0,
     Math.max(5, ...formattedData.map((insulin) => insulin.y)),
   ] as DomainTuple
 
