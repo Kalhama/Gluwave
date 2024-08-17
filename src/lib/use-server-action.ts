@@ -15,11 +15,15 @@ export const useServerAction = <T>(
   const actionHandler = async (...args: Parameters<typeof action>) => {
     setLoading(true)
     const ret = await action(...args)
+
     setLoading(false)
-    if (ret.success) {
-      setData(ret.data)
-    } else {
-      setError(ret.error)
+
+    if (ret) {
+      if (ret.success) {
+        setData(ret.data)
+      } else {
+        setError(ret.error)
+      }
     }
 
     setLoading(false)
