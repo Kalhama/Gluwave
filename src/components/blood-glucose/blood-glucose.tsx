@@ -42,7 +42,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
 
   const yDomain = [
     2,
-    Math.max(12, ...bloodGlucoseData.map((bg) => bg.value)),
+    Math.max(12, ...bloodGlucoseData.map((bg) => bg.value)) + 2,
   ] as DomainTuple
 
   const eventually =

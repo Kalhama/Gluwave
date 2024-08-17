@@ -27,7 +27,7 @@ export const CarbsOnBoard = ({ data }: Props) => {
 
   const yDomain = [
     0,
-    Math.max(10, ...data.map((carb) => carb.carbsOnBoard)),
+    Math.max(10, ...data.map((carb) => carb.carbsOnBoard)) + 10,
   ] as DomainTuple
 
   return (
