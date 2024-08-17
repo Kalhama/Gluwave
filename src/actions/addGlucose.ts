@@ -21,7 +21,7 @@ export const addGlucosenAction = wrapServerAction(
     }
 
     await db.insert(glucose).values({
-      value: parseFloat(parsed.value.replace(',', '.')),
+      value: parsed.value,
       timestamp: addMinutes(new Date(), parsed.timedelta),
       userId: user.id,
     })

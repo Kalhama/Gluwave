@@ -90,7 +90,7 @@ export function InsulinDialog() {
                   <FormControl>
                     <Select
                       onValueChange={(val) => {
-                        field.onChange(Number(val))
+                        field.onChange(val)
                       }}
                       defaultValue={String(field.value)}
                     >
@@ -128,11 +128,7 @@ export function InsulinDialog() {
                       type="text"
                       className="col-span-3"
                       value={field.value}
-                      onChange={(val) =>
-                        field.onChange(
-                          parseFloat(val.target.value.replace(',', '.'))
-                        )
-                      }
+                      onChange={(val) => field.onChange(val.target.value)}
                     />
                   </FormControl>
                   <FormDescription />

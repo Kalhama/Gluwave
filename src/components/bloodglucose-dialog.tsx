@@ -44,7 +44,7 @@ export function BloodGlucoseDialog() {
   const form = useForm<z.infer<typeof addGlucoseSchema>>({
     resolver: zodResolver(addGlucoseSchema),
     defaultValues: {
-      value: '7',
+      value: 7,
       timedelta: 0,
     },
   })
@@ -91,7 +91,7 @@ export function BloodGlucoseDialog() {
                   <FormControl>
                     <Select
                       onValueChange={(val) => {
-                        field.onChange(Number(val))
+                        field.onChange(val)
                       }}
                       defaultValue={String(field.value)}
                     >

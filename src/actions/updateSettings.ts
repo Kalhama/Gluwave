@@ -18,7 +18,7 @@ export const updateSettings = wrapServerAction(
         carbsPerUnits: parsed.carbsPerUnits,
         adjustmentRate: parsed.adjustmentRate,
         target: parsed.target,
-        insulinOnBoardOffset: parsed.target,
+        insulinOnBoardOffset: parsed.insulinOnBoardOffset,
       })
       .where(eq(userTable.id, parsed.id))
 
