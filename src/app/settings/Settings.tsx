@@ -51,6 +51,8 @@ export function Settings({ defaultValues }: Props) {
                 <FormLabel>Carbs per units (g/U)</FormLabel>
                 <FormControl>
                   <Input
+                    type="text"
+                    inputMode="decimal"
                     value={field.value}
                     onChange={(val) => field.onChange(val.target.value)}
                   />
@@ -70,6 +72,8 @@ export function Settings({ defaultValues }: Props) {
                 </FormLabel>
                 <FormControl>
                   <Input
+                    type="text"
+                    inputMode="decimal"
                     value={field.value}
                     onChange={(val) => field.onChange(val.target.value)}
                   />
@@ -87,6 +91,8 @@ export function Settings({ defaultValues }: Props) {
                 <FormLabel>Target blood glucose (mmol/l)</FormLabel>
                 <FormControl>
                   <Input
+                    type="text"
+                    inputMode="decimal"
                     value={field.value}
                     onChange={(val) => field.onChange(val.target.value)}
                   />
@@ -104,6 +110,8 @@ export function Settings({ defaultValues }: Props) {
                 <FormLabel>Offset for insulin on board target (U)</FormLabel>
                 <FormControl>
                   <Input
+                    type="text"
+                    inputMode="decimal"
                     value={field.value}
                     onChange={(val) => field.onChange(val.target.value)}
                   />

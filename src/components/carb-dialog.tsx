@@ -126,6 +126,8 @@ export function CarbDialog() {
                   <FormControl>
                     <Input
                       id="amount"
+                      type="text"
+                      inputMode="decimal"
                       className="col-span-3"
                       value={field.value}
                       onChange={(val) => field.onChange(val.target.value)}
