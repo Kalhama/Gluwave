@@ -1,6 +1,10 @@
-# Nextjs template
+# insulin on board calculator
 
-A NextJS template with drizzle, variety of utility functions, and more.
+Simple web based calculator / diary for logging insulin, carbs and glucose and making predictions based on them.
+
+![image of the app main screen](examples/main.jpg)
+
+Example of this is hosted at [vercel](https://iob-calculator-nextjs.vercel.app/)
 
 ## How to start developing
 
@@ -92,15 +96,15 @@ NEW_VARIABLE=my_value
 
 ## Protecting routes
 
-To protect routes using the `getCurrentUser` method, you can utilize it app / api routes. This ensures that only authenticated users can access certain routes. Here's how you can implement it:
+To protect routes using the `validateRequest` method, you can utilize it app / api routes. This ensures that only authenticated users can access certain routes. Here's how you can implement it:
 
 ```typescript
-import { getCurrentUser } from '@/lib/auth.ts'
+const { user } = await validateRequest()
 
 // Example route / template
 const routeOrPage = () => {
   try {
-    const { user } = await getCurrentUser()
+    const { user } = await validateRequest()
 
     if (!user) {
       // Redirect or throw
@@ -147,17 +151,6 @@ export default function Page() {
 }
 
 ```
-
-## Component library
-
-Component library is located at `@/components`.
-
-- `ButtonLoading` - shadcn Button with loading
-- OAuth specific login buttons
-- `Menu` component
-- `DateTimePicker` component
-
-Additionally, [shadcn/ui](https://ui.shadcn.com/) components are in subfolder `@/components/ui`
 
 ## Commit message linting
 
