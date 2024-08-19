@@ -2,7 +2,7 @@
 
 Simple web based calculator / diary for logging insulin, carbs and glucose and making predictions based on them.
 
-![image of the app main screen](examples/main.jpg)
+![image of the app main screen](examples/main.png)
 
 Example of this is hosted at [vercel](https://iob-calculator-nextjs.vercel.app/)
 
