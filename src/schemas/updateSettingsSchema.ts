@@ -17,5 +17,4 @@ export const updateSettingsSchema = z.object({
     (v) => parseFloat(String(v).replace(',', '.')),
     z.number().gt(0)
   ),
-  id: z.string(),
 })
