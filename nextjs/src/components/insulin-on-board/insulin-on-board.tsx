@@ -12,22 +12,19 @@ import {
   VictoryZoomContainer,
 } from 'victory'
 
+type InsulinData = Awaited<ReturnType<typeof calculateUserInsulinData>>
+type InsulinDataItem = InsulinData[0]
+
 interface Props {
-  data: Awaited<ReturnType<typeof calculateUserInsulinData>>
+  data: InsulinData
 }
 
 export const InsulinOnBoard = ({ data }: Props) => {
-  const formattedData = data.map((d) => {
-    return {
-      x: d.timestamp,
-      y: d.insulinOnBoard,
-    }
-  })
   const now = new Date()
 
   const yDomain = [
     0,
-    Math.max(5, ...formattedData.map((insulin) => insulin.y)) + 2,
+    Math.max(5, ...data.map((insulin) => insulin.insulinOnBoard)) + 2,
   ] as DomainTuple
 
   return (
@@ -77,7 +74,9 @@ export const InsulinOnBoard = ({ data }: Props) => {
                 data: { stroke: '#c43a31' },
                 parent: { border: '1px solid #ccc', padding: 0 },
               }}
-              data={formattedData}
+              data={data}
+              x="timestamp"
+              y="insulinOnBoard"
             />
           </VictoryChart>
         </div>

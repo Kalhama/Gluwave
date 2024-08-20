@@ -12,18 +12,15 @@ import {
   VictoryZoomContainer,
 } from 'victory'
 
+type CarbsData = Awaited<ReturnType<typeof calculateUserCarbsData>>
+type CarbsDataItem = CarbsData[0]
+
 interface Props {
-  data: Awaited<ReturnType<typeof calculateUserCarbsData>>
+  data: CarbsData
 }
 
 export const CarbsOnBoard = ({ data }: Props) => {
   const now = new Date()
-  const formattedData = data.map((d) => {
-    return {
-      x: d.timestamp,
-      y: d.carbsOnBoard,
-    }
-  })
 
   const yDomain = [
     0,
@@ -77,7 +74,9 @@ export const CarbsOnBoard = ({ data }: Props) => {
                 data: { stroke: '#c43a31' },
                 parent: { border: '1px solid #ccc', padding: 0 },
               }}
-              data={formattedData}
+              data={data}
+              x="timestamp"
+              y="carbsOnBoard"
             />
           </VictoryChart>
         </div>
