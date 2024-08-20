@@ -102,11 +102,32 @@ export function Settings({ defaultValues }: Props) {
               </FormItem>
             )}
           />
+          <FormItem>
+            <FormLabel>
+              Carbs to glucose increase ratio based on above (g / mmol/l).
+              (Based on above ISF and CF)
+            </FormLabel>
+            <FormControl>
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={(
+                  form.watch('carbsPerUnits') / form.watch('adjustmentRate')
+                ).toLocaleString(undefined, {
+                  maximumFractionDigits: 1,
+                  minimumFractionDigits: 1,
+                })}
+                disabled
+              />
+            </FormControl>
+            <FormDescription />
+            <FormMessage />
+          </FormItem>
           <FormField
             control={form.control}
             name="insulinOnBoardOffset"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="hidden">
                 <FormLabel>Offset for insulin on board target (U)</FormLabel>
                 <FormControl>
                   <Input
