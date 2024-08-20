@@ -15,6 +15,6 @@ export const updateSettingsSchema = z.object({
   ),
   insulinOnBoardOffset: z.preprocess(
     (v) => parseFloat(String(v).replace(',', '.')),
-    z.number().gt(0)
+    z.number().gte(-5).lte(5)
   ),
 })
