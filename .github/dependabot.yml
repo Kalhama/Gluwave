@@ -5,12 +5,12 @@
 
 version: 2
 updates:
-  - package-ecosystem: 'npm' # See documentation for possible values
-    directory: '/' # Location of package manifests
+  - package-ecosystem: "npm" # See documentation for possible values
+    directory: "/nextjs" # Location of package manifests
     schedule:
-      interval: 'monthly'
+      interval: "monthly"
     allow:
       # Allow both direct and indirect updates for all packages
-      - dependency-type: 'direct'
+      - dependency-type: "direct"
     commit-message:
-      prefix: 'chore(dependencies)'
+      prefix: "chore(dependencies)"

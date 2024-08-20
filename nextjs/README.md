@@ -152,10 +152,6 @@ export default function Page() {
 
 ```
 
-## Commit message linting
-
-We use `commitlint` to lint commit messages and enforce [conventional commits](https://www.conventionalcommits.org/en). We highly [recommend](https://github.com/googleapis/release-please?tab=readme-ov-file#linear-git-commit-history-use-squash-merge) you to use squash merges. If your PR contains multiple fixes or features [see this](https://github.com/googleapis/release-please?tab=readme-ov-file#what-if-my-pr-contains-multiple-fixes-or-features)
-
 ## Typography
 
 Use [Shadcn/ui typography](https://ui.shadcn.com/docs/components/typography) with `Typography` component. ([Credits](https://github.com/shadcn-ui/ui/issues/315#issuecomment-1882739488))
