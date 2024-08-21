@@ -141,7 +141,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
                 data: { stroke: '#c43a31' },
                 parent: { border: '1px solid #ccc', padding: 0 },
               }}
-              size={1}
+              size={2}
               data={bloodGlucoseData}
               x="timestamp"
               y="value"
