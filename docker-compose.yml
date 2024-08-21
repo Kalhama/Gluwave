@@ -1,0 +1,20 @@
+services:
+  nextjs:
+    build:
+      context: ./nextjs
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+        GITHUB_ID: ${GITHUB_ID}
+        GITHUB_SECRET: ${GITHUB_SECRET}
+        DATABASE_URL_UNPOOLED: ${DATABASE_URL_UNPOOLED}
+        INTERVAL: ${INTERVAL}
+    ports:
+      - "3000:3000"
+    env_file: ".env"
+  librelinkup-to-iob-calculator:
+    build:
+      context: ./librelinkup-to-iob-calculator
+      dockerfile: Dockerfile
+    env_file: ".env"
+    restart: always

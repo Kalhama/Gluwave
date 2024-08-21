@@ -8,6 +8,20 @@
       "when": 1723819822070,
       "tag": "0000_flawless_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1724151258387,
+      "tag": "0001_lame_doorman",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1724257485421,
+      "tag": "0002_parallel_marvel_boy",
+      "breakpoints": true
     }
   ]
 }

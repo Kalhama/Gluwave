@@ -1,0 +1,17 @@
+{
+    // Change this to match your project
+    "compilerOptions": {
+      "allowJs": true,
+      "declaration": true,
+      "skipLibCheck": true,
+      "lib": ["ES2022", "DOM"],
+      "target": "ES2022",
+      "moduleResolution": "Node16",
+      "module": "Node16",
+      "allowSyntheticDefaultImports": true,
+      "resolveJsonModule": true,
+      "esModuleInterop": true,
+      "types": ["node"],
+      "outDir": "dist"
+    },
+  }

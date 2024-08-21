@@ -28,6 +28,7 @@ export const lucia = new Lucia(adapter, {
       adjustmentRate: attributes.adjustmentRate,
       target: attributes.target,
       insulinOnBoardOffset: attributes.insulinOnBoardOffset,
+      apikey: attributes.apikey,
     }
   },
 })

@@ -33,6 +33,7 @@ export const glucose = pgTable('glucose', {
   userId: text('user_id')
     .notNull()
     .references(() => userTable.id),
+  device: text('device'),
 })
 
 export const userTable = pgTable('user', {
@@ -44,6 +45,7 @@ export const userTable = pgTable('user', {
   insulinOnBoardOffset: doublePrecision('insulinOnBoardOffset')
     .notNull()
     .default(0),
+  apikey: text('apikey'),
 })
 
 export const sessionTable = pgTable('session', {
