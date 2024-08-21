@@ -16,16 +16,9 @@ import { useServerAction } from '@/lib/use-server-action'
 import * as React from 'react'
 
 export const ApiKeyForm = ({ current }: { current: string | null }) => {
-  const {
-    action: newAction,
-    loading: newLoading,
-    data: newData,
-  } = useServerAction(newApiKey)
-  const {
-    action: deleteAction,
-    loading: deleteLoading,
-    data: deleteData,
-  } = useServerAction(deleteApiKey)
+  const { action: newAction, loading: newLoading } = useServerAction(newApiKey)
+  const { action: deleteAction, loading: deleteLoading } =
+    useServerAction(deleteApiKey)
 
   return (
     <Card>
@@ -34,13 +27,14 @@ export const ApiKeyForm = ({ current }: { current: string | null }) => {
         <CardDescription>Delete or renew a API key</CardDescription>
       </CardHeader>
       <CardContent>
-        <Input value={newData ?? current ?? ''} />
+        <Input value={current ?? ''} />
       </CardContent>
       <CardFooter className="flex gap-2">
         <ButtonLoading
           loading={newLoading}
           onClick={async () => {
             await newAction()
+            window.location.reload()
           }}
         >
           Refresh
