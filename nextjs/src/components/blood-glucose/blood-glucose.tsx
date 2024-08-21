@@ -97,16 +97,6 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
                 { x: now, y: 100 },
               ]}
             />
-            <VictoryScatter
-              style={{
-                data: { stroke: '#c43a31' },
-                parent: { border: '1px solid #ccc', padding: 0 },
-              }}
-              size={1}
-              data={bloodGlucoseData}
-              x="timestamp"
-              y="value"
-            />
             <VictoryLine
               style={{
                 data: { stroke: '#c43a31', strokeDasharray: '2 2' },
@@ -145,6 +135,16 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
                 predictionData2[0].cumulativeCarbsEffect +
                 lastBloodGlucose
               }
+            />
+            <VictoryScatter
+              style={{
+                data: { stroke: '#c43a31' },
+                parent: { border: '1px solid #ccc', padding: 0 },
+              }}
+              size={1}
+              data={bloodGlucoseData}
+              x="timestamp"
+              y="value"
             />
           </VictoryChart>
         </div>
