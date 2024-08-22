@@ -1,6 +1,6 @@
 'use client'
 
-import { addCarbAction } from '@/actions/addCarb'
+import { addCarbsAction } from '@/actions/add-carbs'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -40,7 +40,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 export function CarbDialog() {
-  const { action, loading, data, message } = useServerAction(addCarbAction)
+  const { action, loading, data, message } = useServerAction(addCarbsAction)
   const form = useForm<z.infer<typeof addCarbSchema>>({
     resolver: zodResolver(addCarbSchema),
     defaultValues: {

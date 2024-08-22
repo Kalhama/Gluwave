@@ -1,6 +1,6 @@
 'use client'
 
-import { updateSettings } from '@/actions/updateSettings'
+import { updateSettings } from '@/actions/update-settings'
 import { Button } from '@/components/ui/button'
 import {
   Form,

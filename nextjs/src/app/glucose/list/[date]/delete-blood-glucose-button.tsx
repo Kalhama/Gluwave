@@ -1,6 +1,6 @@
 'use client'
 
-import { deleteGlucose } from '@/actions/deleteGlucose'
+import { deleteGlucose } from '@/actions/delete-glucose'
 import { useServerAction } from '@/lib/use-server-action'
 import { Loader2, Trash2 } from 'lucide-react'
 

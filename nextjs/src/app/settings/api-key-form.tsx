@@ -1,7 +1,7 @@
 'use client'
 
-import { deleteApiKey } from '@/actions/deleteApiKey'
-import { newApiKey } from '@/actions/newApiKey'
+import { deleteApiKey } from '@/actions/delete-api-key'
+import { newApiKey } from '@/actions/new-api-key'
 import { ButtonLoading } from '@/components/button-loading'
 import {
   Card,

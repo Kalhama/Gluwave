@@ -1,6 +1,6 @@
 'use client'
 
-import { addInsulinAction } from '@/actions/addInsulin'
+import { addInsulinAction } from '@/actions/add-insulin'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,

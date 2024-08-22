@@ -1,7 +1,6 @@
 'use client'
 
-import { deleteCarb } from '@/actions/deleteCarb'
-import { deleteInsulin } from '@/actions/deleteInsulin'
+import { deleteInsulin } from '@/actions/delete-insulin'
 import { useServerAction } from '@/lib/use-server-action'
 import { Loader2, Trash2 } from 'lucide-react'
 
@@ -9,8 +8,8 @@ interface Props {
   id: number
 }
 
-export const DeleteCarbButton = ({ id }: Props) => {
-  const { action, loading } = useServerAction(deleteCarb)
+export const DeleteInsulinButton = ({ id }: Props) => {
+  const { action, loading } = useServerAction(deleteInsulin)
 
   if (loading) {
     return <Loader2 className="w-4 h-4 animate-spin" />

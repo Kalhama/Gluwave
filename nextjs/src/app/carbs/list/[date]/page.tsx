@@ -14,8 +14,8 @@ import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
 
-import { CarbListDatePicker } from './CarbListDatePicker'
-import { DeleteCarbButton } from './DeleteCarbButton'
+import { CarbListDatePicker } from './carbs-list-datepicker'
+import { DeleteCarbButton } from './delete-carbs-button'
 
 interface Props {
   date: Date
