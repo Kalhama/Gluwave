@@ -16,18 +16,18 @@ type CarbsData = Awaited<ReturnType<typeof calculateUserCarbsData>>
 type CarbsDataItem = CarbsData[0]
 
 interface Props {
-  data: CarbsData
+  carbsOnBoard: CarbsData
 }
 
-export const CarbsOnBoard = ({ data }: Props) => {
+export const CarbsOnBoard = ({ carbsOnBoard }: Props) => {
   const now = new Date()
 
   const yDomain = [
     0,
-    Math.max(10, ...data.map((carb) => carb.carbsOnBoard)) + 10,
+    Math.max(10, ...carbsOnBoard.map((carb) => carb.carbsOnBoard)) + 10,
   ] as DomainTuple
 
-  const current = data.find(
+  const current = carbsOnBoard.find(
     (carb) => carb.timestamp > now && carb.timestamp <= addMinutes(now, 1)
   )
 
@@ -84,7 +84,7 @@ export const CarbsOnBoard = ({ data }: Props) => {
                 data: { stroke: '#c43a31' },
                 parent: { border: '1px solid #ccc', padding: 0 },
               }}
-              data={data}
+              data={carbsOnBoard}
               x="timestamp"
               y="carbsOnBoard"
             />
