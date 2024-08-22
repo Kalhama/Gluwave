@@ -13,5 +13,4 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm run deploy
-CMD ["pnpm", "run", "start"]
+CMD ["pnpm", "run", "migrate-build-and-start"]

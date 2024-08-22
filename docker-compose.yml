@@ -1,4 +1,22 @@
 services:
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ${POSTGRES_DATA_DIR}:/var/lib/postgresql/data
+    env_file: ".env"
+    restart: always
+    shm_size: 128mb
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
+        ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
   nextjs:
     build:
       context: ./nextjs
@@ -12,9 +30,20 @@ services:
     ports:
       - "3000:3000"
     env_file: ".env"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
   librelinkup-to-iob-calculator:
     build:
       context: ./librelinkup-to-iob-calculator
       dockerfile: Dockerfile
     env_file: ".env"
     restart: always
+    depends_on:
+      nextjs:
+        condition: service_healthy

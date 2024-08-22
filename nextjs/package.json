@@ -10,7 +10,9 @@
     "prettier": "prettier src/ --write",
     "prepare": "husky",
     "migrate": "drizzle-kit migrate",
-    "deploy": "pnpm migrate && pnpm build"
+    "migrate-and-build": "pnpm run migrate && pnpm run build",
+    "migrate-and-start": "pnpm run migrate && pnpm run start",
+    "migrate-build-and-start": "pnpm run migrate && pnpm run build && pnpm run start"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
