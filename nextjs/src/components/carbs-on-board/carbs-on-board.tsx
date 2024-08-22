@@ -1,7 +1,7 @@
 'use client'
 
 import { calculateUserCarbsData } from '@/lib/sql_utils'
-import { addHours, subHours } from 'date-fns'
+import { addHours, addMinutes, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -27,6 +27,10 @@ export const CarbsOnBoard = ({ data }: Props) => {
     Math.max(10, ...data.map((carb) => carb.carbsOnBoard)) + 10,
   ] as DomainTuple
 
+  const current = data.find(
+    (carb) => carb.timestamp > now && carb.timestamp <= addMinutes(now, 1)
+  )
+
   return (
     <div className="space-y-4">
       <div className="border rounded-sm">
@@ -34,7 +38,13 @@ export const CarbsOnBoard = ({ data }: Props) => {
           <h2 className="font-semibold">Carbs</h2>
           <Link href="/carbs/list">
             <div className="flex items-center">
-              <span className="mt-0 text-sm">TODO g</span>
+              <span className="mt-0 text-sm">
+                {(current?.carbsOnBoard ?? 0).toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                  minimumFractionDigits: 0,
+                })}{' '}
+                g
+              </span>
               <ChevronRight />
             </div>
           </Link>

@@ -1,7 +1,7 @@
 'use client'
 
 import { calculateUserInsulinData } from '@/lib/sql_utils'
-import { addHours, subHours } from 'date-fns'
+import { addHours, addMinutes, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -27,6 +27,11 @@ export const InsulinOnBoard = ({ data }: Props) => {
     Math.max(5, ...data.map((insulin) => insulin.insulinOnBoard)) + 2,
   ] as DomainTuple
 
+  const current = data.find(
+    (insulin) =>
+      insulin.timestamp > now && insulin.timestamp <= addMinutes(now, 1)
+  )
+
   return (
     <div className="space-y-4">
       <div className="border rounded-sm">
@@ -34,7 +39,13 @@ export const InsulinOnBoard = ({ data }: Props) => {
           <h2 className="font-semibold">Insulin on board</h2>
           <Link href="/insulin/list">
             <div className="flex items-center">
-              <span className="mt-0 text-sm">TODO U</span>
+              <span className="mt-0 text-sm">
+                {(current?.insulinOnBoard ?? 0).toLocaleString(undefined, {
+                  maximumFractionDigits: 2,
+                  minimumFractionDigits: 1,
+                })}{' '}
+                U
+              </span>
               <ChevronRight />
             </div>
           </Link>
