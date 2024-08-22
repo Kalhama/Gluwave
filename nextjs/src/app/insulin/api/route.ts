@@ -64,7 +64,14 @@ export async function POST(request: NextRequest) {
         .limit(1)
     )[0]
 
-    if (!existing) {
+    if (existing) {
+      await db
+        .update(glucose)
+        .set({
+          value: bg.value,
+        })
+        .where(eq(glucose.id, existing.id))
+    } else {
       await db.insert(glucose).values({
         value: bg.value,
         timestamp: bg.timestamp,
