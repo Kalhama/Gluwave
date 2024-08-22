@@ -84,6 +84,13 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
             }
             theme={VictoryTheme.material}
           >
+            {/* empty chart in case there is no other data, so that x axis remains stable */}
+            <VictoryLine
+              data={[
+                { x: subHours(now, 24), y: null },
+                { x: addHours(now, 24), y: null },
+              ]}
+            />
             <VictoryLine
               style={{
                 data: {

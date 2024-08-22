@@ -3,7 +3,11 @@ import { carbs, insulin, userTable } from '@/schema'
 import { startOfMinute, subHours } from 'date-fns'
 import { and, eq, sql } from 'drizzle-orm'
 
-export const calculateUserInsulinData = async (userId: string) => {
+export const calculateUserInsulinData = async (
+  from: Date,
+  to: Date,
+  userId: string
+) => {
   const minutes = db.$with('minutes').as(
     db
       .select({
@@ -13,10 +17,7 @@ export const calculateUserInsulinData = async (userId: string) => {
       })
       .from(
         sql`
-    generate_series(
-        ( SELECT min(date_trunc('minute'::text, insulin."timestamp")) AS min
-                FROM insulin WHERE ${insulin.userId} = ${userId}), ( SELECT max(insulin."timestamp") + '06:00:00'::interval
-                FROM insulin WHERE ${insulin.userId} = ${userId}), '00:01:00'::interval) AS "timestamp"
+    generate_series(${from}, ${to}, '00:01:00'::interval) AS "timestamp"
   `
       )
   )
@@ -62,7 +63,11 @@ export const calculateUserInsulinData = async (userId: string) => {
   return insulin_on_board
 }
 
-export const calculateUserCarbsData = async (userId: string) => {
+export const calculateUserCarbsData = async (
+  from: Date,
+  to: Date,
+  userId: string
+) => {
   const minutes = db.$with('minutes').as(
     db
       .select({
@@ -72,10 +77,7 @@ export const calculateUserCarbsData = async (userId: string) => {
       })
       .from(
         sql`
-    generate_series(
-        ( SELECT min(date_trunc('minute'::text, carbs."timestamp")) AS min
-                FROM carbs WHERE ${carbs.userId} = ${userId}), ( SELECT max(carbs."timestamp") + '06:00:00'::interval
-                FROM carbs WHERE ${carbs.userId} = ${userId}), '00:01:00'::interval) AS "timestamp"
+    generate_series(${from}, ${to}, '00:01:00'::interval) AS "timestamp"
   `
       )
   )
