@@ -43,4 +43,8 @@ const job = async (full: "full" | undefined) => {
 };
 
 job("full");
+
+// rerun full job because history data comes a bit late
+setTimeout(() => job("full"), 1000 * 60 * 30);
+
 setInterval(job, config.INTERVAL * 1000 * 60);
