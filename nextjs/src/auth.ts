@@ -24,8 +24,8 @@ export const lucia = new Lucia(adapter, {
       // attributes has the type of DatabaseUserAttributes
       githubId: attributes.githubId,
       id: attributes.id,
-      carbsPerUnits: attributes.carbsPerUnits,
-      adjustmentRate: attributes.adjustmentRate,
+      carbohydrateRatio: attributes.carbohydrateRatio,
+      correctionRatio: attributes.correctionRatio,
       target: attributes.target,
       insulinOnBoardOffset: attributes.insulinOnBoardOffset,
       apikey: attributes.apikey,

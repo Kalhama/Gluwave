@@ -45,10 +45,10 @@ export function Settings({ defaultValues }: Props) {
           <h1 className="text-xl font-bold">Update your personal settings</h1>
           <FormField
             control={form.control}
-            name="carbsPerUnits"
+            name="carbohydrateRatio"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Carbs per units (g/U)</FormLabel>
+                <FormLabel>Carbohydrate ratio (g/U)</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
@@ -64,11 +64,11 @@ export function Settings({ defaultValues }: Props) {
           />
           <FormField
             control={form.control}
-            name="adjustmentRate"
+            name="correctionRatio"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Adjustment rate for high blood glucose (mmol/l / U)
+                  Correction ratio for high blood glucose (mmol/l / U)
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -83,6 +83,28 @@ export function Settings({ defaultValues }: Props) {
               </FormItem>
             )}
           />
+          <FormItem>
+            <FormLabel>
+              Carbs to glucose increase ratio based on above (g / mmol/l).
+              (Based on above ICR and ISF)
+            </FormLabel>
+            <FormControl>
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={(
+                  form.watch('carbohydrateRatio') /
+                  form.watch('correctionRatio')
+                ).toLocaleString(undefined, {
+                  maximumFractionDigits: 1,
+                  minimumFractionDigits: 1,
+                })}
+                disabled
+              />
+            </FormControl>
+            <FormDescription />
+            <FormMessage />
+          </FormItem>
           <FormField
             control={form.control}
             name="target"
@@ -102,27 +124,6 @@ export function Settings({ defaultValues }: Props) {
               </FormItem>
             )}
           />
-          <FormItem>
-            <FormLabel>
-              Carbs to glucose increase ratio based on above (g / mmol/l).
-              (Based on above ISF and CF)
-            </FormLabel>
-            <FormControl>
-              <Input
-                type="text"
-                inputMode="decimal"
-                value={(
-                  form.watch('carbsPerUnits') / form.watch('adjustmentRate')
-                ).toLocaleString(undefined, {
-                  maximumFractionDigits: 1,
-                  minimumFractionDigits: 1,
-                })}
-                disabled
-              />
-            </FormControl>
-            <FormDescription />
-            <FormMessage />
-          </FormItem>
           <FormField
             control={form.control}
             name="insulinOnBoardOffset"

@@ -146,7 +146,7 @@ export const getData2 = async (from: Date, to: Date, userId: string) => {
           .mapWith(carbs.timestamp)
           .as('timestamp'),
         cumulativeInsulinEffect:
-          sql`COALESCE(SUM(((((EXTRACT(EPOCH FROM minutes.timestamp - insulin.timestamp)/60/55)+1) * EXP(-((EXTRACT(EPOCH FROM minutes.timestamp - insulin.timestamp)/60/55)))) - 1) * insulin.amount), 0) * ${user?.adjustmentRate}`
+          sql`COALESCE(SUM(((((EXTRACT(EPOCH FROM minutes.timestamp - insulin.timestamp)/60/55)+1) * EXP(-((EXTRACT(EPOCH FROM minutes.timestamp - insulin.timestamp)/60/55)))) - 1) * insulin.amount), 0) * ${user?.correctionRatio}`
             .mapWith(insulin.amount)
             .as('cumulative_insulin_effect'),
       })
@@ -176,7 +176,7 @@ export const getData2 = async (from: Date, to: Date, userId: string) => {
           .mapWith(carbs.timestamp)
           .as('timestamp'),
         cumulativeCarbsEffect: sql`SUM(
-          COALESCE(LEAST(1, EXTRACT(epoch FROM minutes.timestamp - carbs.timestamp) / 60 / carbs.decay) * carbs.amount / ${user?.carbsPerUnits} * ${user?.adjustmentRate}, 0)
+          COALESCE(LEAST(1, EXTRACT(epoch FROM minutes.timestamp - carbs.timestamp) / 60 / carbs.decay) * carbs.amount / ${user?.carbohydrateRatio} * ${user?.correctionRatio}, 0)
         )`
           .mapWith(carbs.amount)
           .as('cumulative_carbs_effect'),

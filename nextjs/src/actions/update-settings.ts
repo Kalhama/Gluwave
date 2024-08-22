@@ -22,8 +22,8 @@ export const updateSettings = wrapServerAction(
     await db
       .update(userTable)
       .set({
-        carbsPerUnits: parsed.carbsPerUnits,
-        adjustmentRate: parsed.adjustmentRate,
+        carbohydrateRatio: parsed.carbohydrateRatio,
+        correctionRatio: parsed.correctionRatio,
         target: parsed.target,
         insulinOnBoardOffset: parsed.insulinOnBoardOffset,
       })

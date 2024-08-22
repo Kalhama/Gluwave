@@ -1,11 +1,11 @@
 import { z } from 'zod'
 
 export const updateSettingsSchema = z.object({
-  carbsPerUnits: z.preprocess(
+  carbohydrateRatio: z.preprocess(
     (v) => parseFloat(String(v).replace(',', '.')),
     z.number().gt(0)
   ),
-  adjustmentRate: z.preprocess(
+  correctionRatio: z.preprocess(
     (v) => parseFloat(String(v).replace(',', '.')),
     z.number().gt(0)
   ),

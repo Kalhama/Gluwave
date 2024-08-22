@@ -39,8 +39,8 @@ export const glucose = pgTable('glucose', {
 export const userTable = pgTable('user', {
   id: text('id').primaryKey(),
   githubId: text('github_id').notNull().unique(),
-  carbsPerUnits: doublePrecision('carbsPerUnits').notNull().default(10),
-  adjustmentRate: doublePrecision('adjustmentRate').notNull().default(1),
+  carbohydrateRatio: doublePrecision('carbohydrateRatio').notNull().default(10),
+  correctionRatio: doublePrecision('correctionRatio').notNull().default(1),
   target: doublePrecision('target').notNull().default(6),
   insulinOnBoardOffset: doublePrecision('insulinOnBoardOffset')
     .notNull()
