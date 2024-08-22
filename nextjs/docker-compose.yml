@@ -5,13 +5,13 @@ services:
       - 5432:5432
     volumes:
       - ${POSTGRES_DATA_DIR}:/var/lib/postgresql/data
-    env_file: ".env"
+    env_file: 'prod.env'
     restart: always
     shm_size: 128mb
     healthcheck:
       test:
         [
-          "CMD-SHELL",
+          'CMD-SHELL',
           "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
         ]
       interval: 1s
@@ -19,7 +19,7 @@ services:
       retries: 10
   nextjs:
     build:
-      context: ./nextjs
+      context: .
       dockerfile: Dockerfile
       args:
         DATABASE_URL: ${DATABASE_URL}
@@ -28,22 +28,13 @@ services:
         DATABASE_URL_UNPOOLED: ${DATABASE_URL_UNPOOLED}
         INTERVAL: ${INTERVAL}
     ports:
-      - "3000:3000"
-    env_file: ".env"
+      - '3000:3000'
+    env_file: 'prod.env'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
       interval: 30s
       timeout: 10s
       retries: 5
     depends_on:
       postgres:
-        condition: service_healthy
-  librelinkup-to-iob-calculator:
-    build:
-      context: ./librelinkup-to-iob-calculator
-      dockerfile: Dockerfile
-    env_file: ".env"
-    restart: always
-    depends_on:
-      nextjs:
         condition: service_healthy

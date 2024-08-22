@@ -1,0 +1,7 @@
+services:
+  librelinkup-to-iob-calculator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    restart: always
