@@ -4,7 +4,7 @@ Simple web based calculator / diary for logging insulin, carbs and glucose and m
 
 ![image of the app main screen](examples/main.png)
 
-Example of this is hosted at [vercel](https://iob-calculator-nextjs.vercel.app/)
+Example of this is hosted at [iob.kalhama.fi](https://iob.kalhama.fi/)
 
 ## How to start developing
 
@@ -69,7 +69,7 @@ const schema = z.object({
   GOOGLE_ID: z.string(),
   GOOGLE_SECRET: z.string(),
   HOST: z.string(),
-})
+});
 ```
 
 ```typescript
@@ -81,9 +81,9 @@ NEW_VARIABLE: z.string(),
 After adding the variable to the schema, save the changes to `config.mjs`. You can now access this new environment variable within your application code using the `config` object exported from `config.mjs`.
 
 ```typescript
-import config from './config.mjs'
+import config from "./config.mjs";
 
-const newVariableValue = config.NEW_VARIABLE
+const newVariableValue = config.NEW_VARIABLE;
 ```
 
 ### Step 3: Set the Variable in Your `.env` File
@@ -138,18 +138,13 @@ export const exampleAction = wrapServerAction(async (/* params */) => {
 ## useServerAction hook
 
 ```typescript
-import { useServerAction } from '@/lib/use-server-action'
+import { useServerAction } from "@/lib/use-server-action";
 
 export default function Page() {
-  const { action, loading, data, message } = useServerAction(serverAction)
+  const { action, loading, data, message } = useServerAction(serverAction);
 
-  return (
-    <div>
-      ...
-    </div>
-  )
+  return <div>...</div>;
 }
-
 ```
 
 ## Typography
