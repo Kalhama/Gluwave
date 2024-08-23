@@ -4,6 +4,7 @@ import config from "./config.js";
 import axios from "axios";
 
 import { LibreLinkUpClient } from "@diakem/libre-link-up-api-client";
+import { addMinutes } from "date-fns";
 
 const { read } = LibreLinkUpClient({
   username: config.LIBRELINKUP_USERNAME,
@@ -25,7 +26,7 @@ const job = async (full: "full" | undefined) => {
       const history = response.history.map((d) => {
         return {
           value: d.value,
-          timestamp: d.date,
+          timestamp: addMinutes(d.date, config.TIMESTAMP_OFFSET),
           device: "LIBRELINKUP",
         };
       });
@@ -35,7 +36,7 @@ const job = async (full: "full" | undefined) => {
 
     parsed.push({
       value: response.current.value,
-      timestamp: response.current.date,
+      timestamp: addMinutes(response.current.date, config.TIMESTAMP_OFFSET),
       device: "LIBRELINKUP",
     });
 

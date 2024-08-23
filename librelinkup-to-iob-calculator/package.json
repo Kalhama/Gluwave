@@ -12,6 +12,7 @@
 		"@babel/runtime": "^7.25.0",
 		"@diakem/libre-link-up-api-client": "github:Kalhama/libre-link-up-api-client",
 		"axios": "^1.7.4",
+		"date-fns": "^3.6.0",
 		"dotenv": "^16.4.5",
 		"zod": "^3.23.8"
 	},

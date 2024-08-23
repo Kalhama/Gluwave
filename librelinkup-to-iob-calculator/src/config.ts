@@ -15,6 +15,7 @@ const schema = z.object({
     .toLowerCase()
     .transform((x) => x === "true")
     .pipe(z.boolean()),
+  TIMESTAMP_OFFSET: z.coerce.number().lte(0),
 });
 
 const config = schema.parse(process.env);
