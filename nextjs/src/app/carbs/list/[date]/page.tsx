@@ -1,8 +1,10 @@
 import { validateRequest } from '@/auth'
+import { ClientOnly } from '@/components/client-only'
 import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -53,10 +55,14 @@ async function ListCarbTable({ date }: Props) {
           {results.map((carb) => (
             <TableRow key={carb.id}>
               <TableCell className="font-medium">
-                {carb.timestamp.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                <ClientOnly>
+                  <>
+                    {carb.timestamp.toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </>
+                </ClientOnly>
               </TableCell>
               <TableCell>{carb.amount} g</TableCell>
               <TableCell>{carb.decay / 60} h</TableCell>
@@ -66,6 +72,21 @@ async function ListCarbTable({ date }: Props) {
             </TableRow>
           ))}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell>Total</TableCell>
+            <TableCell>
+              {results.reduce(
+                (accumulator, currentValue) =>
+                  accumulator + currentValue.amount,
+                0
+              )}{' '}
+              g
+            </TableCell>
+            <TableCell />
+            <TableCell />
+          </TableRow>
+        </TableFooter>
       </Table>
     </div>
   )

@@ -1,8 +1,10 @@
 import { validateRequest } from '@/auth'
+import ClientOnly from '@/components/client-only'
 import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -53,10 +55,14 @@ async function ListInsulinTable({ date }: Props) {
           {results.map((insulin) => (
             <TableRow key={insulin.id}>
               <TableCell className="font-medium">
-                {insulin.timestamp.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                <ClientOnly>
+                  <>
+                    {insulin.timestamp.toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </>
+                </ClientOnly>
               </TableCell>
               <TableCell>{insulin.amount} U</TableCell>
               <TableCell className="text-right">
@@ -65,6 +71,20 @@ async function ListInsulinTable({ date }: Props) {
             </TableRow>
           ))}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell>Total</TableCell>
+            <TableCell>
+              {results.reduce(
+                (accumulator, currentValue) =>
+                  accumulator + currentValue.amount,
+                0
+              )}{' '}
+              U
+            </TableCell>
+            <TableCell />
+          </TableRow>
+        </TableFooter>
       </Table>
     </div>
   )
