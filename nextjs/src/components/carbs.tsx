@@ -1,9 +1,11 @@
 'use client'
 
-import { observedCarbs } from '@/lib/sql_utils'
-import { addHours, addSeconds, subHours } from 'date-fns'
+import { getObservedCarbsAction } from '@/actions/get-observed-carbs'
+import { useServerAction } from '@/lib/use-server-action'
+import { addHours, addSeconds, setHours, startOfDay, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect } from 'react'
 import {
   DomainTuple,
   VictoryChart,
@@ -12,18 +14,33 @@ import {
   VictoryZoomContainer,
 } from 'victory'
 
-type CarbsData = Awaited<ReturnType<typeof observedCarbs>>
-type CarbsDataItem = CarbsData[0]
+interface Props {}
 
-interface Props {
-  observedCarbs: CarbsData
-}
+export const Carbs = ({}: Props) => {
+  const {
+    action,
+    data: observedCarbs,
+    loading,
+  } = useServerAction(getObservedCarbsAction)
 
-export const Carbs = ({ observedCarbs }: Props) => {
+  useEffect(() => {
+    const now = new Date()
+    const start = setHours(startOfDay(now), 0)
+    const end = addHours(start, 24)
+
+    action({
+      start,
+      end,
+    })
+  }, [])
+
   const now = new Date()
+
+  if (loading || !observedCarbs) return 'loading...'
 
   // timestamp is always the beginning of a group, so when we add a dummy element with current time we essentially tell when the predicitons end
   const lastObservedCarbs = observedCarbs[observedCarbs.length - 1]
+
   observedCarbs.push({
     timestamp: addSeconds(
       lastObservedCarbs?.timestamp ?? 0,
@@ -40,6 +57,11 @@ export const Carbs = ({ observedCarbs }: Props) => {
     Math.max(...observedCarbs.map((carb) => carb.observed_carbs)) + 2,
   ] as DomainTuple
 
+  const totalObservedCarbs = observedCarbs.reduce(
+    (acc, el) => acc + el.observed_carbs,
+    0
+  )
+
   return (
     <div className="space-y-4">
       <div className="border rounded-sm">
@@ -48,12 +70,14 @@ export const Carbs = ({ observedCarbs }: Props) => {
             <h2 className="font-semibold">Observed carbs</h2>
             <Link href="/carbs/list">
               <div className="flex items-center">
-                {/* <span className="mt-0 text-sm">
-                  {(current?.carbsOnBoard ?? 0).toLocaleString(undefined, {
-                  maximumFractionDigits: 0,
-                  minimumFractionDigits: 0,
-                })}{' '}
-                </span> */}
+                <span className="mt-0 text-sm">
+                  Observed today{' '}
+                  {(totalObservedCarbs ?? 0).toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                    minimumFractionDigits: 0,
+                  })}{' '}
+                  g
+                </span>
                 <ChevronRight />
               </div>
             </Link>
