@@ -11,3 +11,4 @@ Following environment variables must be set
 | IOB_CALC_ENDPOINT    | Endpoint for Nextjs service. Example: `https://iob-calculator-nextjs.vercel.com/insulin/api` |
 | IOB_CALC_API_KEY     | API key that can be generated in settings. Example: `Z4_g-aZAvfsK9hzypdf0s`                  |
 | INTERVAL             | How often we should try to get data form libre and push it to iob-calc. Example: `5`         |
+| SINGLE_SHOT_HISTORY  | Should we stream results or just single shot history once                                    |

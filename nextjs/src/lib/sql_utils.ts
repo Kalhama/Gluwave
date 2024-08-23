@@ -162,7 +162,7 @@ export const observedCarbs = async (from: Date, to: Date, userId: string) => {
             .mapWith(glucose.value)
             .as('observed_carbs'),
         group: sql`FLOOR(EXTRACT (EPOCH FROM SUM(interval_length) OVER (
-                         ORDER BY timestamp)) / EXTRACT (EPOCH FROM interval '20 minutes'))`
+                         ORDER BY timestamp)) / EXTRACT (EPOCH FROM interval '15 minutes'))`
           .mapWith(glucose.value)
           .as('group'),
       })
@@ -190,7 +190,7 @@ export const observedCarbs = async (from: Date, to: Date, userId: string) => {
             .mapWith(glucose.value)
             .as('insulin_decay'),
           observed_carbs:
-            sql`SUM(observed_carbs) / SUM(EXTRACT (EPOCH FROM interval_length)) * EXTRACT (EPOCH FROM interval '20 minutes')`
+            sql`SUM(observed_carbs) / SUM(EXTRACT (EPOCH FROM interval_length)) * EXTRACT (EPOCH FROM interval '15 minutes')`
               .mapWith(glucose.value)
               .as('observed_carbs'),
           // group: sql`group`.as('group'),

@@ -10,6 +10,11 @@ const schema = z.object({
   IOB_CALC_ENDPOINT: z.string(),
   IOB_CALC_API_KEY: z.string(),
   INTERVAL: z.coerce.number().gte(1),
+  SINGLE_SHOT_HISTORY: z
+    .string()
+    .toLowerCase()
+    .transform((x) => x === "true")
+    .pipe(z.boolean()),
 });
 
 const config = schema.parse(process.env);
