@@ -1,7 +1,7 @@
 'use client'
 
 import { observedCarbs } from '@/lib/sql_utils'
-import { addHours, addMinutes, parseISO, subHours } from 'date-fns'
+import { addHours, addSeconds, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -23,33 +23,22 @@ export const Carbs = ({ observedCarbs }: Props) => {
   const now = new Date()
 
   // timestamp is always the beginning of a group, so when we add a dummy element with current time we essentially tell when the predicitons end
-
-  // TODO actually we need to use last bg measuremetn timestamp...
-
-  // observedCarbs.push({
-  //   timestamp: new Date(),
-  //   interval_length: 0,
-  //   glucose_change: 0,
-  //   insulin_decay: 0,
-  //   observed_carbs: 0,
-  // })
-  // observedCarbs.push({
-  //   ...observedCarbs[observedCarbs.length - 1],
-  //   timestamp: new Date(),
-  // })
-
-  // observedCarbs = observedCarbs.filter(
-  //   (d) => d.timestamp < parseISO('2024-08-22T02:34:32.999Z')
-  // )
+  const lastObservedCarbs = observedCarbs[observedCarbs.length - 1]
+  observedCarbs.push({
+    timestamp: addSeconds(
+      lastObservedCarbs?.timestamp ?? 0,
+      lastObservedCarbs?.interval_length ?? 0
+    ),
+    interval_length: 0,
+    glucose_change: 0,
+    insulin_decay: 0,
+    observed_carbs: 0,
+  })
 
   const yDomain = [
-    Math.min(...observedCarbs.map((carb) => carb.observed_carbs)),
-    Math.max(1, ...observedCarbs.map((carb) => carb.observed_carbs)),
+    Math.min(...observedCarbs.map((carb) => carb.observed_carbs)) - 2,
+    Math.max(...observedCarbs.map((carb) => carb.observed_carbs)) + 2,
   ] as DomainTuple
-
-  // const current = carbsOnBoard.find(
-  //   (carb) => carb.timestamp > now && carb.timestamp <= addMinutes(now, 1)
-  // )
 
   return (
     <div className="space-y-4">
