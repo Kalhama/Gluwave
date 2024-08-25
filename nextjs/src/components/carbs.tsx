@@ -50,6 +50,7 @@ export const Carbs = ({}: Props) => {
     glucose_change: 0,
     insulin_decay: 0,
     observed_carbs: 0,
+    observed_carbs_rate: 0,
   })
 
   const yDomain = [
@@ -122,7 +123,7 @@ export const Carbs = ({}: Props) => {
               interpolation="stepAfter"
               data={observedCarbs}
               x="timestamp"
-              y="observed_carbs"
+              y="observed_carbs_rate"
             />
             {/* empty chart in case there is no other data, so that x axis remains stable */}
             <VictoryLine

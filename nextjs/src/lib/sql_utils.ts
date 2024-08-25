@@ -189,10 +189,13 @@ export const observedCarbs = async (from: Date, to: Date, userId: string) => {
           insulin_decay: sql`SUM(insulin_decay)`
             .mapWith(glucose.value)
             .as('insulin_decay'),
-          observed_carbs:
+          observed_carbs_rate:
             sql`SUM(observed_carbs) / SUM(EXTRACT (EPOCH FROM interval_length)) * EXTRACT (EPOCH FROM interval '15 minutes')`
               .mapWith(glucose.value)
-              .as('observed_carbs'),
+              .as('observed_carbs_rate'),
+          observed_carbs: sql`SUM(observed_carbs)`
+            .mapWith(glucose.value)
+            .as('observed_carbs'),
           // group: sql`group`.as('group'),
         })
         .from(observed_carbs)
