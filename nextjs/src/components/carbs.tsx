@@ -25,7 +25,7 @@ export const Carbs = ({}: Props) => {
 
   useEffect(() => {
     const now = new Date()
-    const start = setHours(startOfDay(now), 0)
+    const start = setHours(startOfDay(subHours(now, 4)), 4)
     const end = addHours(start, 24)
 
     action({
