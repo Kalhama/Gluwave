@@ -54,8 +54,8 @@ export const Carbs = ({}: Props) => {
   })
 
   const yDomain = [
-    Math.min(...observedCarbs.map((carb) => carb.observed_carbs)) - 2,
-    Math.max(...observedCarbs.map((carb) => carb.observed_carbs)) + 2,
+    Math.min(...observedCarbs.map((carb) => carb.observed_carbs_rate)) - 2,
+    Math.max(...observedCarbs.map((carb) => carb.observed_carbs_rate)) + 2,
   ] as DomainTuple
 
   const totalObservedCarbs = observedCarbs.reduce(
