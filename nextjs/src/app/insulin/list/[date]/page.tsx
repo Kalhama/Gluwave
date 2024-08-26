@@ -1,5 +1,5 @@
 import { validateRequest } from '@/auth'
-import ClientOnly from '@/components/client-only'
+import { ClientDateTime } from '@/components/client-datetime'
 import {
   Table,
   TableBody,
@@ -55,14 +55,7 @@ async function ListInsulinTable({ date }: Props) {
           {results.map((insulin) => (
             <TableRow key={insulin.id}>
               <TableCell className="font-medium">
-                <ClientOnly>
-                  <>
-                    {insulin.timestamp.toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </>
-                </ClientOnly>
+                <ClientDateTime timestamp={insulin.timestamp} />
               </TableCell>
               <TableCell>{insulin.amount} U</TableCell>
               <TableCell className="text-right">

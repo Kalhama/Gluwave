@@ -1,5 +1,5 @@
 import { validateRequest } from '@/auth'
-import ClientOnly from '@/components/client-only'
+import { ClientDateTime } from '@/components/client-datetime'
 import {
   Table,
   TableBody,
@@ -55,14 +55,7 @@ async function ListCarbTable({ date }: Props) {
           {results.map((carb) => (
             <TableRow key={carb.id}>
               <TableCell className="font-medium">
-                <ClientOnly>
-                  <>
-                    {carb.timestamp.toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </>
-                </ClientOnly>
+                <ClientDateTime timestamp={carb.timestamp} />
               </TableCell>
               <TableCell>{carb.amount} g</TableCell>
               <TableCell>{carb.decay / 60} h</TableCell>
