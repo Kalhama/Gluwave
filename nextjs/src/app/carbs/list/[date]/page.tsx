@@ -1,5 +1,5 @@
 import { validateRequest } from '@/auth'
-import { ClientOnly } from '@/components/client-only'
+import ClientOnly from '@/components/client-only'
 import {
   Table,
   TableBody,
