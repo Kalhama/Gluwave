@@ -1,4 +1,5 @@
 import { db } from '@/db'
+import { parseCommaFloat } from '@/lib/parse-comma-float'
 import { glucose, userTable } from '@/schema'
 import { and, eq, isNotNull } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
@@ -6,10 +7,7 @@ import { z } from 'zod'
 
 const postGlucoseSchema = z.array(
   z.object({
-    value: z.preprocess(
-      (v) => parseFloat(String(v).replace(',', '.')),
-      z.number().gt(0).lt(50)
-    ),
+    value: z.preprocess((v) => parseCommaFloat(v), z.number().gt(0).lt(50)),
     timestamp: z
       .string()
       .datetime()

@@ -12,6 +12,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { parseCommaFloat } from '@/lib/parse-comma-float'
 import { useServerAction } from '@/lib/use-server-action'
 import { updateSettingsSchema } from '@/schemas/updateSettingsSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -93,8 +94,8 @@ export function Settings({ defaultValues }: Props) {
                 type="text"
                 inputMode="decimal"
                 value={(
-                  form.watch('carbohydrateRatio') /
-                  form.watch('correctionRatio')
+                  parseCommaFloat(form.watch('carbohydrateRatio')) /
+                  parseCommaFloat(form.watch('correctionRatio'))
                 ).toLocaleString(undefined, {
                   maximumFractionDigits: 1,
                   minimumFractionDigits: 1,
