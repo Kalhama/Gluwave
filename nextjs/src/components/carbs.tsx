@@ -2,7 +2,7 @@
 
 import { getObservedCarbsAction } from '@/actions/get-observed-carbs'
 import { useServerAction } from '@/lib/use-server-action'
-import { addHours, addSeconds, setHours, startOfDay, subHours } from 'date-fns'
+import { addHours, setHours, startOfDay, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect } from 'react'
@@ -38,30 +38,12 @@ export const Carbs = ({}: Props) => {
 
   if (loading || !observedCarbs) return 'loading...'
 
-  // timestamp is always the beginning of a group, so when we add a dummy element with current time we essentially tell when the predicitons end
-  const lastObservedCarbs = observedCarbs[observedCarbs.length - 1]
-
-  observedCarbs.push({
-    timestamp: addSeconds(
-      lastObservedCarbs?.timestamp ?? 0,
-      lastObservedCarbs?.interval_length ?? 0
-    ),
-    interval_length: 0,
-    glucose_change: 0,
-    insulin_decay: 0,
-    observed_carbs: 0,
-    observed_carbs_rate: 0,
-  })
-
   const yDomain = [
     Math.min(...observedCarbs.map((carb) => carb.observed_carbs_rate)) - 2,
     Math.max(...observedCarbs.map((carb) => carb.observed_carbs_rate)) + 2,
   ] as DomainTuple
 
-  const totalObservedCarbs = observedCarbs.reduce(
-    (acc, el) => acc + el.observed_carbs,
-    0
-  )
+  const last = observedCarbs[observedCarbs.length - 1]
 
   return (
     <div className="space-y-4">
@@ -73,10 +55,13 @@ export const Carbs = ({}: Props) => {
               <div className="flex items-center">
                 <span className="mt-0 text-sm">
                   Observed today{' '}
-                  {(totalObservedCarbs ?? 0).toLocaleString(undefined, {
-                    maximumFractionDigits: 0,
-                    minimumFractionDigits: 0,
-                  })}{' '}
+                  {(last?.cumulative_observed_carbs ?? 0).toLocaleString(
+                    undefined,
+                    {
+                      maximumFractionDigits: 0,
+                      minimumFractionDigits: 0,
+                    }
+                  )}{' '}
                   g
                 </span>
                 <ChevronRight />
@@ -102,6 +87,13 @@ export const Carbs = ({}: Props) => {
             }
             theme={VictoryTheme.material}
           >
+            {/* empty chart in case there is no other data, so that x axis remains stable */}
+            <VictoryLine
+              data={[
+                { x: subHours(now, 24), y: null },
+                { x: addHours(now, 24), y: null },
+              ]}
+            />
             <VictoryLine
               style={{
                 data: {
@@ -115,23 +107,18 @@ export const Carbs = ({}: Props) => {
                 { x: now, y: 100 },
               ]}
             />
-            <VictoryLine
-              style={{
-                data: { stroke: '#c43a31' },
-                parent: { border: '1px solid #ccc', padding: 0 },
-              }}
-              interpolation="stepAfter"
-              data={observedCarbs}
-              x="timestamp"
-              y="observed_carbs_rate"
-            />
-            {/* empty chart in case there is no other data, so that x axis remains stable */}
-            <VictoryLine
-              data={[
-                { x: subHours(now, 24), y: null },
-                { x: addHours(now, 24), y: null },
-              ]}
-            />
+            {observedCarbs.length !== 0 && (
+              <VictoryLine
+                style={{
+                  data: { stroke: '#c43a31' },
+                  parent: { border: '1px solid #ccc', padding: 0 },
+                }}
+                interpolation="stepBefore"
+                data={observedCarbs}
+                x="timestamp"
+                y="observed_carbs_rate"
+              />
+            )}
           </VictoryChart>
         </div>
       </div>
