@@ -50,7 +50,6 @@ export function InsulinDialog() {
   })
 
   async function onSubmit(values: z.infer<typeof addInsulinSchema>) {
-    console.log(values)
     await action(values)
     form.reset()
     setOpenChange(false)

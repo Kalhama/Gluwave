@@ -50,7 +50,6 @@ export function BloodGlucoseDialog() {
   })
 
   async function onSubmit(values: z.infer<typeof addGlucoseSchema>) {
-    console.log(values)
     await action(values)
     form.reset()
     setOpenChange(false)

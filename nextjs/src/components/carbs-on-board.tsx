@@ -1,34 +1,40 @@
 'use client'
 
+import { getCarbsOnBoardAction } from '@/actions/get-carbs-on-board'
 import { getObservedCarbsAction } from '@/actions/get-observed-carbs'
 import { useServerAction } from '@/lib/use-server-action'
-import { addHours, setHours, startOfDay, subHours } from 'date-fns'
+import { addHours, addMinutes, setHours, startOfDay, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect } from 'react'
-import {
-  DomainTuple,
-  VictoryChart,
-  VictoryLine,
-  VictoryTheme,
-  VictoryZoomContainer,
-} from 'victory'
+import { DomainTuple, VictoryChart, VictoryLine, VictoryTheme } from 'victory'
 
 interface Props {}
 
-export const Carbs = ({}: Props) => {
+export const CarbsOnBoard = ({}: Props) => {
   const {
-    action,
+    action: observedAction,
     data: observedCarbs,
-    loading,
+    loading: observedLoading,
   } = useServerAction(getObservedCarbsAction)
+
+  const {
+    action: COBAction,
+    data: carbsOnBoard,
+    loading: COBLoading,
+  } = useServerAction(getCarbsOnBoardAction)
 
   useEffect(() => {
     const now = new Date()
-    const start = setHours(startOfDay(subHours(now, 4)), 4)
-    const end = addHours(start, 24)
+    const start = setHours(startOfDay(subHours(now, 4)), 4) // previous 4AM
+    const end = addHours(start, 24) // next 4AM
 
-    action({
+    observedAction({
+      start,
+      end,
+    })
+
+    COBAction({
       start,
       end,
     })
@@ -36,46 +42,51 @@ export const Carbs = ({}: Props) => {
 
   const now = new Date()
 
-  if (loading || !observedCarbs) return 'loading...'
+  if (observedLoading || !observedCarbs || COBLoading || !carbsOnBoard)
+    return 'loading...'
+
+  const current = carbsOnBoard.find(
+    (c) => now < c.timestamp && addMinutes(now, 1) >= c.timestamp
+  )
 
   const yDomain = [
-    Math.min(...observedCarbs.map((carb) => carb.observed_carbs_rate)) - 2,
-    Math.max(...observedCarbs.map((carb) => carb.observed_carbs_rate)) + 2,
+    Math.min(
+      ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
+      ...observedCarbs.map((c) => c.cumulative_observed_carbs)
+    ) - 5,
+    Math.max(
+      ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
+      ...observedCarbs.map((c) => c.cumulative_observed_carbs)
+    ) + 5,
   ] as DomainTuple
-
-  const last = observedCarbs[observedCarbs.length - 1]
 
   return (
     <div>
       <div className="pt-2 px-4">
         <div className="flex flex-row justify-between items-center">
-          <h2 className="font-semibold">Observed carbs</h2>
+          <h2 className="font-semibold">Observed vs predicted carbs</h2>
           <Link href="/carbs/list">
             <div className="flex items-center">
               <span className="mt-0 text-sm">
-                Observed today{' '}
-                {(last?.cumulative_observed_carbs ?? 0).toLocaleString(
-                  undefined,
-                  {
-                    maximumFractionDigits: 0,
-                    minimumFractionDigits: 0,
-                  }
-                )}{' '}
+                Remaining COB{' '}
+                {current?.carbsOnBoard.toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                  minimumFractionDigits: 0,
+                })}{' '}
                 g
               </span>
               <ChevronRight />
             </div>
           </Link>
         </div>
-        <span className="text-sm">Normalized to 15m</span>
       </div>
       <div className="p-2">
         <VictoryChart
           padding={{ top: 10, bottom: 25, left: 30, right: 15 }}
           height={200}
-          // domain={{
-          //   y: yDomain,
-          // }}
+          domain={{
+            y: yDomain,
+          }}
           // containerComponent={
           //   <VictoryZoomContainer
           //     allowZoom={false}
@@ -86,13 +97,6 @@ export const Carbs = ({}: Props) => {
           // }
           theme={VictoryTheme.material}
         >
-          {/* empty chart in case there is no other data, so that x axis remains stable */}
-          {/* <VictoryLine
-            data={[
-              { x: subHours(now, 24), y: null },
-              { x: addHours(now, 24), y: null },
-            ]}
-          /> */}
           <VictoryLine
             style={{
               data: {
@@ -106,18 +110,6 @@ export const Carbs = ({}: Props) => {
               { x: now, y: 100 },
             ]}
           />
-          {observedCarbs.length !== 0 && (
-            <VictoryLine
-              style={{
-                data: { stroke: '#c43a31' },
-                parent: { border: '1px solid #ccc', padding: 0 },
-              }}
-              interpolation="stepBefore"
-              data={observedCarbs}
-              x="timestamp"
-              y="observed_carbs_rate"
-            />
-          )}
           <VictoryLine
             style={{
               data: { stroke: '#111111' },
@@ -127,6 +119,15 @@ export const Carbs = ({}: Props) => {
             data={observedCarbs}
             x="timestamp"
             y="cumulative_observed_carbs"
+          />
+          <VictoryLine
+            style={{
+              data: { stroke: '#c43a31' },
+              parent: { border: '1px solid #ccc', padding: 0 },
+            }}
+            data={carbsOnBoard}
+            x="timestamp"
+            y="cumulativeDecayedCarbs"
           />
         </VictoryChart>
       </div>

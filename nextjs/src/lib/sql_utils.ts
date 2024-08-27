@@ -84,15 +84,14 @@ export const observedCarbs = async (from: Date, to: Date, userId: string) => {
         timestamp: sql`MIN(timestamp)`
           .mapWith(glucose.timestamp)
           .as('timestamp'),
-        group:
-          sql`FLOOR(EXTRACT (EPOCH FROM timestamp) / EXTRACT (EPOCH FROM interval '15 minutes'))`
-            .mapWith(glucose.value)
-            .as('group'),
+        pool: sql`FLOOR(EXTRACT (EPOCH FROM timestamp) / EXTRACT (EPOCH FROM interval '15 minutes'))`
+          .mapWith(glucose.value)
+          .as('pool'),
       })
       .from(glucose)
       .where(and(eq(glucose.userId, user.id)))
       .orderBy(sql`timestamp`)
-      .groupBy(sql`timestamp`)
+      .groupBy(sql`pool`)
   )
 
   // calculate cumulative insulin decay for every timestamp
@@ -170,7 +169,7 @@ export const observedCarbs = async (from: Date, to: Date, userId: string) => {
         interval_length: sql`COALESCE(EXTRACT (EPOCH FROM interval_length), 0)`
           .mapWith(glucose.value)
           .as('interval_length'),
-        glucose: sql`glucose`.mapWith(glucose.value).as('glucose'),
+        // glucose: sql`glucose`.mapWith(glucose.value).as('glucose'),
         glucose_change: sql`COALESCE(glucose_change, 0)`
           .mapWith(glucose.value)
           .as('glucose_change'),
@@ -182,7 +181,7 @@ export const observedCarbs = async (from: Date, to: Date, userId: string) => {
             .mapWith(glucose.value)
             .as('observed_carbs'),
         cumulative_observed_carbs:
-          sql`SUM((glucose_change - insulin_decay * ${user.correctionRatio}) * (${user.carbohydrateRatio / user.correctionRatio})) OVER (ORDER BY timestamp)`
+          sql`COALESCE(SUM((glucose_change - insulin_decay * ${user.correctionRatio}) * (${user.carbohydrateRatio / user.correctionRatio})) OVER (ORDER BY timestamp), 0)`
             .mapWith(carbs.amount)
             .as('cumulative_observed_carbs'),
         observed_carbs_rate:
@@ -232,8 +231,6 @@ export const observedCarbs = async (from: Date, to: Date, userId: string) => {
     .from(observed_carbs)
     .orderBy(sql`timestamp`)
 
-  // console.log('sql', data.slice(-5))
-
   return data
 }
 
@@ -270,13 +267,24 @@ export const calculateUserCarbsData = async (
              END)`
         .mapWith(carbs.amount)
         .as('carbs_on_board'),
+      cumulativeDecayedCarbs: sql`sum(
+          CASE
+              WHEN minutes."timestamp" >= carbs."timestamp" AND minutes."timestamp" < (carbs."timestamp" + MAKE_INTERVAL(mins => carbs.decay)) THEN 
+                 "carbs"."amount"::numeric * (EXTRACT(epoch FROM minutes."timestamp" - carbs."timestamp") / 60.0 / carbs.decay)
+              WHEN minutes."timestamp" >= (carbs."timestamp" + MAKE_INTERVAL(mins => carbs.decay)) THEN
+                carbs.amount
+              ELSE 0::numeric
+          END)`
+        .mapWith(carbs.amount)
+        .as('cumulativeDecayedCarbs'),
     })
     .from(minutes)
     .leftJoin(
       carbs,
       and(
         sql`minutes."timestamp" >= carbs."timestamp"`,
-        eq(carbs.userId, userId)
+        eq(carbs.userId, userId),
+        sql`(carbs."timestamp" + MAKE_INTERVAL(mins => carbs.decay)) >= ${from}`
       )
     )
     .groupBy(

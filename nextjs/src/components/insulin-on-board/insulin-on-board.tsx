@@ -33,64 +33,62 @@ export const InsulinOnBoard = ({ data }: Props) => {
   )
 
   return (
-    <div className="space-y-4">
-      <div className="border rounded-sm">
-        <div className="flex flex-row justify-between items-center pt-4 px-4">
-          <h2 className="font-semibold">Insulin on board</h2>
-          <Link href="/insulin/list">
-            <div className="flex items-center">
-              <span className="mt-0 text-sm">
-                {(current?.insulinOnBoard ?? 0).toLocaleString(undefined, {
-                  maximumFractionDigits: 2,
-                  minimumFractionDigits: 1,
-                })}{' '}
-                U
-              </span>
-              <ChevronRight />
-            </div>
-          </Link>
-        </div>
-        <div className="p-2">
-          <VictoryChart
-            padding={{ top: 15, bottom: 30, left: 30, right: 15 }}
-            height={200}
-            domain={{
-              y: yDomain,
+    <div>
+      <div className="flex flex-row justify-between items-center pt-2 px-4">
+        <h2 className="font-semibold">Insulin on board</h2>
+        <Link href="/insulin/list">
+          <div className="flex items-center">
+            <span className="mt-0 text-sm">
+              {(current?.insulinOnBoard ?? 0).toLocaleString(undefined, {
+                maximumFractionDigits: 2,
+                minimumFractionDigits: 1,
+              })}{' '}
+              U
+            </span>
+            <ChevronRight />
+          </div>
+        </Link>
+      </div>
+      <div className="p-2">
+        <VictoryChart
+          padding={{ top: 10, bottom: 25, left: 30, right: 15 }}
+          height={130}
+          domain={{
+            y: yDomain,
+          }}
+          containerComponent={
+            <VictoryZoomContainer
+              allowZoom={false}
+              zoomDomain={{
+                x: [subHours(new Date(), 2), addHours(new Date(), 2)],
+              }}
+            />
+          }
+          theme={VictoryTheme.material}
+        >
+          <VictoryLine
+            style={{
+              data: {
+                strokeDasharray: '2 2',
+                strokeWidth: 1,
+                stroke: '#c43a31',
+              },
             }}
-            containerComponent={
-              <VictoryZoomContainer
-                allowZoom={false}
-                zoomDomain={{
-                  x: [subHours(new Date(), 2), addHours(new Date(), 2)],
-                }}
-              />
-            }
-            theme={VictoryTheme.material}
-          >
-            <VictoryLine
-              style={{
-                data: {
-                  strokeDasharray: '2 2',
-                  strokeWidth: 1,
-                  stroke: '#c43a31',
-                },
-              }}
-              data={[
-                { x: now, y: 0 },
-                { x: now, y: 10 },
-              ]}
-            />
-            <VictoryLine
-              style={{
-                data: { stroke: '#c43a31' },
-                parent: { border: '1px solid #ccc', padding: 0 },
-              }}
-              data={data}
-              x="timestamp"
-              y="insulinOnBoard"
-            />
-          </VictoryChart>
-        </div>
+            data={[
+              { x: now, y: 0 },
+              { x: now, y: 10 },
+            ]}
+          />
+          <VictoryLine
+            style={{
+              data: { stroke: '#c43a31' },
+              parent: { border: '1px solid #ccc', padding: 0 },
+            }}
+            data={data}
+            x="timestamp"
+            y="insulinOnBoard"
+          />
+        </VictoryChart>
       </div>
     </div>
   )

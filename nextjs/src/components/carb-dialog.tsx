@@ -51,7 +51,6 @@ export function CarbDialog() {
   })
 
   async function onSubmit(values: z.infer<typeof addCarbSchema>) {
-    console.log(values)
     await action(values)
     form.reset()
     setOpenChange(false)
