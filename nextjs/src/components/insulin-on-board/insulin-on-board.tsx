@@ -76,7 +76,7 @@ export const InsulinOnBoard = ({ data }: Props) => {
             }}
             data={[
               { x: now, y: 0 },
-              { x: now, y: 10 },
+              { x: now, y: 100 },
             ]}
           />
           <VictoryLine

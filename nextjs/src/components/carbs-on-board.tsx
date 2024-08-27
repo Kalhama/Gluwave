@@ -27,7 +27,7 @@ export const CarbsOnBoard = ({}: Props) => {
   useEffect(() => {
     const now = new Date()
     const start = setHours(startOfDay(subHours(now, 4)), 4) // previous 4AM
-    const end = addHours(start, 24) // next 4AM
+    const end = addHours(now, 6)
 
     observedAction({
       start,
@@ -82,7 +82,7 @@ export const CarbsOnBoard = ({}: Props) => {
       </div>
       <div className="p-2">
         <VictoryChart
-          padding={{ top: 10, bottom: 25, left: 30, right: 15 }}
+          padding={{ top: 10, bottom: 25, left: 35, right: 15 }}
           height={200}
           domain={{
             y: yDomain,
@@ -107,7 +107,7 @@ export const CarbsOnBoard = ({}: Props) => {
             }}
             data={[
               { x: now, y: 0 },
-              { x: now, y: 100 },
+              { x: now, y: 5000 },
             ]}
           />
           <VictoryLine
