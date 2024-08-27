@@ -2,8 +2,8 @@ import { validateRequest } from '@/auth'
 import { db } from '@/db'
 import { getData2 } from '@/lib/sql_utils'
 import { glucose } from '@/schema'
-import { addHours } from 'date-fns'
-import { eq } from 'drizzle-orm'
+import { addHours, subHours } from 'date-fns'
+import { and, eq, gte } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
 import { BloodGlucose } from './blood-glucose'
@@ -20,7 +20,12 @@ export default async function BloodGlucoseProvider() {
       value: glucose.value,
     })
     .from(glucose)
-    .where(eq(glucose.userId, user.id))
+    .where(
+      and(
+        eq(glucose.userId, user.id),
+        gte(glucose.timestamp, subHours(new Date(), 48))
+      )
+    )
     .orderBy(glucose.timestamp)
 
   const latestBloodGlucose =
