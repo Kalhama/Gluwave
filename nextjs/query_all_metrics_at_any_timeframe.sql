@@ -66,15 +66,22 @@ WITH timeframe AS (
   SELECT timestamp AS timestamp
   FROM carbs
   -- WHERE "userId" = '123'
+  -- AND timestamp > '1970-01-01'::timestamp
+  -- AND timestamp < '2020-01-01'::timestamp
   UNION
   SELECT timestamp + MAKE_INTERVAL(mins => decay) AS timestamp
   FROM carbs
   -- WHERE "userId" = '123'
+  -- AND timestamp > '1970-01-01'::timestamp
+  -- AND timestamp < '2020-01-01'::timestamp
   UNION SELECT timestamp AS timestamp
   FROM glucose
   -- WHERE "userId" = '123'
+  -- AND timestamp > '1970-01-01'::timestamp
+  -- AND timestamp < '2020-01-01'::timestamp
   ORDER BY timestamp DESC
   LIMIT 1
+  -- UNION SELECT '1970-01-01'::timestamp as timestamp -- add "from" to series
 ), interpolated_glucose AS (
   SELECT 
     timeframe.timestamp,
@@ -93,7 +100,8 @@ WITH timeframe AS (
 	    glucose.timestamp,
       LEAD(timestamp) OVER (order BY timestamp) as next_timestamp
     FROM glucose
-  ) glucose
+    -- WHERE "userId" = '123'
+  ) AS glucose
   ON glucose.timestamp < timeframe.timestamp AND glucose.next_timestamp >= timeframe.timestamp
   GROUP BY timeframe.timestamp
 ), aggregated_carbs AS (
