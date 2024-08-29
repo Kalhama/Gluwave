@@ -145,7 +145,7 @@ WITH timeframe AS (
     ON insulin.timestamp < timeframe.timestamp
     -- AND insulin.userId = '123'
   GROUP BY timeframe.timestamp
-), combined_aggregated AS (
+), combined_metrics AS (
   SELECT 
     timeframe.timestamp,
     ANY_VALUE(total_insulin_absorbed) - FIRST_VALUE(total_insulin_absorbed) OVER (ORDER BY timeframe.timestamp) AS total_insulin_absorbed,
@@ -157,7 +157,7 @@ WITH timeframe AS (
   LEFT JOIN ON timeframe.timestamp = interpolated_glucose.timestamp
   GROUP BY timestamp
   ORDER BY timestamp ASC
-), observed_carbs AS (
+), with_observed_carbs AS (
   SELECT
     *,
     observed_carbs(
@@ -166,5 +166,35 @@ WITH timeframe AS (
       ISF => 2,
       ICR => 10
     ) AS observed_carbs,
-    LEAD(timeframe.timestamp) - timeframe.timestamp as interval    
-), 
+  FROM combined_aggregated
+), carbs_with_attributed_observed_carbs AS (
+  /* 
+  TODO we can attribute carbs to only meals that are decaying. 
+  
+  I think we should be able to dynamically adjust the decay time. If observed absorption has been low for lets say 15-45 mins lets close the meal.
+  Vice versa if observed absorption has been high lets push the decay further back. 
+
+  We could also adjust decay based on carbs remaining: 
+    - ie its not viable to assume that 200g of remaining carbs could be absorbed within 45 mins. Thus we should push decay even further
+    - if carbs remaining is very low we shouldn't use long decay time in predictions
+
+  There might me need for two decays 1) for making predictions 2) for attributing observed carbs to meals. However it might be possible to combine these two.
+  */
+  SELECT
+    timeframe.timestamp as timestamp,
+    id,
+    decay,
+    value,
+    value / decay as minimium_absorption_rate,
+    SUM(value / decay) OVER (PARTITION BY timestamp) AS total_minimium_absorption_rate /*if there are multiple meal entries for one timestamp, sum all of their minimum_absorption_rates */
+    observed_carbs * (minimium_absorption_rate / total_minimium_absorption_rate) AS observed_carbs_for_this_meal_at_this_time -- to hell with these names
+  FROM with_observed_carbs
+  LEFT JOIN carbs
+    ON timeframe.timestamp >= carbs.timestamp 
+    AND timeframe.timestamp < carbs.timestamp + MAKE_INTERVAL(mins => carbs.decay)
+    -- AND carbs."userId" = '123'
+
+    -- Two possible use cases for this query
+    -- GROUP BY observed_carbs_for_this_meal_at_this_time -- to get per meal end value 
+    -- WHERE id = '123 -- to get observed absorption over time for one meal
+)
