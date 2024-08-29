@@ -180,6 +180,26 @@ WITH timeframe AS (
     - if carbs remaining is very low we shouldn't use long decay time in predictions
 
   There might me need for two decays 1) for making predictions 2) for attributing observed carbs to meals. However it might be possible to combine these two.
+
+  Update:
+  I just realized that if we do this dynamic attribution time we need to see the observed absorption every 15 mins to be able to make the decision.
+
+  For example like this:
+  1. We get new gcm reading
+  2. Calculate observed carbs
+  3. Split the carbs between meals based on observed_decay_rate (= carbs / observed_decay)
+  4. If attributed carbs are close on ending, move observed_decay closer conservatively, and vice versa.
+    - Basically do a linear fit to the historical observed to make the prediction about future
+  5. Exception is that if the attributed carbs are very low for several rounds. Then instead of moving the decay_time further and further we should close the meal early.
+
+
+  On critical note
+  1. What is the benefit for the program to know when meal is "closed" and when not? 
+    For predictions there is no benefit. We never really know when the carbs are gonna end. Best we can guess is latest trend and extrapolate it based on remaining carbs.
+  2. For attributing carbs to two meals at the same time we can probably do that just with absorption rate. 
+  3. Only case for closing meal is useful when previous meal is clearly ended (latest values for observed_carbs are 0) and user is adding next meal. In this case we dont want the previous meal to affect our new meal. I think we can just prompt user to close the previous meal. Anyway editing decay time should be possible by user and could be useful.
+
+  I think I like this more and this fixes some issues I had with Loop (trying to predict something that cannot be known)
   */
   SELECT
     metrics.*,
