@@ -45,11 +45,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION interpolate(t TIMESTAMP, x1 TIMESTAMP, x2 TIMESTAMP, y1 DOUBLE PRECISION, y2 DOUBLE PRECISION)
+CREATE OR REPLACE FUNCTION interpolate_glucose(t TIMESTAMP, x1 TIMESTAMP, x2 TIMESTAMP, y1 DOUBLE PRECISION, y2 DOUBLE PRECISION)
 RETURNS DOUBLE PRECISION AS $$
 BEGIN
     IF (t < x1 OR t > x2) THEN
       RETURN null;
+    END IF;
+
+    -- If interpolated range is too long just use last known value
+    IF (minutes_between(x2, x1) > 15) THEN
+      RETURN y1
     END IF;
 
     return y1 + (y2 - y1) / EXTRACT(EPOCH FROM(x2 - x1)) * EXTRACT (EPOCH FROM (t - x1));
@@ -73,7 +78,7 @@ WITH timeframe AS (
 ), interpolated_glucose AS (
   SELECT 
     timeframe.timestamp,
-    ANY_VALUE(interpolate(
+    ANY_VALUE(interpolate_glucose(
       t => timeframe.timestamp, 
       x1 => glucose.timestamp, 
       x2 => glucose.next_timestamp, 
