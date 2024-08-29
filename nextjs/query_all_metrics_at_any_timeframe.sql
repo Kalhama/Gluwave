@@ -65,6 +65,11 @@ WITH timeframe AS (
   SELECT timestamp + MAKE_INTERVAL(mins => decay) AS timestamp
   FROM carbs
   -- WHERE "userId" = '123'
+  UNION SELECT timestamp AS timestamp
+  FROM glucose
+  -- WHERE "userId" = '123'
+  ORDER BY timestamp DESC
+  LIMIT 1
 ), interpolated_glucose AS (
   SELECT 
     timeframe.timestamp,
