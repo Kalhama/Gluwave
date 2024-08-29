@@ -60,7 +60,18 @@ BEGIN
     return y1 + (y2 - y1) / EXTRACT(EPOCH FROM(x2 - x1)) * EXTRACT (EPOCH FROM (t - x1));
 END;
 $$ LANGUAGE plpgsql;
-    
+
+CREATE OR REPLACE FUNCTION observed_carbs(
+  glucose_chnage DOUBLE PRECISION, 
+  insulin_change DOUBLE PRECISION, 
+  ISF => DOUBLE PRECISION,
+  ICR => DOUBLE PRECISION
+)
+RETURNS DOUBLE PRECISION AS $$
+BEGIN
+    RETURN glucose_chnage * (ICR / ISF) + insulin_change * ICR;
+END;
+$$ LANGUAGE plpgsql;
 
 WITH timeframe AS (
   SELECT timestamp AS timestamp
@@ -134,16 +145,26 @@ WITH timeframe AS (
     ON insulin.timestamp < timeframe.timestamp
     -- AND insulin.userId = '123'
   GROUP BY timeframe.timestamp
-)
-
-SELECT 
-  timeframe.timestamp,
-  ANY_VALUE(total_insulin_absorbed) - FIRST_VALUE(total_insulin_absorbed) OVER (ORDER BY timeframe.timestamp) AS total_insulin_absorbed,
-  ANY_VALUE(total_carbs_absorbed) - FIRST_VALUE(total_carbs_absorbed) OVER (ORDER BY timeframe.timestamp) AS total_carbs_absorbed,
-  ANY_VALUE(glucose) AS glucose
-FROM timeframe
-LEFT JOIN ON timeframe.timestamp = aggregated_insulin.timestamp
-LEFT JOIN ON timeframe.timestamp = aggregated_carbs.timestamp
-LEFT JOIN ON timeframe.timestamp = interpolated_glucose.timestamp
-GROUP BY timestamp
-ORDER BY timestamp ASC
+), combined_aggregated AS (
+  SELECT 
+    timeframe.timestamp,
+    ANY_VALUE(total_insulin_absorbed) - FIRST_VALUE(total_insulin_absorbed) OVER (ORDER BY timeframe.timestamp) AS total_insulin_absorbed,
+    ANY_VALUE(total_carbs_absorbed) - FIRST_VALUE(total_carbs_absorbed) OVER (ORDER BY timeframe.timestamp) AS total_carbs_absorbed_predicted,
+    ANY_VALUE(glucose) AS glucose,
+  FROM timeframe
+  LEFT JOIN ON timeframe.timestamp = aggregated_insulin.timestamp
+  LEFT JOIN ON timeframe.timestamp = aggregated_carbs.timestamp
+  LEFT JOIN ON timeframe.timestamp = interpolated_glucose.timestamp
+  GROUP BY timestamp
+  ORDER BY timestamp ASC
+), observed_carbs AS (
+  SELECT
+    *,
+    observed_carbs(
+      glucose_chnage => LEAD(glucose) - glucose 
+      insulin_change => total_insulin_absorbed - LEAD(total_insulin_absorbed),
+      ISF => 2,
+      ICR => 10
+    ) AS observed_carbs,
+    LEAD(timeframe.timestamp) - timeframe.timestamp as interval    
+), 
