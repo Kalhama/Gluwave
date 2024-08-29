@@ -168,7 +168,7 @@ WITH timeframe AS (
     ) AS carbs_absorbed_observed,
 	LEAD(timestamp) OVER (ORDER BY timestamp) - timestamp AS interval
   FROM basic_metrics
-), observed_carbs_per_meal AS (
+), observed_carbs_per_meal_per_timestamp AS (
   /* 
   TODO we can attribute carbs to only meals that are decaying. 
   
@@ -182,20 +182,16 @@ WITH timeframe AS (
   There might me need for two decays 1) for making predictions 2) for attributing observed carbs to meals. However it might be possible to combine these two.
   */
   SELECT
-    metrics.timestamp as timestamp,
-    id,
-    decay,
-    amount,
-    amount / decay as minimium_absorption_rate,
+    metrics.*,
+  	carbs.*,
+  	amount / decay as minimium_absorption_rate,
     SUM(amount / decay) OVER (PARTITION BY metrics.timestamp) AS total_minimium_absorption_rate, /*if there are multiple meal entries for one timestamp, sum all of their minimum_absorption_rates */
     carbs_absorbed_observed * ((amount / decay) / SUM(amount / decay) OVER (PARTITION BY metrics.timestamp)) AS observed_carbs_for_this_meal_at_this_time -- to hell with these names
   FROM metrics
   LEFT JOIN carbs
     ON metrics.timestamp >= carbs.timestamp 
-    AND metrics.timestamp < carbs.timestamp + MAKE_INTERVAL(mins => carbs.decay)
+    AND metrics.timestamp < carbs.timestamp + MAKE_INTERVAL(mins => carbs.decay) * 1.5 -- TODO 1.5 or 1 or something dynamical?
     -- AND carbs."userId" = '123'
-
-    -- GROUP BY observed_carbs_for_this_meal_at_this_time -- to get per meal end value 
 )
 
-SELECT * FROM observed_carbs_per_meal
+SELECT * FROM observed_carbs_per_meal_per_timestamp
