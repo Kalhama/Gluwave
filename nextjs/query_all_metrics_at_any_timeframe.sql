@@ -125,8 +125,8 @@ WITH timeframe AS (
 
 SELECT 
   timeframe.timestamp,
-  ANY_VALUE(total_insulin_absorbed) AS total_insulin_absorbed,
-  ANY_VALUE(total_carbs_absorbed) AS total_carbs_absorbed,
+  ANY_VALUE(total_insulin_absorbed) - FIRST_VALUE(total_insulin_absorbed) OVER (ORDER BY timeframe.timestamp) AS total_insulin_absorbed,
+  ANY_VALUE(total_carbs_absorbed) - FIRST_VALUE(total_carbs_absorbed) OVER (ORDER BY timeframe.timestamp) AS total_carbs_absorbed,
   ANY_VALUE(glucose) AS glucose
 FROM timeframe
 LEFT JOIN ON timeframe.timestamp = aggregated_insulin.timestamp
