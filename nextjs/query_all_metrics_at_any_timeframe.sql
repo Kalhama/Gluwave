@@ -65,56 +65,67 @@ WITH timeframe AS (
   SELECT timestamp + MAKE_INTERVAL(mins => decay) AS timestamp
   FROM carbs
   -- WHERE "userId" = '123'
-  /* TODO filter by start and end datetimes */
-), glucose_lead AS (
+), interpolated_glucose AS (
+  SELECT 
+    timeframe.timestamp,
+    ANY_VALUE(interpolate(
+      t => timeframe.timestamp, 
+      x1 => glucose.timestamp, 
+      x2 => glucose.next_timestamp, 
+      y1 => glucose.amount,
+      y2 => glucose.next_amount
+    )) AS glucose,
+  FROM timeframe
+  LEFT JOIN (
     SELECT 
       amount,
       LEAD(amount) OVER (ORDER BY timestamp) AS next_amount,
-	  glucose.timestamp,
+	    glucose.timestamp,
       LEAD(timestamp) OVER (order BY timestamp) as next_timestamp
     FROM glucose
-    -- WHERE userId = '123'
-    /* TODO filter by start and end datetimes */
-), metrics_on_timeframe AS (
+  ) glucose
+  ON glucose.timestamp < timeframe.timestamp AND glucose.next_timestamp >= timeframe.timestamp
+  GROUP BY timeframe.timestamp
+), aggregated_carbs AS (
   SELECT 
     timeframe.timestamp,
-    
-    MAX(interpolate(
-      t => timeframe.timestamp, 
-      x1 => glucose_lead.timestamp, 
-      x2 => glucose_lead.next_timestamp, 
-      y1 => glucose_lead.amount,
-      y2 => glucose_lead.next_amount
-    )) AS interpolated_glucose,
-
-    /* cumulative carbs, TODO: does not start from 0 I think in case when first meal starts before first timeframe.timestamp  */
+    /* cumulative carbs */
     COALESCE(SUM(total_carbs_absorbed(
       t => timeframe.timestamp, 
       start => carbs.timestamp, 
       amount => carbs.amount, 
       decay => carbs.decay
     )), 0) AS total_carbs_absorbed,
+  FROM timeframe
+  LEFT JOIN carbs 
+    ON carbs.timestamp < timeframe.timestamp 
+    -- AND carbs.userId = '123'
+  GROUP BY timeframe.timestamp
+), aggregated_insulin AS (
+  SELECT 
+    timeframe.timestamp,
 
-    /* cumulative carbs, TODO: does not start from 0 I think in case when first meal starts before first timeframe.timestamp  */
+    /* cumulative insulin */
     COALESCE(SUM(total_insulin_absorbed(
       t => timeframe.timestamp, 
       start => insulin.timestamp, 
       amount => insulin.amount
     )), 0) as total_insulin_absorbed
   FROM timeframe
-  LEFT JOIN glucose_lead
-  ON glucose_lead.timestamp < timeframe.timestamp AND glucose_lead.next_timestamp >= timeframe.timestamp
-  LEFT JOIN carbs 
-    ON carbs.timestamp < timeframe.timestamp 
-    -- AND carbs.userId = '123'
   LEFT JOIN insulin
     ON insulin.timestamp < timeframe.timestamp
     -- AND insulin.userId = '123'
   GROUP BY timeframe.timestamp
-  ORDER BY timeframe.timestamp ASC
 )
 
-SELECT * FROM metrics_on_timeframe
-
-
-
+SELECT 
+  timeframe.timestamp,
+  ANY_VALUE(total_insulin_absorbed) AS total_insulin_absorbed,
+  ANY_VALUE(total_carbs_absorbed) AS total_carbs_absorbed,
+  ANY_VALUE(glucose) AS glucose
+FROM timeframe
+LEFT JOIN ON timeframe.timestamp = aggregated_insulin.timestamp
+LEFT JOIN ON timeframe.timestamp = aggregated_carbs.timestamp
+LEFT JOIN ON timeframe.timestamp = interpolated_glucose.timestamp
+GROUP BY timestamp
+ORDER BY timestamp ASC
