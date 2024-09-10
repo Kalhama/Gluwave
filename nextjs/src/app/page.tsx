@@ -3,14 +3,20 @@ import BloodGlucoseProvider from '@/components/blood-glucose'
 import { Carbs } from '@/components/carbs'
 import { CarbsOnBoard } from '@/components/carbs-on-board'
 import InsulinOnBoardProvider from '@/components/insulin-on-board'
+import { TopBar } from '@/components/top-bar'
 
 export default async function App() {
   return (
-    <div className="space-y-2 w-full border rounded-sm">
-      <AutoReload minutes={5} />
-      <BloodGlucoseProvider />
-      <InsulinOnBoardProvider />
-      <CarbsOnBoard />
-    </div>
+    <>
+      <TopBar />
+      <div className="p-2">
+        <div className="space-y-2 w-full border rounded-sm">
+          <AutoReload minutes={5} />
+          <BloodGlucoseProvider />
+          <InsulinOnBoardProvider />
+          <CarbsOnBoard />
+        </div>
+      </div>
+    </>
   )
 }
