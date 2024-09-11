@@ -187,11 +187,11 @@ WITH timeframe AS (
 FROM metrics
 LEFT JOIN carbs AS active_carbs
   ON active_carbs.timestamp <= metrics.timestamp
-  AND active_carbs.timestamp + MAKE_INTERVAL(mins => active_carbs.decay) >= metrics.timestamp
+  AND active_carbs.timestamp + MAKE_INTERVAL(mins => active_carbs.decay) > metrics.timestamp
   -- AND active_carbs.userId = '123'
 LEFT JOIN carbs AS overtime_carbs
   ON overtime_carbs.timestamp + MAKE_INTERVAL(mins => overtime_carbs.decay) <= metrics.timestamp
-  AND overtime_carbs.timestamp + MAKE_INTERVAL(mins => (overtime_carbs.decay * 1.5)::integer) >= metrics.timestamp
+  AND overtime_carbs.timestamp + MAKE_INTERVAL(mins => (overtime_carbs.decay * 1.5)::integer) > metrics.timestamp
   AND active_carbs.id IS NULL
   -- AND carbs.userId = '123'
 ORDER BY metrics.timestamp, carbs_id ASC
