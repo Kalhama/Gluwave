@@ -150,7 +150,8 @@ WITH timeframe AS (
     timeframe.timestamp,
     ANY_VALUE(total_insulin_absorbed) - FIRST_VALUE(ANY_VALUE(total_insulin_absorbed)) OVER (ORDER BY timeframe.timestamp) AS insulin_absorbed,
     ANY_VALUE(total_carbs_absorbed) - FIRST_VALUE(ANY_VALUE(total_carbs_absorbed)) OVER (ORDER BY timeframe.timestamp) AS carbs_absorbed_predicted,
-    ANY_VALUE(glucose) AS glucose
+    ANY_VALUE(glucose) AS glucose,
+    LEAD(timeframe.timestamp) OVER (ORDER BY timeframe.timestamp) - timeframe.timestamp AS interval
   FROM timeframe
   LEFT JOIN aggregated_insulin ON timeframe.timestamp = aggregated_insulin.timestamp
   LEFT JOIN aggregated_carbs ON timeframe.timestamp = aggregated_carbs.timestamp
@@ -163,55 +164,45 @@ WITH timeframe AS (
     observed_carbs(
       glucose_chnage => LEAD(glucose) OVER (ORDER BY timestamp) - glucose,
       insulin_change => insulin_absorbed - LEAD(insulin_absorbed) OVER (ORDER BY timestamp),
-      ISF => 2,
-      ICR => 10
-    ) AS carbs_absorbed_observed,
-	LEAD(timestamp) OVER (ORDER BY timestamp) - timestamp AS interval
+      ISF => 2, -- TODO
+      ICR => 10 --TODO
+    ) AS carbs_absorbed_observed
   FROM basic_metrics
-), observed_carbs_per_meal_per_timestamp AS (
-  /* 
-  TODO we can attribute carbs to only meals that are decaying. 
-  
-  I think we should be able to dynamically adjust the decay time. If observed absorption has been low for lets say 15-45 mins lets close the meal.
-  Vice versa if observed absorption has been high lets push the decay further back. 
-
-  We could also adjust decay based on carbs remaining: 
-    - ie its not viable to assume that 200g of remaining carbs could be absorbed within 45 mins. Thus we should push decay even further
-    - if carbs remaining is very low we shouldn't use long decay time in predictions
-
-  There might me need for two decays 1) for making predictions 2) for attributing observed carbs to meals. However it might be possible to combine these two.
-
-  Update:
-  I just realized that if we do this dynamic attribution time we need to see the observed absorption every 15 mins to be able to make the decision.
-
-  For example like this:
-  1. We get new gcm reading
-  2. Calculate observed carbs
-  3. Split the carbs between meals based on observed_decay_rate (= carbs / observed_decay)
-  4. If attributed carbs are close on ending, move observed_decay closer conservatively, and vice versa.
-    - Basically do a linear fit to the historical observed to make the prediction about future
-  5. Exception is that if the attributed carbs are very low for several rounds. Then instead of moving the decay_time further and further we should close the meal early.
-
-
-  On critical note
-  1. What is the benefit for the program to know when meal is "closed" and when not? 
-    For predictions there is no benefit. We never really know when the carbs are gonna end. Best we can guess is latest trend and extrapolate it based on remaining carbs.
-  2. For attributing carbs to two meals at the same time we can probably do that just with absorption rate. 
-  3. Only case for closing meal is useful when previous meal is clearly ended (latest values for observed_carbs are 0) and user is adding next meal. In this case we dont want the previous meal to affect our new meal. I think we can just prompt user to close the previous meal. Anyway editing decay time should be possible by user and could be useful.
-
-  I think I like this more and this fixes some issues I had with Loop (trying to predict something that cannot be known)
-  */
+), attribute_observed_carbs_to_meals AS (
   SELECT
-    metrics.*,
-  	carbs.*,
-  	amount / decay as minimium_absorption_rate,
-    SUM(amount / decay) OVER (PARTITION BY metrics.timestamp) AS total_minimium_absorption_rate, /*if there are multiple meal entries for one timestamp, sum all of their minimum_absorption_rates */
-    carbs_absorbed_observed * ((amount / decay) / SUM(amount / decay) OVER (PARTITION BY metrics.timestamp)) AS observed_carbs_for_this_meal_at_this_time -- to hell with these names
-  FROM metrics
-  LEFT JOIN carbs
-    ON metrics.timestamp >= carbs.timestamp 
-    AND metrics.timestamp < carbs.timestamp + MAKE_INTERVAL(mins => carbs.decay) * 1.5 -- TODO 1.5 or 1 or something dynamical?
-    -- AND carbs."userId" = '123'
+  metrics.timestamp AS timestamp,
+  -- insulin_absorbed,
+  -- carbs_absorbed_predicted,
+  -- glucose,
+  carbs_absorbed_observed,
+  COALESCE(active_carbs.id, overtime_carbs.id, -1) AS carbs_id,
+  COALESCE(active_carbs.amount, overtime_carbs.amount) AS amount,
+  COALESCE(active_carbs.amount / active_carbs.decay, overtime_carbs.amount / overtime_carbs.decay) AS rate,
+  SUM(COALESCE(active_carbs.amount / active_carbs.decay, overtime_carbs.amount / overtime_carbs.decay)) OVER (PARTITION BY metrics.timestamp) AS total_rate,
+  COALESCE((
+	  COALESCE(active_carbs.amount / active_carbs.decay, overtime_carbs.amount / overtime_carbs.decay) -- rate
+  ) / (
+	  SUM(COALESCE(active_carbs.amount / active_carbs.decay, overtime_carbs.amount / overtime_carbs.decay)) OVER (PARTITION BY metrics.timestamp) -- total_rate
+  ) * carbs_absorbed_observed, 0) AS attributed_carbs
+FROM metrics
+LEFT JOIN carbs AS active_carbs
+  ON active_carbs.timestamp <= metrics.timestamp
+  AND active_carbs.timestamp + MAKE_INTERVAL(mins => active_carbs.decay) >= metrics.timestamp
+  -- AND active_carbs.userId = '123'
+LEFT JOIN carbs AS overtime_carbs
+  ON overtime_carbs.timestamp + MAKE_INTERVAL(mins => overtime_carbs.decay) <= metrics.timestamp
+  AND overtime_carbs.timestamp + MAKE_INTERVAL(mins => (overtime_carbs.decay * 1.5)::integer) >= metrics.timestamp
+  AND active_carbs.id IS NULL
+  -- AND carbs.userId = '123'
+ORDER BY metrics.timestamp, carbs_id ASC
+), observed_carbs_by_meal AS (
+  SELECT 
+    carbs_id AS id,
+    SUM(attributed_carbs) AS attributed_carbs,
+    ANY_VALUE(COALESCE(amount, 0)) AS amount
+  FROM attribute_observed_carbs_to_meals
+  GROUP BY carbs_id
+  ORDER BY carbs_id ASC
 )
 
-SELECT * FROM observed_carbs_per_meal_per_timestamp
+SELECT * FROM observed_carbs_by_meal
