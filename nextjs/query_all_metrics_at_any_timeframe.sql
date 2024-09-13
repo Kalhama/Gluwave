@@ -73,7 +73,7 @@ CREATE OR REPLACE FUNCTION observed_carbs(
 )
 RETURNS DOUBLE PRECISION AS $$
 BEGIN
-    RETURN glucose_chnage * (ICR / ISF) + insulin_change * ICR;
+    RETURN COALESCE(glucose_chnage * (ICR / ISF) + insulin_change * ICR, 0);
 END;
 $$ LANGUAGE plpgsql;
 
