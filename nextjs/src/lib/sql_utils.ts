@@ -554,11 +554,11 @@ export const observed_carbs_per_meal = async (
       .with(cumulativeCarbs, cumulativeInsulin, timeframe, interpolatedGlucose)
       .select({
         timestamp: timeframe.timestamp,
-        glucose: interpolatedGlucose.glucose,
-        cumulativeInsulin:
-          sql`${cumulativeInsulin.cumulativeInsulin} - FIRST_VALUE(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${timeframe.timestamp})`
-            .mapWith(insulin.amount)
-            .as('cumulativeInsulin'),
+        // glucose: interpolatedGlucose.glucose,
+        // cumulativeInsulin:
+        //   sql`${cumulativeInsulin.cumulativeInsulin} - FIRST_VALUE(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${timeframe.timestamp})`
+        //     .mapWith(insulin.amount)
+        //     .as('cumulativeInsulin'),
         // predictedCarbs:
         //   sql`${cumulativeCarbs.predictedCarbs} - FIRST_VALUE(${cumulativeCarbs.predictedCarbs}) OVER (ORDER BY ${timeframe.timestamp})`
         //     .mapWith(carbs.amount)
@@ -606,6 +606,10 @@ export const observed_carbs_per_meal = async (
             .mapWith(carbs.amount)
             .as('observedCarbs'),
           carbs: carbs.amount,
+          carbsTimestamp: sql`carbs.timestamp`
+            .mapWith(carbs.timestamp)
+            .as('carbsTimestamp'),
+          decay: carbs.decay,
         })
         .from(metrics)
         .leftJoin(
@@ -629,10 +633,17 @@ export const observed_carbs_per_meal = async (
         carbs: sql`ANY_VALUE(${observed_carbs_per_meal_per_timestamp.carbs})`
           .mapWith(carbs.amount)
           .as('carbs'),
+        timestamp:
+          sql`ANY_VALUE(${observed_carbs_per_meal_per_timestamp.carbsTimestamp})`
+            .mapWith(carbs.timestamp)
+            .as('carbsTimestamp'),
         observedCarbs:
           sql`SUM(${observed_carbs_per_meal_per_timestamp.observedCarbs})`
             .mapWith(carbs.amount)
             .as('observedCarbs'),
+        decay: sql`ANY_VALUE(${observed_carbs_per_meal_per_timestamp.decay})`
+          .mapWith(carbs.decay)
+          .as('decay'),
       })
       .from(observed_carbs_per_meal_per_timestamp)
       .groupBy(observed_carbs_per_meal_per_timestamp.id)
