@@ -650,9 +650,10 @@ export const observed_carbs_per_meal = async (
       .orderBy(observed_carbs_per_meal_per_timestamp.id)
   )
 
-  const data = await db.with(metrics).select().from(metrics)
-
-  console.log(data)
+  const data = await db
+    .with(observed_carbs_per_meal)
+    .select()
+    .from(observed_carbs_per_meal)
 
   return data
 }
