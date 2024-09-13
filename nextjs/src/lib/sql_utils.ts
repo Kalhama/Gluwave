@@ -554,18 +554,18 @@ export const observed_carbs_per_meal = async (
       .with(cumulativeCarbs, cumulativeInsulin, timeframe, interpolatedGlucose)
       .select({
         timestamp: timeframe.timestamp,
-        // glucose: interpolatedGlucose.glucose,
-        // cumulativeInsulin:
-        //   sql`${cumulativeInsulin.cumulativeInsulin} - FIRST_VALUE(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${timeframe.timestamp})`
-        //     .mapWith(insulin.amount)
-        //     .as('cumulativeInsulin'),
-        // predictedCarbs:
-        //   sql`${cumulativeCarbs.predictedCarbs} - FIRST_VALUE(${cumulativeCarbs.predictedCarbs}) OVER (ORDER BY ${timeframe.timestamp})`
-        //     .mapWith(carbs.amount)
-        //     .as('predictedCarbs'),
+        glucose: interpolatedGlucose.glucose,
+        cumulativeInsulin:
+          sql`${cumulativeInsulin.cumulativeInsulin} - FIRST_VALUE(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${timeframe.timestamp})`
+            .mapWith(insulin.amount)
+            .as('cumulativeInsulin'),
+        predictedCarbs:
+          sql`${cumulativeCarbs.predictedCarbs} - FIRST_VALUE(${cumulativeCarbs.predictedCarbs}) OVER (ORDER BY ${timeframe.timestamp})`
+            .mapWith(carbs.amount)
+            .as('predictedCarbs'),
         observedCarbs: sql`observed_carbs(
           glucose_chnage => LEAD(${interpolatedGlucose.glucose}) OVER (ORDER BY ${timeframe.timestamp}) - ${interpolatedGlucose.glucose},
-          insulin_change => ${cumulativeInsulin.cumulativeInsulin} - LEAD(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${timeframe.timestamp}),
+          insulin_change => LEAD(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${timeframe.timestamp}) - ${cumulativeInsulin.cumulativeInsulin},
           ISF => ${ISF},
           ICR => ${ICR}
         )`
@@ -577,10 +577,10 @@ export const observed_carbs_per_meal = async (
         cumulativeInsulin,
         eq(timeframe.timestamp, cumulativeInsulin.timestamp)
       )
-      // .leftJoin(
-      //   cumulativeCarbs,
-      //   eq(timeframe.timestamp, cumulativeCarbs.timestamp)
-      // )
+      .leftJoin(
+        cumulativeCarbs,
+        eq(timeframe.timestamp, cumulativeCarbs.timestamp)
+      )
       .leftJoin(
         interpolatedGlucose,
         eq(timeframe.timestamp, interpolatedGlucose.timestamp)
@@ -650,10 +650,7 @@ export const observed_carbs_per_meal = async (
       .orderBy(observed_carbs_per_meal_per_timestamp.id)
   )
 
-  const data = await db
-    .with(observed_carbs_per_meal)
-    .select()
-    .from(observed_carbs_per_meal)
+  const data = await db.with(metrics).select().from(metrics)
 
   console.log(data)
 

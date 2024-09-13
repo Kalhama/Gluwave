@@ -1,7 +1,7 @@
-CREATE OR REPLACE FUNCTION minutes_between(start_time TIMESTAMP, end_time TIMESTAMP)
+CREATE OR REPLACE FUNCTION minutes_between(t1 TIMESTAMP, t2 TIMESTAMP)
 RETURNS NUMERIC AS $$
 BEGIN
-  RETURN (EXTRACT(EPOCH FROM end_time) - EXTRACT(EPOCH FROM start_time)) / 60;
+  RETURN EXTRACT(EPOCH FROM t1)) - (EXTRACT(EPOCH FROM t2) / 60;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -10,17 +10,17 @@ RETURNS NUMERIC AS $$
 DECLARE
   minutes_diff NUMERIC;
 BEGIN
-  minutes_diff := minutes_between(start, t);
+  minutes_diff := minutes_between(t, start);
   
   IF minutes_diff < 0 THEN
     RETURN 0;
   END IF;
 
   IF minutes_diff > 300 THEN
-    RETURN -amount;
+    RETURN amount;
   END IF;
 
-  RETURN ((minutes_diff / 55 + 1) * exp(-minutes_diff / 55) - 1) * amount;
+  RETURN (1 - (minutes_diff / 55 + 1) * exp(-minutes_diff / 55)) * amount;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -30,7 +30,7 @@ DECLARE
     minutes_diff NUMERIC;
     "end" TIMESTAMP;
 BEGIN
-    minutes_diff := minutes_between(start, t);
+    minutes_diff := minutes_between(t, start);
     "end" := start + MAKE_INTERVAL(mins => decay);
     
     IF minutes_diff < 0 THEN
@@ -57,7 +57,7 @@ BEGIN
     END IF;
 
     -- If interpolated range is too long just use last known value
-    IF (minutes_between(x2, x1) > 15) THEN
+    IF (minutes_between(x1, x2) > 15) THEN
       RETURN y1;
     END IF;
 
