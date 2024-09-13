@@ -16,6 +16,10 @@ BEGIN
     RETURN 0;
   END IF;
 
+  IF minutes_diff > 300 THEN
+    RETURN -amount;
+  END IF;
+
   RETURN ((minutes_diff / 55 + 1) * exp(-minutes_diff / 55) - 1) * amount;
 END;
 $$ LANGUAGE plpgsql;
@@ -175,25 +179,20 @@ WITH timeframe AS (
   -- carbs_absorbed_predicted,
   -- glucose,
   carbs_absorbed_observed,
-  COALESCE(active_carbs.id, overtime_carbs.id, -1) AS carbs_id,
-  COALESCE(active_carbs.amount, overtime_carbs.amount) AS amount,
-  COALESCE(active_carbs.amount / active_carbs.decay, overtime_carbs.amount / overtime_carbs.decay) AS rate,
-  SUM(COALESCE(active_carbs.amount / active_carbs.decay, overtime_carbs.amount / overtime_carbs.decay)) OVER (PARTITION BY metrics.timestamp) AS total_rate,
-  COALESCE((
-	  COALESCE(active_carbs.amount / active_carbs.decay, overtime_carbs.amount / overtime_carbs.decay) -- rate
+  COALESCE(active_carbs.id, -1) AS carbs_id,
+  active_carbs.amount AS amount,
+  active_carbs.amount / active_carbs.decay AS rate,
+  SUM(active_carbs.amount / active_carbs.decay) OVER (PARTITION BY metrics.timestamp) AS total_rate,
+  ((
+	  active_carbs.amount / active_carbs.decay -- rate
   ) / (
-	  SUM(COALESCE(active_carbs.amount / active_carbs.decay, overtime_carbs.amount / overtime_carbs.decay)) OVER (PARTITION BY metrics.timestamp) -- total_rate
-  ) * carbs_absorbed_observed, 0) AS attributed_carbs
+	  SUM(active_carbs.amount / active_carbs.decay) OVER (PARTITION BY metrics.timestamp) -- total_rate
+  ) * carbs_absorbed_observed) AS attributed_carbs
 FROM metrics
 LEFT JOIN carbs AS active_carbs
   ON active_carbs.timestamp <= metrics.timestamp
   AND active_carbs.timestamp + MAKE_INTERVAL(mins => active_carbs.decay) > metrics.timestamp
   -- AND active_carbs.userId = '123'
-LEFT JOIN carbs AS overtime_carbs
-  ON overtime_carbs.timestamp + MAKE_INTERVAL(mins => overtime_carbs.decay) <= metrics.timestamp
-  AND overtime_carbs.timestamp + MAKE_INTERVAL(mins => (overtime_carbs.decay * 1.5)::integer) > metrics.timestamp
-  AND active_carbs.id IS NULL
-  -- AND carbs.userId = '123'
 ORDER BY metrics.timestamp, carbs_id ASC
 ), observed_carbs_by_meal AS (
   SELECT 
@@ -205,4 +204,4 @@ ORDER BY metrics.timestamp, carbs_id ASC
   ORDER BY carbs_id ASC
 )
 
-SELECT * FROM observed_carbs_by_meal
+SELECT * FROM attribute_observed_carbs_to_meals
