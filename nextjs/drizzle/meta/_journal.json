@@ -36,6 +36,13 @@
       "when": 1726236483526,
       "tag": "0004_regular_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1726324303662,
+      "tag": "0005_tiny_hitman",
+      "breakpoints": true
     }
   ]
 }
