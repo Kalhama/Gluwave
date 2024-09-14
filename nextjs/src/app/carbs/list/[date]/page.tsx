@@ -1,18 +1,9 @@
 import { validateRequest } from '@/auth'
 import { ClientDateTime } from '@/components/client-datetime'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { db } from '@/db'
-import { carbs } from '@/schema'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
+import { Statistics } from '@/lib/sql_utils'
 import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
-import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
 
@@ -28,59 +19,66 @@ async function ListCarbTable({ date }: Props) {
   if (!user) {
     redirect('/login')
   }
-  const results = await db
-    .select()
-    .from(carbs)
-    .where(
-      and(
-        gte(carbs.timestamp, startOfDay(date)),
-        lt(carbs.timestamp, endOfDay(date)),
-        eq(carbs.userId, user.id)
-      )
-    )
-    .orderBy(asc(carbs.timestamp))
+
+  if (!user) redirect('/login')
+  const now = new Date()
+
+  const start = startOfDay(now)
+  const end = endOfDay(now)
+
+  const carbs = await Statistics.carbs_timeframe(
+    user.id,
+    start,
+    end
+  ).observed_carbs_per_meal(
+    user.id,
+    user.carbohydrateRatio,
+    user.correctionRatio
+  )
 
   return (
     <div className="border rounded-sm">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Timestamp</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Decay</TableHead>
-            <TableHead className="text-right"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {results.map((carb) => (
-            <TableRow key={carb.id}>
-              <TableCell className="font-medium">
-                <ClientDateTime timestamp={carb.timestamp} />
-              </TableCell>
-              <TableCell>{carb.amount} g</TableCell>
-              <TableCell>{carb.decay / 60} h</TableCell>
-              <TableCell className="text-right">
-                <DeleteCarbButton id={carb.id} />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell>Total</TableCell>
-            <TableCell>
-              {results.reduce(
-                (accumulator, currentValue) =>
-                  accumulator + currentValue.amount,
-                0
-              )}{' '}
-              g
-            </TableCell>
-            <TableCell />
-            <TableCell />
-          </TableRow>
-        </TableFooter>
-      </Table>
+      {carbs
+        .filter((carb) => carb.timestamp >= start)
+        .map((carb) => {
+          const over = carb.observedCarbs > carb.carbs
+          if (carb.id !== -1) {
+            return (
+              <div key={carb.id}>
+                <div className="p-2">
+                  <div className="grid grid-cols-2 pb-2">
+                    <div>
+                      <div>{Math.round(carb.carbs)} g </div>
+                      <div>Observed: {Math.round(carb.observedCarbs)} g </div>
+                    </div>
+                    <div className="flex items-center gap-4 justify-end">
+                      <div>
+                        <ClientDateTime timestamp={carb.timestamp} /> +{' '}
+                        {(carb.decay / 60).toLocaleString([], {
+                          maximumFractionDigits: 1,
+                        })}
+                        <span> h</span>
+                      </div>
+                      <DeleteCarbButton id={carb.id} />
+                    </div>
+                  </div>
+                  {over ? (
+                    <Progress
+                      className="h-2 bg-orange-400"
+                      value={(carb.carbs / carb.observedCarbs) * 100}
+                    />
+                  ) : (
+                    <Progress
+                      className="h-2 "
+                      value={(carb.observedCarbs / carb.carbs) * 100}
+                    />
+                  )}
+                </div>
+                <Separator />
+              </div>
+            )
+          }
+        })}
     </div>
   )
 }

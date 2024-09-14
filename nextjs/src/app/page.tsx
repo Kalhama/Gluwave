@@ -1,6 +1,5 @@
 import { AutoReload } from '@/components/auto-reload'
 import BloodGlucoseProvider from '@/components/blood-glucose'
-import { Carbs } from '@/components/carbs'
 import { CarbsOnBoard } from '@/components/carbs-on-board'
 import InsulinOnBoardProvider from '@/components/insulin-on-board'
 
