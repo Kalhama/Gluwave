@@ -45,8 +45,8 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
 
   const eventually =
     lastBloodGlucose -
-    predictionData2[0].totalEffect +
-    predictionData2[predictionData2.length - 1].totalEffect
+    predictionData2[0]?.totalEffect +
+    predictionData2[predictionData2.length - 1]?.totalEffect
 
   return (
     <div>

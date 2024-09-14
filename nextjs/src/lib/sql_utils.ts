@@ -1,7 +1,8 @@
 import { db } from '@/db'
 import { carbs, glucose, insulin, userTable } from '@/schema'
 import { startOfMinute, subHours } from 'date-fns'
-import { and, desc, eq, gt, gte, lt, lte, sql } from 'drizzle-orm'
+import { SQL, and, desc, eq, gt, gte, lt, lte, sql } from 'drizzle-orm'
+import { PgColumn, WithSubqueryWithSelection } from 'drizzle-orm/pg-core'
 
 export const calculateUserInsulinData = async (
   from: Date,
@@ -408,252 +409,369 @@ export const getData2 = async (from: Date, to: Date, userId: string) => {
   return results
 }
 
-export const observed_carbs_per_meal = async (
-  start: Date,
-  end: Date,
-  userId: string,
-  ISF: number,
-  ICR: number
-) => {
-  // TODO change timeframe to parameter
-  const timeframe = db.$with('timeframe').as(
-    db
-      .select({
-        timestamp: carbs.timestamp,
-      })
-      .from(carbs)
-      .where(
-        and(
-          eq(carbs.userId, userId),
-          gte(carbs.timestamp, start),
-          lte(carbs.timestamp, end)
-        )
-      )
-      .union(
+type Timeframe =
+  | WithSubqueryWithSelection<
+      {
+        timestamp: PgColumn<
+          {
+            name: 'timestamp'
+            tableName: string
+            dataType: 'date'
+            columnType: 'PgTimestamp'
+            data: Date
+            driverParam: string
+            notNull: true
+            hasDefault: boolean
+            isPrimaryKey: boolean
+            generated: undefined
+            isAutoincrement: boolean
+            hasRuntimeDefault: boolean
+            enumValues: any
+          },
+          {},
+          {}
+        >
+      },
+      'timeframe'
+    >
+  | WithSubqueryWithSelection<
+      {
+        timestamp: SQL.Aliased<Date>
+      },
+      'timeframe'
+    >
+
+class Runner {
+  private _timeframe: Timeframe
+
+  constructor(timeframe: Timeframe) {
+    this._timeframe = timeframe
+  }
+
+  /**
+   * The function might return meals earlier than specified in timeframe selection
+   */
+  public async observed_carbs_per_meal(
+    userId: string,
+    ISF: number,
+    ICR: number
+  ) {
+    const metrics = await this.metrics_cte(userId, ISF, ICR)
+
+    const observed_carbs_per_meal_per_timestamp = db
+      .$with('observed_carbs_per_meal_per_timestamp')
+      .as(
         db
+          .with(metrics)
           .select({
-            timestamp: sql`timestamp + MAKE_INTERVAL(mins => decay)`
+            timestamp: metrics.timestamp,
+            id: sql`COALESCE(carbs.id, -1)`.mapWith(carbs.id).as('id'),
+
+            /* rate divided by total rate times observed carbs*/
+            observedCarbs: sql`COALESCE((${carbs.amount} / ${carbs.decay})
+              / 
+              (SUM(${carbs.amount} / ${carbs.decay}) OVER (PARTITION BY ${metrics.timestamp})), 1)
+              *
+              ${metrics.observedCarbs}`
+              .mapWith(carbs.amount)
+              .as('observedCarbs'),
+            carbs: carbs.amount,
+            carbsTimestamp: sql`carbs.timestamp`
               .mapWith(carbs.timestamp)
-              .as('timestamp'),
+              .as('carbsTimestamp'),
+            decay: carbs.decay,
           })
-          .from(carbs)
-          .where(
+          .from(metrics)
+          .leftJoin(
+            carbs,
             and(
               eq(carbs.userId, userId),
-              gte(carbs.timestamp, start),
-              lte(carbs.timestamp, end)
+              lte(carbs.timestamp, metrics.timestamp),
+              gt(
+                sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
+                metrics.timestamp
+              )
             )
           )
       )
-      .union(
-        db
-          .select({
-            timestamp: glucose.timestamp,
-          })
-          .from(glucose)
-          .where(eq(glucose.userId, userId))
-          .orderBy(desc(glucose.timestamp))
-          .limit(1)
-      )
-  )
 
-  const adjacentGlucoseReadings = db.$with('adjacentGlucoseReadings').as(
-    db
-      .select({
-        value: glucose.value,
-        nextValue:
-          sql`LEAD(${glucose.value}) OVER (ORDER BY ${glucose.timestamp})`.as(
-            'next_value'
-          ),
-        timestamp: glucose.timestamp,
-        nextTimestamp:
-          sql`LEAD(${glucose.timestamp}) OVER (ORDER BY ${glucose.timestamp})`.as(
-            'next_timestamp'
-          ),
-      })
-      .from(glucose)
-      .where(eq(glucose.userId, userId))
-  )
+    const observed_carbs_per_meal = db.$with('observed_carbs_per_meal').as(
+      db
+        .with(observed_carbs_per_meal_per_timestamp)
+        .select({
+          id: observed_carbs_per_meal_per_timestamp.id,
+          carbs: sql`ANY_VALUE(${observed_carbs_per_meal_per_timestamp.carbs})`
+            .mapWith(carbs.amount)
+            .as('carbs'),
+          timestamp:
+            sql`ANY_VALUE(${observed_carbs_per_meal_per_timestamp.carbsTimestamp})`
+              .mapWith(carbs.timestamp)
+              .as('carbsTimestamp'),
+          observedCarbs:
+            sql`SUM(${observed_carbs_per_meal_per_timestamp.observedCarbs})`
+              .mapWith(carbs.amount)
+              .as('observedCarbs'),
+          decay: sql`ANY_VALUE(${observed_carbs_per_meal_per_timestamp.decay})`
+            .mapWith(carbs.decay)
+            .as('decay'),
+        })
+        .from(observed_carbs_per_meal_per_timestamp)
+        .groupBy(observed_carbs_per_meal_per_timestamp.id)
+        .orderBy(observed_carbs_per_meal_per_timestamp.id)
+    )
 
-  const interpolatedGlucose = db.$with('interpolatedGlucose').as(
-    db
-      .with(timeframe, adjacentGlucoseReadings)
-      .select({
-        timestamp: timeframe.timestamp,
-        glucose: sql`ANY_VALUE(interpolate_glucose(
-          t => ${timeframe.timestamp},
-          x1 => ${adjacentGlucoseReadings.timestamp},
-          x2 => ${adjacentGlucoseReadings.nextTimestamp},
-          y1 => ${adjacentGlucoseReadings.value},
-          y2 => ${adjacentGlucoseReadings.nextValue}
-        ))`
-          .mapWith(adjacentGlucoseReadings.value)
-          .as('glucose'),
-      })
-      .from(timeframe)
-      .leftJoin(
-        adjacentGlucoseReadings,
-        and(
-          lt(adjacentGlucoseReadings.timestamp, timeframe.timestamp),
-          gte(adjacentGlucoseReadings.nextTimestamp, timeframe.timestamp)
-        )
-      )
-      .groupBy(timeframe.timestamp)
-  )
+    const data = await db
+      .with(observed_carbs_per_meal)
+      .select()
+      .from(observed_carbs_per_meal)
 
-  const cumulativeCarbs = db.$with('cumulativeCarbs').as(
-    db
-      .with(timeframe)
-      .select({
-        timestamp: timeframe.timestamp,
-        predictedCarbs: sql`COALESCE(SUM(total_carbs_absorbed(
-          t => ${timeframe.timestamp}, 
-          start => ${carbs.timestamp}, 
-          amount => ${carbs.amount}, 
-          decay => ${carbs.decay}
-        )), 0)`
-          .mapWith(carbs.amount)
-          .as('predictedCarbs'),
-      })
-      .from(timeframe)
-      .leftJoin(
-        carbs,
-        and(eq(carbs.userId, userId), lt(carbs.timestamp, timeframe.timestamp))
-      )
-      .groupBy(timeframe.timestamp)
-  )
+    return data
+  }
 
-  const cumulativeInsulin = db.$with('cumulativeInsulin').as(
-    db
-      .with(timeframe)
-      .select({
-        timestamp: timeframe.timestamp,
-        cumulativeInsulin: sql`COALESCE(SUM(
-          total_insulin_absorbed(
-            t => ${timeframe.timestamp},
-            start => ${insulin.timestamp},
-            amount => ${insulin.amount}
+  private async metrics_cte(userId: string, ISF: number, ICR: number) {
+    const adjacentGlucoseReadings = db.$with('adjacentGlucoseReadings').as(
+      db
+        .select({
+          value: glucose.value,
+          nextValue:
+            sql`LEAD(${glucose.value}) OVER (ORDER BY ${glucose.timestamp})`.as(
+              'next_value'
+            ),
+          timestamp: glucose.timestamp,
+          nextTimestamp:
+            sql`LEAD(${glucose.timestamp}) OVER (ORDER BY ${glucose.timestamp})`.as(
+              'next_timestamp'
+            ),
+        })
+        .from(glucose)
+        .where(eq(glucose.userId, userId))
+    )
+
+    const interpolatedGlucose = db.$with('interpolatedGlucose').as(
+      db
+        .with(this._timeframe, adjacentGlucoseReadings)
+        .select({
+          timestamp: this._timeframe.timestamp,
+          glucose: sql`ANY_VALUE(interpolate_glucose(
+            t => ${this._timeframe.timestamp},
+            x1 => ${adjacentGlucoseReadings.timestamp},
+            x2 => ${adjacentGlucoseReadings.nextTimestamp},
+            y1 => ${adjacentGlucoseReadings.value},
+            y2 => ${adjacentGlucoseReadings.nextValue}
+          ))`
+            .mapWith(adjacentGlucoseReadings.value)
+            .as('glucose'),
+        })
+        .from(this._timeframe)
+        .leftJoin(
+          adjacentGlucoseReadings,
+          and(
+            lt(adjacentGlucoseReadings.timestamp, this._timeframe.timestamp),
+            gte(
+              adjacentGlucoseReadings.nextTimestamp,
+              this._timeframe.timestamp
+            )
           )
-        ), 0)`
-          .mapWith(insulin.amount)
-          .as('cumulativeInsulin'),
-      })
-      .from(timeframe)
-      .leftJoin(
-        insulin,
-        and(
-          eq(insulin.userId, userId),
-          lt(insulin.timestamp, timeframe.timestamp)
         )
-      )
-      .groupBy(timeframe.timestamp)
-  )
+        .groupBy(this._timeframe.timestamp)
+    )
 
-  const metrics = db.$with('metrics').as(
-    db
-      .with(cumulativeCarbs, cumulativeInsulin, timeframe, interpolatedGlucose)
-      .select({
-        timestamp: timeframe.timestamp,
-        glucose: interpolatedGlucose.glucose,
-        cumulativeInsulin:
-          sql`${cumulativeInsulin.cumulativeInsulin} - FIRST_VALUE(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${timeframe.timestamp})`
-            .mapWith(insulin.amount)
-            .as('cumulativeInsulin'),
-        predictedCarbs:
-          sql`${cumulativeCarbs.predictedCarbs} - FIRST_VALUE(${cumulativeCarbs.predictedCarbs}) OVER (ORDER BY ${timeframe.timestamp})`
+    const cumulativeCarbs = db.$with('cumulativeCarbs').as(
+      db
+        .with(this._timeframe)
+        .select({
+          timestamp: this._timeframe.timestamp,
+          predictedCarbs: sql`COALESCE(SUM(total_carbs_absorbed(
+            t => ${this._timeframe.timestamp}, 
+            start => ${carbs.timestamp}, 
+            amount => ${carbs.amount}, 
+            decay => ${carbs.decay}
+          )), 0)`
             .mapWith(carbs.amount)
             .as('predictedCarbs'),
-        observedCarbs: sql`observed_carbs(
-          glucose_chnage => LEAD(${interpolatedGlucose.glucose}) OVER (ORDER BY ${timeframe.timestamp}) - ${interpolatedGlucose.glucose},
-          insulin_change => LEAD(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${timeframe.timestamp}) - ${cumulativeInsulin.cumulativeInsulin},
-          ISF => ${ISF},
-          ICR => ${ICR}
-        )`
-          .mapWith(carbs.amount)
-          .as('observedCarbs'),
-      })
-      .from(timeframe)
-      .leftJoin(
-        cumulativeInsulin,
-        eq(timeframe.timestamp, cumulativeInsulin.timestamp)
-      )
-      .leftJoin(
-        cumulativeCarbs,
-        eq(timeframe.timestamp, cumulativeCarbs.timestamp)
-      )
-      .leftJoin(
-        interpolatedGlucose,
-        eq(timeframe.timestamp, interpolatedGlucose.timestamp)
-      )
-      .orderBy(timeframe.timestamp)
-  )
-
-  const observed_carbs_per_meal_per_timestamp = db
-    .$with('observed_carbs_per_meal_per_timestamp')
-    .as(
-      db
-        .with(metrics)
-        .select({
-          timestamp: metrics.timestamp,
-          id: sql`COALESCE(carbs.id, -1)`.mapWith(carbs.id).as('id'),
-
-          /* rate divided by total rate times observed carbs*/
-          observedCarbs: sql`COALESCE((${carbs.amount} / ${carbs.decay})
-            / 
-            (SUM(${carbs.amount} / ${carbs.decay}) OVER (PARTITION BY ${metrics.timestamp})), 1)
-            *
-            ${metrics.observedCarbs}`
-            .mapWith(carbs.amount)
-            .as('observedCarbs'),
-          carbs: carbs.amount,
-          carbsTimestamp: sql`carbs.timestamp`
-            .mapWith(carbs.timestamp)
-            .as('carbsTimestamp'),
-          decay: carbs.decay,
         })
-        .from(metrics)
+        .from(this._timeframe)
         .leftJoin(
           carbs,
           and(
             eq(carbs.userId, userId),
-            lte(carbs.timestamp, metrics.timestamp),
-            gt(
-              sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
-              metrics.timestamp
-            )
+            lt(carbs.timestamp, this._timeframe.timestamp)
           )
+        )
+        .groupBy(this._timeframe.timestamp)
+    )
+
+    const cumulativeInsulin = db.$with('cumulativeInsulin').as(
+      db
+        .with(this._timeframe)
+        .select({
+          timestamp: this._timeframe.timestamp,
+          cumulativeInsulin: sql`COALESCE(SUM(
+            total_insulin_absorbed(
+              t => ${this._timeframe.timestamp},
+              start => ${insulin.timestamp},
+              amount => ${insulin.amount}
+            )
+          ), 0)`
+            .mapWith(insulin.amount)
+            .as('cumulativeInsulin'),
+        })
+        .from(this._timeframe)
+        .leftJoin(
+          insulin,
+          and(
+            eq(insulin.userId, userId),
+            lt(insulin.timestamp, this._timeframe.timestamp)
+          )
+        )
+        .groupBy(this._timeframe.timestamp)
+    )
+
+    const metrics = db.$with('metrics').as(
+      db
+        .with(
+          cumulativeCarbs,
+          cumulativeInsulin,
+          this._timeframe,
+          interpolatedGlucose
+        )
+        .select({
+          timestamp: this._timeframe.timestamp,
+          glucose: interpolatedGlucose.glucose,
+          cumulativeInsulin:
+            sql`${cumulativeInsulin.cumulativeInsulin} - FIRST_VALUE(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${this._timeframe.timestamp})`
+              .mapWith(insulin.amount)
+              .as('cumulativeInsulin'),
+          predictedCarbs:
+            sql`${cumulativeCarbs.predictedCarbs} - FIRST_VALUE(${cumulativeCarbs.predictedCarbs}) OVER (ORDER BY ${this._timeframe.timestamp})`
+              .mapWith(carbs.amount)
+              .as('predictedCarbs'),
+          observedCarbs: sql`observed_carbs(
+            glucose_chnage => LEAD(${interpolatedGlucose.glucose}) OVER (ORDER BY ${this._timeframe.timestamp}) - ${interpolatedGlucose.glucose},
+            insulin_change => LEAD(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${this._timeframe.timestamp}) - ${cumulativeInsulin.cumulativeInsulin},
+            ISF => ${ISF},
+            ICR => ${ICR}
+          )`
+            .mapWith(carbs.amount)
+            .as('observedCarbs'),
+        })
+        .from(this._timeframe)
+        .leftJoin(
+          cumulativeInsulin,
+          eq(cumulativeInsulin.timestamp, this._timeframe.timestamp)
+        )
+        .leftJoin(
+          cumulativeCarbs,
+          eq(cumulativeCarbs.timestamp, this._timeframe.timestamp)
+        )
+        .leftJoin(
+          interpolatedGlucose,
+          eq(interpolatedGlucose.timestamp, this._timeframe.timestamp)
+        )
+        .orderBy(this._timeframe.timestamp)
+    )
+    return metrics
+  }
+
+  public async metrics(userId: string, ISF: number, ICR: number) {
+    const cte = await this.metrics_cte(userId, ISF, ICR)
+
+    return db.with(cte).select().from(cte)
+  }
+
+  public async predict(
+    userId: string,
+    ISF: number,
+    ICR: number,
+    COB: number,
+    rate: number
+  ) {
+    if (!this._timeframe) {
+      throw new Error('no timeframe')
+    }
+
+    const metrics = await this.metrics_cte(userId, ISF, ICR)
+
+    // return db
+    //   .with(this._timeframe)
+    //   .select({
+    //     timestamp: this._timeframe.timestamp,
+    //     insulinEffect: sql`${metrics.cumulativeInsulin} * ${ISF}`
+    //       .mapWith(glucose.value)
+    //       .as('insulinEffect'),
+    //     carbEffect: sql`
+    //     total_carbs_absorbed(
+    //       t => ${this._timeframe.timestamp},
+    //       start => FIRST_VALUE(${this._timeframe.timestamp}) OVER (ORDER BY ${this._timeframe.timestamp} ASC),
+    //       amount => ${COB},
+    //       decay => ${COB} / ${rate}
+    //     ) / (${ICR} / ${ISF})
+    //     `
+    //       .mapWith(glucose.value)
+    //       .as('carbEffect'),
+    //   })
+    //   .from(this._timeframe)
+    //   .leftJoin(metrics, eq(metrics.timestamp, this._timeframe.timestamp))
+  }
+}
+
+export class Statistics {
+  public static carbs_timeframe(userId: string, start: Date, end: Date) {
+    const tf = db.$with('timeframe').as(
+      db
+        .select({
+          timestamp: carbs.timestamp,
+        })
+        .from(carbs)
+        .where(
+          and(
+            eq(carbs.userId, userId),
+            gte(carbs.timestamp, start),
+            lte(carbs.timestamp, end)
+          )
+        )
+        .union(
+          db
+            .select({
+              timestamp: sql`timestamp + MAKE_INTERVAL(mins => decay)`
+                .mapWith(carbs.timestamp)
+                .as('timestamp'),
+            })
+            .from(carbs)
+            .where(
+              and(
+                eq(carbs.userId, userId),
+                gte(carbs.timestamp, start),
+                lte(carbs.timestamp, end)
+              )
+            )
+        )
+        .union(
+          db
+            .select({
+              timestamp: glucose.timestamp,
+            })
+            .from(glucose)
+            .where(eq(glucose.userId, userId))
+            .orderBy(desc(glucose.timestamp))
+            .limit(1)
         )
     )
 
-  const observed_carbs_per_meal = db.$with('observed_carbs_per_meal').as(
-    db
-      .with(observed_carbs_per_meal_per_timestamp)
-      .select({
-        id: observed_carbs_per_meal_per_timestamp.id,
-        carbs: sql`ANY_VALUE(${observed_carbs_per_meal_per_timestamp.carbs})`
-          .mapWith(carbs.amount)
-          .as('carbs'),
-        timestamp:
-          sql`ANY_VALUE(${observed_carbs_per_meal_per_timestamp.carbsTimestamp})`
-            .mapWith(carbs.timestamp)
-            .as('carbsTimestamp'),
-        observedCarbs:
-          sql`SUM(${observed_carbs_per_meal_per_timestamp.observedCarbs})`
-            .mapWith(carbs.amount)
-            .as('observedCarbs'),
-        decay: sql`ANY_VALUE(${observed_carbs_per_meal_per_timestamp.decay})`
-          .mapWith(carbs.decay)
-          .as('decay'),
-      })
-      .from(observed_carbs_per_meal_per_timestamp)
-      .groupBy(observed_carbs_per_meal_per_timestamp.id)
-      .orderBy(observed_carbs_per_meal_per_timestamp.id)
-  )
+    return new Runner(tf)
+  }
 
-  const data = await db
-    .with(observed_carbs_per_meal)
-    .select()
-    .from(observed_carbs_per_meal)
+  public static range_timeframe(start: Date, end: Date, interval: number) {
+    const tf = db.$with('timeframe').as(
+      db
+        .select({
+          timestamp: sql`timestamp`.mapWith(glucose.timestamp).as('timestamp'),
+        })
+        .from(
+          sql`generate_series(${start}, ${end}, interval '${interval} minutes') as timestamp`
+        )
+    )
 
-  return data
+    return new Runner(tf)
+  }
 }
