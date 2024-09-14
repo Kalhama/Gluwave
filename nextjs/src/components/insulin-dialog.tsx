@@ -1,6 +1,6 @@
 'use client'
 
-import { addInsulinAction } from '@/actions/add-insulin'
+import { upsertInsulinAction } from '@/actions/upsert-insulin'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -31,31 +31,48 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useServerAction } from '@/lib/use-server-action'
-import { addInsulinSchema } from '@/schemas/addInsulinSchema'
+import { cn } from '@/lib/utils'
+import { upsertInsulinSchema } from '@/schemas/upsertInsulinSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Syringe } from 'lucide-react'
+import { addMinutes, format, parse, set } from 'date-fns'
+import { CalendarIcon, Syringe } from 'lucide-react'
 import * as React from 'react'
-import { useState } from 'react'
+import { PropsWithChildren, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-export function InsulinDialog() {
-  const { action, loading, data, message } = useServerAction(addInsulinAction)
-  const form = useForm<z.infer<typeof addInsulinSchema>>({
-    resolver: zodResolver(addInsulinSchema),
+import { Calendar } from './ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+
+interface Props {
+  insulin?: {
+    amount: number
+    timestamp: Date
+    id: number
+  }
+}
+
+export function InsulinDialog({ insulin, children }: PropsWithChildren<Props>) {
+  const { action, loading, data, message } =
+    useServerAction(upsertInsulinAction)
+  const form = useForm<z.infer<typeof upsertInsulinSchema>>({
+    resolver: zodResolver(upsertInsulinSchema),
     defaultValues: {
-      amount: 0,
-      timedelta: 0,
+      amount: insulin?.amount ?? 0,
+      timestamp: insulin?.timestamp ?? new Date(),
+      id: insulin?.id,
     },
   })
+  const editing = !!insulin?.id
 
-  async function onSubmit(values: z.infer<typeof addInsulinSchema>) {
+  async function onSubmit(values: z.infer<typeof upsertInsulinSchema>) {
     await action(values)
     form.reset()
     setOpenChange(false)
   }
 
   const [open, setOpenChange] = useState(false)
+  const [popoverOpen, popoverOnOpenChange] = useState(false)
 
   return (
     <Drawer
@@ -66,13 +83,11 @@ export function InsulinDialog() {
       }}
     >
       <DrawerTrigger asChild>
-        <Button variant="link">
-          <Syringe />
-        </Button>
+        <div>{children}</div>
       </DrawerTrigger>
-      <DrawerContent className="sm:max-w-[325px] mx-auto">
+      <DrawerContent className="sm:max-w-[350px] mx-auto">
         <DrawerHeader>
-          <DrawerTitle>Add insulin</DrawerTitle>
+          <DrawerTitle>{editing ? 'Edit ' : 'Add '} insulin</DrawerTitle>
           <DrawerDescription></DrawerDescription>
         </DrawerHeader>
         <Form {...form}>
@@ -82,33 +97,116 @@ export function InsulinDialog() {
           >
             <FormField
               control={form.control}
-              name="timedelta"
+              name="timestamp"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>When</FormLabel>
                   <FormControl>
-                    <Select
-                      onValueChange={(val) => {
-                        field.onChange(val)
-                      }}
-                      defaultValue={String(field.value)}
-                    >
-                      <SelectTrigger className="w-[280px]">
-                        <SelectValue id="time" placeholder="Now" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value={'0'}>Now</SelectItem>
-                          {Array.from({ length: 36 }).map((_, i) => {
-                            return (
-                              <SelectItem value={String(-i * 5 - 5)} key={i}>
-                                -{i * 5 + 5} min
-                              </SelectItem>
-                            )
-                          })}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                    <div>
+                      <div className="flex gap-1">
+                        <Popover
+                          modal
+                          open={popoverOpen}
+                          onOpenChange={(e) => popoverOnOpenChange(e)}
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={'outline'}
+                                className={cn(
+                                  'pl-3 h-10 text-left font-normal',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                              >
+                                {field.value ? (
+                                  <span className="mr-2">
+                                    {format(field.value, 'PPP')}
+                                  </span>
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={(e) =>
+                                field.onChange(
+                                  set(e || field.value, {
+                                    hours: field.value.getHours(),
+                                    minutes: field.value.getMinutes(),
+                                    seconds: field.value.getSeconds(),
+                                  })
+                                )
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <Input
+                          type="time"
+                          value={format(field.value, 'HH:mm')}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            const date = parse(value, 'HH:mm', field.value)
+                            field.onChange(date)
+                          }}
+                        />
+                      </div>
+                      <div className="flex mt-2 justify-stretch">
+                        <Button
+                          onClick={() =>
+                            field.onChange(addMinutes(field.value, -15))
+                          }
+                          variant="outline"
+                          type="button"
+                          className="h-8"
+                        >
+                          -15
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            field.onChange(addMinutes(field.value, -5))
+                          }
+                          variant="outline"
+                          type="button"
+                          className="h-8"
+                        >
+                          -5
+                        </Button>
+                        <Button
+                          onClick={() => field.onChange(new Date())}
+                          variant="outline"
+                          type="button"
+                          className="h-8"
+                        >
+                          Now
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            field.onChange(addMinutes(field.value, 5))
+                          }
+                          variant="outline"
+                          type="button"
+                          className="h-8"
+                        >
+                          +5
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            field.onChange(addMinutes(field.value, 15))
+                          }
+                          variant="outline"
+                          type="button"
+                          className="h-8"
+                        >
+                          +15
+                        </Button>
+                      </div>
+                    </div>
                   </FormControl>
                   <FormDescription />
                   <FormMessage />

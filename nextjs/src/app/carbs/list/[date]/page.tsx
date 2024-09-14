@@ -1,9 +1,12 @@
 import { validateRequest } from '@/auth'
+import { CarbDialog } from '@/components/carb-dialog'
 import { ClientDateTime } from '@/components/client-datetime'
+import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Statistics } from '@/lib/sql_utils'
 import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
+import { Pencil, UtensilsCrossed } from 'lucide-react'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
 
@@ -23,8 +26,8 @@ async function ListCarbTable({ date }: Props) {
   if (!user) redirect('/login')
   const now = new Date()
 
-  const start = startOfDay(now)
-  const end = endOfDay(now)
+  const start = startOfDay(date)
+  const end = endOfDay(date)
 
   const carbs = await Statistics.carbs_timeframe(
     user.id,
@@ -51,7 +54,7 @@ async function ListCarbTable({ date }: Props) {
                       <div>{Math.round(carb.carbs)} g </div>
                       <div>Observed: {Math.round(carb.observedCarbs)} g </div>
                     </div>
-                    <div className="flex items-center gap-4 justify-end">
+                    <div className="flex items-center gap-2 justify-end">
                       <div>
                         <ClientDateTime timestamp={carb.timestamp} /> +{' '}
                         {(carb.decay / 60).toLocaleString([], {
@@ -59,6 +62,11 @@ async function ListCarbTable({ date }: Props) {
                         })}
                         <span> h</span>
                       </div>
+                      <CarbDialog carb={carb}>
+                        <Button variant="link" className="p-2">
+                          <Pencil className="cursor-pointer w-4 h-4" />
+                        </Button>
+                      </CarbDialog>
                       <DeleteCarbButton id={carb.id} />
                     </div>
                   </div>

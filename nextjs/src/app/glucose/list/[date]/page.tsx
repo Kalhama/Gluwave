@@ -1,4 +1,5 @@
 import { validateRequest } from '@/auth'
+import { BloodGlucoseDialog } from '@/components/bloodglucose-dialog'
 import { ClientDateTime } from '@/components/client-datetime'
 import {
   Table,
@@ -12,6 +13,7 @@ import { db } from '@/db'
 import { glucose } from '@/schema'
 import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
 import { and, asc, eq, gte, lt } from 'drizzle-orm'
+import { Pencil } from 'lucide-react'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
 
@@ -57,7 +59,15 @@ async function ListBloodGlucoseTable({ date }: Props) {
                 <ClientDateTime timestamp={glucose.timestamp} />
               </TableCell>
               <TableCell>{glucose.value} mmol/l</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right flex gap-2 justify-end">
+                <BloodGlucoseDialog
+                  glucose={{
+                    ...glucose,
+                    glucose: glucose.value,
+                  }}
+                >
+                  <Pencil className="cursor-pointer w-4 h-4" />
+                </BloodGlucoseDialog>
                 <DeleteBloodGlucoseButton id={glucose.id} />
               </TableCell>
             </TableRow>

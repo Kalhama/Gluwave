@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { Settings } from 'lucide-react'
+import { Droplet, Settings, Syringe, UtensilsCrossed } from 'lucide-react'
 import Link from 'next/link'
 import * as React from 'react'
 
@@ -18,9 +18,21 @@ export const Menu = ({ authenticated }: Props) => {
 
   return (
     <div className="fixed bottom-0 bg-white w-full flex p-4 gap-4 border-t justify-center">
-      <BloodGlucoseDialog />
-      <InsulinDialog />
-      <CarbDialog />
+      <BloodGlucoseDialog>
+        <Button variant="link">
+          <Droplet />
+        </Button>
+      </BloodGlucoseDialog>
+      <InsulinDialog>
+        <Button variant="link">
+          <Syringe />
+        </Button>
+      </InsulinDialog>
+      <CarbDialog>
+        <Button variant="link">
+          <UtensilsCrossed />
+        </Button>
+      </CarbDialog>
       <Button variant="link">
         <Link href="/settings">
           <Settings />

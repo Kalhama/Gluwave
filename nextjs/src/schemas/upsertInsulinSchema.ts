@@ -1,7 +1,8 @@
 import { parseCommaFloat } from '@/lib/parse-comma-float'
 import { z } from 'zod'
 
-export const addInsulinSchema = z.object({
-  timedelta: z.coerce.number().lte(0).gt(-300),
+export const upsertInsulinSchema = z.object({
+  timestamp: z.date(),
   amount: z.preprocess((v) => parseCommaFloat(v), z.number().gt(0).lt(50)),
+  id: z.number().optional(),
 })

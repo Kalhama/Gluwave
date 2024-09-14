@@ -1,5 +1,6 @@
 import { validateRequest } from '@/auth'
 import { ClientDateTime } from '@/components/client-datetime'
+import { InsulinDialog } from '@/components/insulin-dialog'
 import {
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import { db } from '@/db'
 import { insulin } from '@/schema'
 import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
 import { and, asc, eq, gte, lt } from 'drizzle-orm'
+import { Pencil } from 'lucide-react'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
 
@@ -58,7 +60,10 @@ async function ListInsulinTable({ date }: Props) {
                 <ClientDateTime timestamp={insulin.timestamp} />
               </TableCell>
               <TableCell>{insulin.amount} U</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right flex gap-2 justify-end">
+                <InsulinDialog insulin={insulin}>
+                  <Pencil className="cursor-pointer w-4 h-4" />
+                </InsulinDialog>
                 <DeleteInsulinButton id={insulin.id} />
               </TableCell>
             </TableRow>
