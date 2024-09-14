@@ -409,39 +409,32 @@ export const getData2 = async (from: Date, to: Date, userId: string) => {
   return results
 }
 
-type Timeframe =
-  | WithSubqueryWithSelection<
+type Timeframe = WithSubqueryWithSelection<
+  {
+    timestamp: PgColumn<
       {
-        timestamp: PgColumn<
-          {
-            name: 'timestamp'
-            tableName: string
-            dataType: 'date'
-            columnType: 'PgTimestamp'
-            data: Date
-            driverParam: string
-            notNull: true
-            hasDefault: boolean
-            isPrimaryKey: boolean
-            generated: undefined
-            isAutoincrement: boolean
-            hasRuntimeDefault: boolean
-            enumValues: any
-          },
-          {},
-          {}
-        >
+        name: 'timestamp'
+        tableName: string
+        dataType: 'date'
+        columnType: 'PgTimestamp'
+        data: Date
+        driverParam: string
+        notNull: true
+        hasDefault: boolean
+        isPrimaryKey: boolean
+        generated: undefined
+        isAutoincrement: boolean
+        hasRuntimeDefault: boolean
+        enumValues: any
       },
-      'timeframe'
+      {},
+      {}
     >
-  | WithSubqueryWithSelection<
-      {
-        timestamp: SQL.Aliased<Date>
-      },
-      'timeframe'
-    >
+  },
+  'timeframe'
+>
 
-class Runner {
+export class Runner {
   private _timeframe: Timeframe
 
   constructor(timeframe: Timeframe) {
@@ -692,26 +685,33 @@ class Runner {
 
     const metrics = await this.metrics_cte(userId, ISF, ICR)
 
-    // return db
-    //   .with(this._timeframe)
-    //   .select({
-    //     timestamp: this._timeframe.timestamp,
-    //     insulinEffect: sql`${metrics.cumulativeInsulin} * ${ISF}`
-    //       .mapWith(glucose.value)
-    //       .as('insulinEffect'),
-    //     carbEffect: sql`
-    //     total_carbs_absorbed(
-    //       t => ${this._timeframe.timestamp},
-    //       start => FIRST_VALUE(${this._timeframe.timestamp}) OVER (ORDER BY ${this._timeframe.timestamp} ASC),
-    //       amount => ${COB},
-    //       decay => ${COB} / ${rate}
-    //     ) / (${ICR} / ${ISF})
-    //     `
-    //       .mapWith(glucose.value)
-    //       .as('carbEffect'),
-    //   })
-    //   .from(this._timeframe)
-    //   .leftJoin(metrics, eq(metrics.timestamp, this._timeframe.timestamp))
+    const data = await db
+      .with(this._timeframe, metrics)
+      .select({
+        timestamp: this._timeframe.timestamp,
+        insulinEffect: sql`${metrics.cumulativeInsulin} * ${ISF}`
+          .mapWith(glucose.value)
+          .as('insulinEffect'),
+        carbEffect: sql`
+        total_carbs_absorbed(
+          t => ${this._timeframe.timestamp},
+          start => FIRST_VALUE(${this._timeframe.timestamp}) OVER (ORDER BY ${this._timeframe.timestamp} ASC),
+          amount => 50,
+          decay => 60
+        ) / ${ISF} * ${ICR}
+        `
+          .mapWith(glucose.value)
+          .as('carbEffect'),
+      })
+      .from(this._timeframe)
+      .leftJoin(metrics, eq(metrics.timestamp, this._timeframe.timestamp))
+
+    return data.map((e) => {
+      return {
+        ...e,
+        totalEffect: e.carbEffect + e.insulinEffect,
+      }
+    })
   }
 }
 
@@ -761,14 +761,25 @@ export class Statistics {
     return new Runner(tf)
   }
 
-  public static range_timeframe(start: Date, end: Date, interval: number) {
+  public static range_timeframe(start: Date, end: Date) {
+    /* need to use a real table where we union the series, because otherwise tf.timestamp will refer to timestamp, not timeframe.timestamp */
     const tf = db.$with('timeframe').as(
       db
         .select({
-          timestamp: sql`timestamp`.mapWith(glucose.timestamp).as('timestamp'),
+          timestamp: carbs.timestamp,
         })
-        .from(
-          sql`generate_series(${start}, ${end}, interval '${interval} minutes') as timestamp`
+        .from(carbs)
+        .limit(0)
+        .union(
+          db
+            .select({
+              timestamp: sql`timestamp`
+                .mapWith(glucose.timestamp)
+                .as('timestamp'),
+            })
+            .from(
+              sql`generate_series(${start}::timestamp, ${end}::timestamp, interval '1 minutes') as timestamp`
+            )
         )
     )
 

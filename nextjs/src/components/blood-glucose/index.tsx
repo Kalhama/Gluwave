@@ -1,8 +1,8 @@
 import { validateRequest } from '@/auth'
 import { db } from '@/db'
-import { getData2 } from '@/lib/sql_utils'
+import { Statistics } from '@/lib/sql_utils'
 import { glucose } from '@/schema'
-import { addHours, subHours } from 'date-fns'
+import { addHours, addMinutes, subHours } from 'date-fns'
 import { and, eq, gte } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
@@ -33,44 +33,37 @@ export default async function BloodGlucoseProvider() {
   const latestBloodGlucose =
     bloodGlucoseData[bloodGlucoseData.length - 1]?.timestamp ?? now
 
-  // const carbs = await Statistics.carbs_timeframe(
-  //   user.id,
-  //   subHours(now, 12),
-  //   now
-  // ).observed_carbs_per_meal(
-  //   user.id,
-  //   user.carbohydrateRatio,
-  //   user.correctionRatio
-  // )
-
-  // const activeCarbs = carbs.filter(
-  //   (carb) => addMinutes(carb.timestamp, carb.decay) > now
-  // )
-  // const COB = activeCarbs.reduce(
-  //   (acc, curr) => acc + (curr.carbs - curr.observedCarbs),
-  //   0
-  // )
-  // const rate = activeCarbs.reduce(
-  //   (acc, curr) => acc + curr.carbs / curr.decay,
-  //   0
-  // )
-
-  // const predictions = await Statistics.range_timeframe(
-  //   latestBloodGlucose,
-  //   addHours(now, 6),
-  //   1
-  // ).predict(user.id, user.carbohydrateRatio, user.correctionRatio, COB, rate)
-
-  const predictionData2 = await getData2(
-    latestBloodGlucose,
-    addHours(latestBloodGlucose, 9),
-    user.id
+  const carbs = await Statistics.carbs_timeframe(
+    user.id,
+    subHours(now, 12),
+    now
+  ).observed_carbs_per_meal(
+    user.id,
+    user.carbohydrateRatio,
+    user.correctionRatio
   )
+
+  const activeCarbs = carbs.filter(
+    (carb) => addMinutes(carb.timestamp, carb.decay) > now
+  )
+  const COB = activeCarbs.reduce(
+    (acc, curr) => acc + (curr.carbs - curr.observedCarbs),
+    0
+  )
+  const rate = activeCarbs.reduce(
+    (acc, curr) => acc + curr.carbs / curr.decay,
+    0
+  )
+
+  const predictions = await Statistics.range_timeframe(
+    now,
+    addHours(now, 6)
+  ).predict(user.id, user.carbohydrateRatio, user.correctionRatio, COB, rate)
 
   return (
     <BloodGlucose
       bloodGlucoseData={bloodGlucoseData}
-      predictionData2={predictionData2}
+      predictions={predictions}
     />
   )
 }
