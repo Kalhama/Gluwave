@@ -33,32 +33,30 @@ export default async function BloodGlucoseProvider() {
   const latestBloodGlucose =
     bloodGlucoseData[bloodGlucoseData.length - 1]?.timestamp ?? now
 
-  const carbs = await Statistics.carbs_timeframe(
+  const observed_carbbs = await Statistics.carbs_timeframe(
     user.id,
-    subHours(now, 12),
-    now
+    subHours(latestBloodGlucose, 12),
+    addHours(now, 6)
   ).observed_carbs_per_meal(
     user.id,
     user.carbohydrateRatio,
     user.correctionRatio
   )
 
-  const activeCarbs = carbs.filter(
-    (carb) => addMinutes(carb.timestamp, carb.decay) > now
+  const activeCarbs = observed_carbbs.filter(
+    (carb) => addMinutes(carb.timestamp, carb.decay) > latestBloodGlucose
   )
+
   const COB = activeCarbs.reduce(
     (acc, curr) => acc + (curr.carbs - curr.observedCarbs),
     0
   )
-  const rate = activeCarbs.reduce(
-    (acc, curr) => acc + curr.carbs / curr.decay,
-    0
-  )
+  const decay = activeCarbs.reduce((acc, curr) => acc + curr.decay, 0)
 
   const predictions = await Statistics.range_timeframe(
-    now,
+    latestBloodGlucose,
     addHours(now, 6)
-  ).predict(user.id, user.carbohydrateRatio, user.correctionRatio, COB, rate)
+  ).predict(user.id, user.carbohydrateRatio, user.correctionRatio, COB, decay)
 
   return (
     <BloodGlucose

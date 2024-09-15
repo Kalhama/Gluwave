@@ -676,8 +676,8 @@ export class Runner {
     userId: string,
     ISF: number,
     ICR: number,
-    COB: number,
-    rate: number
+    carbsOnBoard: number,
+    decay: number
   ) {
     if (!this._timeframe) {
       throw new Error('no timeframe')
@@ -689,15 +689,15 @@ export class Runner {
       .with(this._timeframe, metrics)
       .select({
         timestamp: this._timeframe.timestamp,
-        insulinEffect: sql`${metrics.cumulativeInsulin} * ${ISF}`
+        insulinEffect: sql`${metrics.cumulativeInsulin} * ${ICR} * -1`
           .mapWith(glucose.value)
           .as('insulinEffect'),
         carbEffect: sql`
         total_carbs_absorbed(
           t => ${this._timeframe.timestamp},
           start => FIRST_VALUE(${this._timeframe.timestamp}) OVER (ORDER BY ${this._timeframe.timestamp} ASC),
-          amount => 50,
-          decay => 60
+          amount => ${carbsOnBoard},
+          decay => ${decay}
         ) / ${ISF} * ${ICR}
         `
           .mapWith(glucose.value)
@@ -778,7 +778,7 @@ export class Statistics {
                 .as('timestamp'),
             })
             .from(
-              sql`generate_series(${start}::timestamp, ${end}::timestamp, interval '1 minutes') as timestamp`
+              sql`generate_series(${startOfMinute(start).toISOString()}::timestamp, ${startOfMinute(end).toISOString()}::timestamp, interval '1 minutes') as timestamp`
             )
         )
     )
