@@ -183,7 +183,7 @@ export function CarbDialog({ carb, children }: PropsWithChildren<Props>) {
                           onClick={() => field.onChange(new Date())}
                           variant="outline"
                           type="button"
-                          className="h-8"
+                          className="h-8 flex-grow"
                         >
                           Now
                         </Button>

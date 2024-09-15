@@ -22,20 +22,12 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useServerAction } from '@/lib/use-server-action'
 import { cn } from '@/lib/utils'
 import { upsertInsulinSchema } from '@/schemas/upsertInsulinSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addMinutes, format, parse, set } from 'date-fns'
-import { CalendarIcon, Syringe } from 'lucide-react'
+import { CalendarIcon } from 'lucide-react'
 import * as React from 'react'
 import { PropsWithChildren, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -181,7 +173,7 @@ export function InsulinDialog({ insulin, children }: PropsWithChildren<Props>) {
                           onClick={() => field.onChange(new Date())}
                           variant="outline"
                           type="button"
-                          className="h-8"
+                          className="h-8 flex-grow"
                         >
                           Now
                         </Button>

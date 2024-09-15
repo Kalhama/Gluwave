@@ -179,7 +179,7 @@ export function BloodGlucoseDialog({
                           onClick={() => field.onChange(new Date())}
                           variant="outline"
                           type="button"
-                          className="h-8"
+                          className="h-8 flex-grow"
                         >
                           Now
                         </Button>
