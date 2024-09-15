@@ -73,7 +73,12 @@ export const TopBar = async () => {
         className={`flex items-center border-4 px-4 py-1 rounded-full ${status}`}
       >
         <div className="rounded-full inline">
-          <span className="text-2xl font-bold">{last.value}</span>
+          <span className="text-2xl font-bold">
+            {last.value.toLocaleString(undefined, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+          </span>
           <span className="text-sm"> mmol/l</span>
         </div>
         {trend !== null && (
