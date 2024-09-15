@@ -1,6 +1,6 @@
 'use client'
 
-import { type Runner } from '@/lib/sql_utils'
+import { type Statistics } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -21,7 +21,7 @@ interface Props {
   predictions: Predictions
 }
 
-type Predictions = Awaited<ReturnType<Runner['predict']>>
+type Predictions = Awaited<ReturnType<Statistics['predict']>>
 
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never

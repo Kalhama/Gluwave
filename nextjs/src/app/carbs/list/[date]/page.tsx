@@ -29,14 +29,14 @@ async function ListCarbTable({ date }: Props) {
   const start = startOfDay(date)
   const end = endOfDay(date)
 
-  const carbs = await Statistics.carbs_timeframe(
-    user.id,
-    start,
-    end
-  ).observed_carbs_per_meal(
-    user.id,
-    user.carbohydrateRatio,
-    user.correctionRatio
+  const tf = Statistics.carbs_timeframe(user.id, start, end)
+  const carbs = await Statistics.execute(
+    Statistics.observed_carbs_per_meal(
+      tf,
+      user.id,
+      user.carbohydrateRatio,
+      user.correctionRatio
+    )
   )
 
   return (
