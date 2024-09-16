@@ -18,19 +18,15 @@ interface Props {
     timestamp: Date
     value: number
   }[]
-  predictions: Predictions
+  predictions: Prediction[]
 }
 
-type Predictions = Awaited<ReturnType<Statistics['predict']>>
-
-type ArrayElement<ArrayType extends readonly unknown[]> =
-  ArrayType extends readonly (infer ElementType)[] ? ElementType : never
-
-type PredictionElement = ArrayElement<Predictions>
-
-// function sum(arr) {
-//   return arr.reduce((acc, curr) => acc + curr, 0)
-// }
+type Prediction = {
+  timestamp: Date
+  carbEffect: number
+  insulinEffect: number
+  totalEffect: number
+}
 
 export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
   const now = new Date()
@@ -110,9 +106,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
             }}
             data={predictions}
             x="timestamp"
-            y={(d: PredictionElement) =>
-              d.insulinEffect - predictions[0].insulinEffect + lastBloodGlucose
-            }
+            y={(d: Prediction) => d.insulinEffect + lastBloodGlucose}
           />
           <VictoryLine
             style={{
@@ -121,9 +115,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
             }}
             data={predictions}
             x="timestamp"
-            y={(d: PredictionElement) =>
-              d.totalEffect - predictions[0].totalEffect + lastBloodGlucose
-            }
+            y={(d: Prediction) => d.totalEffect + lastBloodGlucose}
           />
           <VictoryLine
             style={{
@@ -132,9 +124,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
             }}
             data={predictions}
             x="timestamp"
-            y={(d: PredictionElement) =>
-              d.carbEffect - predictions[0].carbEffect + lastBloodGlucose
-            }
+            y={(d: Prediction) => d.carbEffect + lastBloodGlucose}
           />
           <VictoryScatter
             style={{

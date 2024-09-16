@@ -31,7 +31,7 @@ async function ListCarbTable({ date }: Props) {
 
   const tf = Statistics.carbs_timeframe(user.id, start, end)
   const carbs = await Statistics.execute(
-    Statistics.observed_carbs_per_meal(
+    Statistics.observedCarbsPerMeal(
       tf,
       user.id,
       user.carbohydrateRatio,
