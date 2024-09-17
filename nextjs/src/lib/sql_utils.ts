@@ -1,6 +1,6 @@
 import { db } from '@/db'
 import { carbs, glucose, insulin, userTable } from '@/schema'
-import { addHours, startOfMinute, subHours } from 'date-fns'
+import { startOfMinute } from 'date-fns'
 import {
   ColumnsSelection,
   and,
@@ -309,120 +309,6 @@ export const calculateUserCarbsData = async (
   return carbs_on_board
 }
 
-// TODO remove / use Statistics class
-export const getData2 = async (from: Date, to: Date, userId: string) => {
-  const user = (
-    await db.select().from(userTable).where(eq(userTable.id, userId)).limit(1)
-  )[0]
-
-  if (!user) {
-    throw new Error('did not find user with userId')
-  }
-
-  const minutes = db.$with('minutes').as(
-    db
-      .select({
-        timestamp: sql<Date>`timestamp`
-          .mapWith(carbs.timestamp)
-          .as('timestamp'),
-      })
-      .from(
-        sql`
-    generate_series(
-        ${subHours(startOfMinute(from), 0)}, 
-        ${to}, 
-        '00:01:00'::interval) AS "timestamp"
-  `
-      ) // todo test if we need to subhours
-  )
-
-  // WARNING: this does not essentially start form 0
-  const cumulativeInsulinEffect = db.$with('cumulative_insulin_effect').as(
-    db
-      .with(minutes)
-      .select({
-        timestamp: sql`minutes.timestamp`
-          .mapWith(carbs.timestamp)
-          .as('timestamp'),
-        cumulativeInsulinEffect:
-          sql`COALESCE(SUM(((((EXTRACT(EPOCH FROM minutes.timestamp - insulin.timestamp)/60/55)+1) * EXP(-((EXTRACT(EPOCH FROM minutes.timestamp - insulin.timestamp)/60/55)))) - 1) * insulin.amount), 0) * ${user?.correctionRatio}`
-            .mapWith(insulin.amount)
-            .as('cumulative_insulin_effect'),
-      })
-      .from(minutes)
-      .leftJoin(
-        insulin,
-        and(
-          sql`insulin."timestamp" <= minutes."timestamp"`,
-          sql`insulin."timestamp" >= (${from}::timestamp - interval '8 hours')`,
-          eq(insulin.userId, userId)
-        )
-      )
-      .groupBy(
-        sql`minutes.timestamp` /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */
-      )
-      .orderBy(
-        sql`minutes.timestamp` /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */
-      )
-  )
-
-  // WARNING: this does not essentially start form 0
-  const cumulativeCarbsEffect = db.$with('cumulative_carbs_effect').as(
-    db
-      .with(minutes)
-      .select({
-        timestamp: sql`minutes.timestamp`
-          .mapWith(carbs.timestamp)
-          .as('timestamp'),
-        cumulativeCarbsEffect: sql`SUM(
-          COALESCE(LEAST(1, EXTRACT(epoch FROM minutes.timestamp - carbs.timestamp) / 60 / carbs.decay) * carbs.amount / ${user?.carbohydrateRatio} * ${user?.correctionRatio}, 0)
-        )`
-          .mapWith(carbs.amount)
-          .as('cumulative_carbs_effect'),
-      })
-      .from(minutes)
-      .leftJoin(
-        carbs,
-        and(
-          sql`carbs."timestamp" <= minutes."timestamp"`,
-          sql`carbs."timestamp" >= (${from}::timestamp - interval '12 hours')`,
-          eq(carbs.userId, userId)
-        )
-      )
-      .groupBy(
-        sql`minutes.timestamp` /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */
-      )
-      .orderBy(
-        sql`minutes.timestamp` /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */
-      )
-  )
-
-  const results = await db
-    .with(cumulativeCarbsEffect, cumulativeInsulinEffect)
-    .select({
-      timestamp: sql`cumulative_insulin_effect.timestamp`.mapWith(
-        insulin.timestamp
-      ),
-      cumulativeCarbsEffect: sql`cumulative_carbs_effect`.mapWith(
-        insulin.amount
-      ),
-      cumulativeInsulinEffect: sql`cumulative_insulin_effect`.mapWith(
-        insulin.amount
-      ),
-      totalEffect:
-        sql`cumulative_insulin_effect + cumulative_carbs_effect`.mapWith(
-          insulin.amount
-        ),
-    })
-    .from(cumulativeCarbsEffect)
-    .leftJoin(
-      cumulativeInsulinEffect,
-      sql`cumulative_insulin_effect.timestamp = cumulative_carbs_effect.timestamp`
-    )
-
-  return results
-}
-
 type Timeframe = WithSubqueryWithSelection<
   {
     timestamp: PgColumn<
@@ -451,6 +337,8 @@ type Timeframe = WithSubqueryWithSelection<
 export class Statistics {
   /**
    * The function might return meals earlier than specified in timeframe selection
+   *
+   * If there is no observed carbs on some time period used then observed carbs might be too low
    */
   public static observedCarbsPerMeal(
     timeframe: Timeframe,
@@ -526,7 +414,6 @@ export class Statistics {
   }
 
   public static interpolatedGlucose(timeframe: Timeframe, userId: string) {
-    // TODO we rely too much on this when we don't need to interpolate anything
     const adjacentGlucoseReadings = db.$with('adjacentGlucoseReadings').as(
       db
         .select({
@@ -604,6 +491,7 @@ export class Statistics {
           and(
             eq(insulin.userId, userId),
             lt(insulin.timestamp, timeframe.timestamp)
+            // lt(sql`LEAST(timeframe.timestamp) - interval '12 hours`, insulin.timestamp) with or without?
           )
         )
         .groupBy(timeframe.timestamp)
@@ -640,7 +528,7 @@ export class Statistics {
           and(
             eq(carbs.userId, userId),
             lt(carbs.timestamp, timeframe.timestamp)
-            /* TODO optimize */
+            // lt(sql`LEAST(timeframe.timestamp) - interval '12 hours'`, carbs.timestamp) with or without?
           )
         )
         .groupBy(timeframe.timestamp)
@@ -668,7 +556,7 @@ export class Statistics {
           glucose: interpolatedGlucose.glucose,
           cumulativeInsulin: cumulativeInsulin.cumulativeInsulin,
 
-          // TODO fix bug. right ish amuont of total observed but on wrong timestamps.
+          // If there is no glucose_change, there is no observed_carbs, which is correct behavior
           observedCarbs: sql`observed_carbs(
             glucose_chnage => LEAD(${interpolatedGlucose.glucose}) OVER (ORDER BY ${timeframe.timestamp}) - ${interpolatedGlucose.glucose},
             insulin_change => LEAD(${cumulativeInsulin.cumulativeInsulin}) OVER (ORDER BY ${timeframe.timestamp}) - ${cumulativeInsulin.cumulativeInsulin},
@@ -694,18 +582,18 @@ export class Statistics {
   }
 
   public static predict(
-    timeframe: Timeframe,
+    start: Date,
+    end: Date,
     userId: string,
     ISF: number,
-    ICR: number,
-    start: Date
+    ICR: number
   ) {
-    const cumulativeInsulin = Statistics.cumulativeInsulin(timeframe, userId)
+    const range_tf = Statistics.range_timeframe(start, end)
+    const cumulativeInsulin = Statistics.cumulativeInsulin(range_tf, userId)
 
-    // TODO we can't declare this here. What if we want predictions somewhere else
-    const now = new Date()
+    const carbs_tf = Statistics.carbs_timeframe(userId, start, end)
     const carbs_observed = Statistics.observedCarbsPerMeal(
-      Statistics.carbs_timeframe(userId, subHours(now, 6), addHours(now, 6)),
+      carbs_tf,
       userId,
       ISF,
       ICR
@@ -713,14 +601,13 @@ export class Statistics {
 
     const predictedCarbs = db.$with('predicted_carbs').as(
       db
-        .with(timeframe, carbs_observed)
+        .with(range_tf, carbs_observed)
         .select({
-          timestamp: timeframe.timestamp,
-          // TODO I don't lke how start is separate function parameter
-          // TODO should probably rename decay to rate
+          timestamp: range_tf.timestamp,
+          // don't really like how we come up with decay but whatever
           predicted_carbs: sql`SUM(
             total_carbs_absorbed(
-              t => ${timeframe.timestamp},
+              t => ${range_tf.timestamp},
               start => GREATEST(${start.toISOString()}::timestamp, ${carbs_observed.timestamp}),
               amount => (GREATEST(${carbs_observed.carbs} - ${carbs_observed.observedCarbs}, 0))::integer,
               decay => ((GREATEST(${carbs_observed.carbs} - ${carbs_observed.observedCarbs}, 0)) / (${carbs_observed.carbs} / ${carbs_observed.decay}))::integer
@@ -729,13 +616,13 @@ export class Statistics {
             .mapWith(carbs.amount)
             .as('carbEffect'),
         })
-        .from(timeframe)
+        .from(range_tf)
         .leftJoin(
           carbs_observed,
-          and(gte(timeframe.timestamp, carbs_observed.timestamp))
+          and(gte(range_tf.timestamp, carbs_observed.timestamp))
         )
-        .groupBy(timeframe.timestamp)
-        .orderBy(timeframe.timestamp)
+        .groupBy(range_tf.timestamp)
+        .orderBy(range_tf.timestamp)
     )
 
     const cte = db.$with('predict').as(
@@ -790,8 +677,8 @@ export class Statistics {
             .where(
               and(
                 eq(carbs.userId, userId),
-                gte(carbs.timestamp, start),
-                lte(carbs.timestamp, end)
+                gte(sql`timestamp + MAKE_INTERVAL(mins => decay)`, start),
+                lte(sql`timestamp + MAKE_INTERVAL(mins => decay)`, end)
               )
             )
         )
