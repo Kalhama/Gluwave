@@ -13,7 +13,7 @@ importers:
         version: 3.3.4(react-hook-form@7.51.0(react@18.2.0))
       '@lucia-auth/adapter-drizzle':
         specifier: ^1.1.0
-        version: 1.1.0(drizzle-orm@0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2(prisma@5.10.2))(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(prisma@5.10.2)(react@18.2.0))(lucia@3.2.0)
+        version: 1.1.0(drizzle-orm@0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2)(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(react@18.2.0))(lucia@3.2.0)
       '@neondatabase/serverless':
         specifier: ^0.9.4
         version: 0.9.4
@@ -58,7 +58,7 @@ importers:
         version: 3.6.0
       drizzle-orm:
         specifier: ^0.33.0
-        version: 0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2(prisma@5.10.2))(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(prisma@5.10.2)(react@18.2.0)
+        version: 0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2)(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(react@18.2.0)
       focus-trap-react:
         specifier: ^10.2.3
         version: 10.2.3(prop-types@15.8.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -145,8 +145,8 @@ importers:
         specifier: 14.1.2
         version: 14.1.2(eslint@8.57.0)(typescript@5.3.3)
       husky:
-        specifier: ^9.0.11
-        version: 9.0.11
+        specifier: ^9.1.5
+        version: 9.1.5
       postcss:
         specifier: ^8
         version: 8.4.35
@@ -573,6 +573,7 @@ packages:
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
     engines: {node: '>=10.10.0'}
+    deprecated: Use @eslint/config-array instead
 
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
@@ -580,6 +581,7 @@ packages:
 
   '@humanwhocodes/object-schema@2.0.2':
     resolution: {integrity: sha512-6EwiSjwWYP7pTckG6I5eyFANjPhmPjUX9JRLUSfNPC7FX7zK9gyZAfUEaECL6ALTpGX5AjnBq3C9XmVWPitNpw==}
+    deprecated: Use @eslint/object-schema instead
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -1047,21 +1049,6 @@ packages:
     peerDependenciesMeta:
       prisma:
         optional: true
-
-  '@prisma/debug@5.10.2':
-    resolution: {integrity: sha512-bkBOmH9dpEBbMKFJj8V+Zp8IZHIBjy3fSyhLhxj4FmKGb/UBSt9doyfA6k1UeUREsMJft7xgPYBbHSOYBr8XCA==}
-
-  '@prisma/engines-version@5.10.0-34.5a9203d0590c951969e85a7d07215503f4672eb9':
-    resolution: {integrity: sha512-uCy/++3Jx/O3ufM+qv2H1L4tOemTNqcP/gyEVOlZqTpBvYJUe0tWtW0y3o2Ueq04mll4aM5X3f6ugQftOSLdFQ==}
-
-  '@prisma/engines@5.10.2':
-    resolution: {integrity: sha512-HkSJvix6PW8YqEEt3zHfCYYJY69CXsNdhU+wna+4Y7EZ+AwzeupMnUThmvaDA7uqswiHkgm5/SZ6/4CStjaGmw==}
-
-  '@prisma/fetch-engine@5.10.2':
-    resolution: {integrity: sha512-dSmXcqSt6DpTmMaLQ9K8ZKzVAMH3qwGCmYEZr/uVnzVhxRJ1EbT/w2MMwIdBNq1zT69Rvh0h75WMIi0mrIw7Hg==}
-
-  '@prisma/get-platform@5.10.2':
-    resolution: {integrity: sha512-nqXP6vHiY2PIsebBAuDeWiUYg8h8mfjBckHh6Jezuwej0QJNnjDiOq30uesmg+JXxGk99nqyG3B7wpcOODzXvg==}
 
   '@radix-ui/number@1.0.1':
     resolution: {integrity: sha512-T5gIdVO2mmPW3NNhjNgEP3cqMXjXL9UbO0BzWcXfvdBs+BohbQxvd/K5hSVKmn9/lbTdsQVKbUcP5WLCwvUbBg==}
@@ -2274,6 +2261,7 @@ packages:
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   globals@11.12.0:
     resolution: {integrity: sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==}
@@ -2330,8 +2318,8 @@ packages:
     resolution: {integrity: sha512-1/th4MHjnwncwXsIW6QMzlvYL9kG5e/CpVvLRZe4XPa8TOUNbCELqmvhDmnkNsAjwaG4+I8gJJL0JBvTTLO9qA==}
     engines: {node: '>= 0.4'}
 
-  husky@9.0.11:
-    resolution: {integrity: sha512-AB6lFlbwwyIqMdHYhwPe+kjOC3Oc5P3nThEoW/AaO2BX3vJDjWPFxYLxokUZOo6RNX20He3AaT8sESs9NJcmEw==}
+  husky@9.1.5:
+    resolution: {integrity: sha512-rowAVRUBfI0b4+niA4SJMhfQwc107VLkBUgEYYAOQAbqDCnra1nYh83hF/MDmhYs9t9n1E3DuKOrs2LYNC+0Ag==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -2352,6 +2340,7 @@ packages:
 
   inflight@1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
+    deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
 
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
@@ -2956,11 +2945,6 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  prisma@5.10.2:
-    resolution: {integrity: sha512-hqb/JMz9/kymRE25pMWCxkdyhbnIWrq+h7S6WysJpdnCvhstbJSNP/S6mScEcqiB8Qv2F+0R3yG+osRaWqZacQ==}
-    engines: {node: '>=16.13'}
-    hasBin: true
-
   prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
 
@@ -3082,6 +3066,7 @@ packages:
 
   rimraf@3.0.2:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
   run-parallel@1.2.0:
@@ -3884,9 +3869,9 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
-  '@lucia-auth/adapter-drizzle@1.1.0(drizzle-orm@0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2(prisma@5.10.2))(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(prisma@5.10.2)(react@18.2.0))(lucia@3.2.0)':
+  '@lucia-auth/adapter-drizzle@1.1.0(drizzle-orm@0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2)(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(react@18.2.0))(lucia@3.2.0)':
     dependencies:
-      drizzle-orm: 0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2(prisma@5.10.2))(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(prisma@5.10.2)(react@18.2.0)
+      drizzle-orm: 0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2)(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(react@18.2.0)
       lucia: 3.2.0
 
   '@napi-rs/wasm-runtime@0.1.1':
@@ -4198,35 +4183,7 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@prisma/client@5.10.2(prisma@5.10.2)':
-    optionalDependencies:
-      prisma: 5.10.2
-    optional: true
-
-  '@prisma/debug@5.10.2':
-    optional: true
-
-  '@prisma/engines-version@5.10.0-34.5a9203d0590c951969e85a7d07215503f4672eb9':
-    optional: true
-
-  '@prisma/engines@5.10.2':
-    dependencies:
-      '@prisma/debug': 5.10.2
-      '@prisma/engines-version': 5.10.0-34.5a9203d0590c951969e85a7d07215503f4672eb9
-      '@prisma/fetch-engine': 5.10.2
-      '@prisma/get-platform': 5.10.2
-    optional: true
-
-  '@prisma/fetch-engine@5.10.2':
-    dependencies:
-      '@prisma/debug': 5.10.2
-      '@prisma/engines-version': 5.10.0-34.5a9203d0590c951969e85a7d07215503f4672eb9
-      '@prisma/get-platform': 5.10.2
-    optional: true
-
-  '@prisma/get-platform@5.10.2':
-    dependencies:
-      '@prisma/debug': 5.10.2
+  '@prisma/client@5.10.2':
     optional: true
 
   '@radix-ui/number@1.0.1':
@@ -5078,15 +5035,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2(prisma@5.10.2))(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(prisma@5.10.2)(react@18.2.0):
+  drizzle-orm@0.33.0(@neondatabase/serverless@0.9.4)(@prisma/client@5.10.2)(@types/pg@8.11.6)(@types/react@18.2.74)(pg@8.12.0)(postgres@3.4.4)(react@18.2.0):
     optionalDependencies:
       '@neondatabase/serverless': 0.9.4
-      '@prisma/client': 5.10.2(prisma@5.10.2)
+      '@prisma/client': 5.10.2
       '@types/pg': 8.11.6
       '@types/react': 18.2.74
       pg: 8.12.0
       postgres: 3.4.4
-      prisma: 5.10.2
       react: 18.2.0
 
   eastasianwidth@0.2.0: {}
@@ -5259,7 +5215,7 @@ snapshots:
       '@typescript-eslint/parser': 6.21.0(eslint@8.57.0)(typescript@5.3.3)
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0)
+      eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.57.0)
       eslint-plugin-react: 7.34.0(eslint@8.57.0)
@@ -5278,12 +5234,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0):
+  eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0):
     dependencies:
       debug: 4.3.4
       enhanced-resolve: 5.16.0
       eslint: 8.57.0
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.7.2
@@ -5295,14 +5251,14 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0):
+  eslint-module-utils@2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 6.21.0(eslint@8.57.0)(typescript@5.3.3)
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0)
+      eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -5316,7 +5272,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0)
       hasown: 2.0.1
       is-core-module: 2.13.1
       is-glob: 4.0.3
@@ -5632,7 +5588,7 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  husky@9.0.11: {}
+  husky@9.1.5: {}
 
   ignore@5.3.1: {}
 
@@ -6173,11 +6129,6 @@ snapshots:
       '@trivago/prettier-plugin-sort-imports': 4.3.0(prettier@3.2.5)
 
   prettier@3.2.5: {}
-
-  prisma@5.10.2:
-    dependencies:
-      '@prisma/engines': 5.10.2
-    optional: true
 
   prop-types@15.8.1:
     dependencies:
