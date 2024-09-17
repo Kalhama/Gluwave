@@ -1,6 +1,6 @@
 'use client'
 
-import { getData2 } from '@/lib/sql_utils'
+import { type Statistics } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -18,21 +18,17 @@ interface Props {
     timestamp: Date
     value: number
   }[]
-  predictionData2: PredictionData2
+  predictions: Prediction[]
 }
 
-type PredictionData2 = Awaited<ReturnType<typeof getData2>>
+type Prediction = {
+  timestamp: Date
+  carbEffect: number
+  insulinEffect: number
+  totalEffect: number
+}
 
-type ArrayElement<ArrayType extends readonly unknown[]> =
-  ArrayType extends readonly (infer ElementType)[] ? ElementType : never
-
-type PredictionDataElement2 = ArrayElement<PredictionData2>
-
-// function sum(arr) {
-//   return arr.reduce((acc, curr) => acc + curr, 0)
-// }
-
-export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
+export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
   const now = new Date()
 
   const lastBloodGlucose =
@@ -45,8 +41,8 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
 
   const eventually =
     lastBloodGlucose -
-    predictionData2[0]?.totalEffect +
-    predictionData2[predictionData2.length - 1]?.totalEffect
+    predictions[0]?.totalEffect +
+    predictions[predictions.length - 1]?.totalEffect
 
   return (
     <div>
@@ -108,37 +104,27 @@ export const BloodGlucose = ({ bloodGlucoseData, predictionData2 }: Props) => {
               data: { stroke: '#c43a31', strokeDasharray: '2 2' },
               parent: { border: '1px solid #ccc', padding: 0 },
             }}
-            data={predictionData2}
+            data={predictions}
             x="timestamp"
-            y={(d: PredictionDataElement2) =>
-              d.cumulativeInsulinEffect -
-              predictionData2[0].cumulativeInsulinEffect +
-              lastBloodGlucose
-            }
+            y={(d: Prediction) => d.insulinEffect + lastBloodGlucose}
           />
           <VictoryLine
             style={{
               data: { stroke: '#7a7a7a', strokeDasharray: '2 2' },
               parent: { border: '1px solid #ccc', padding: 0 },
             }}
-            data={predictionData2}
+            data={predictions}
             x="timestamp"
-            y={(d: PredictionDataElement2) =>
-              d.totalEffect - predictionData2[0].totalEffect + lastBloodGlucose
-            }
+            y={(d: Prediction) => d.totalEffect + lastBloodGlucose}
           />
           <VictoryLine
             style={{
               data: { stroke: '#31c449', strokeDasharray: '2 2' },
               parent: { border: '1px solid #ccc', padding: 0 },
             }}
-            data={predictionData2}
+            data={predictions}
             x="timestamp"
-            y={(d: PredictionDataElement2) =>
-              d.cumulativeCarbsEffect -
-              predictionData2[0].cumulativeCarbsEffect +
-              lastBloodGlucose
-            }
+            y={(d: Prediction) => d.carbEffect + lastBloodGlucose}
           />
           <VictoryScatter
             style={{

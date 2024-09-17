@@ -43,6 +43,13 @@
       "when": 1726324303662,
       "tag": "0005_tiny_hitman",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1726582995450,
+      "tag": "0006_complex_mindworm",
+      "breakpoints": true
     }
   ]
 }
