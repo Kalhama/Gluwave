@@ -41,14 +41,7 @@
       "idx": 5,
       "version": "7",
       "when": 1726324303662,
-      "tag": "0005_opposite_pyro",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "tag": "0006_tiny_hitman",
-      "when": 1726576729033,
+      "tag": "0005_tiny_hitman",
       "breakpoints": true
     }
   ]

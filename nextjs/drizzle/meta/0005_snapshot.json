@@ -44,9 +44,13 @@
         "carbs_user_id_user_id_fk": {
           "name": "carbs_user_id_user_id_fk",
           "tableFrom": "carbs",
-          "columnsFrom": ["user_id"],
+          "columnsFrom": [
+            "user_id"
+          ],
           "tableTo": "user",
-          "columnsTo": ["id"],
+          "columnsTo": [
+            "id"
+          ],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -94,9 +98,13 @@
         "glucose_user_id_user_id_fk": {
           "name": "glucose_user_id_user_id_fk",
           "tableFrom": "glucose",
-          "columnsFrom": ["user_id"],
+          "columnsFrom": [
+            "user_id"
+          ],
           "tableTo": "user",
-          "columnsTo": ["id"],
+          "columnsTo": [
+            "id"
+          ],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -138,9 +146,13 @@
         "insulin_user_id_user_id_fk": {
           "name": "insulin_user_id_user_id_fk",
           "tableFrom": "insulin",
-          "columnsFrom": ["user_id"],
+          "columnsFrom": [
+            "user_id"
+          ],
           "tableTo": "user",
-          "columnsTo": ["id"],
+          "columnsTo": [
+            "id"
+          ],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -176,9 +188,13 @@
         "session_user_id_user_id_fk": {
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
-          "columnsFrom": ["user_id"],
+          "columnsFrom": [
+            "user_id"
+          ],
           "tableTo": "user",
-          "columnsTo": ["id"],
+          "columnsTo": [
+            "id"
+          ],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -243,7 +259,9 @@
       "uniqueConstraints": {
         "user_github_id_unique": {
           "name": "user_github_id_unique",
-          "columns": ["github_id"],
+          "columns": [
+            "github_id"
+          ],
           "nullsNotDistinct": false
         }
       }
