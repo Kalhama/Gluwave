@@ -2,8 +2,6 @@
 
 # Gluwave
 
-Gluwave is a web based open loop application for diabetes management
-
 ## Features
 
 - [x] Smart glucose [prediction algorithm](#algorithm)
