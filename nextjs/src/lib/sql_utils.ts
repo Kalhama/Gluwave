@@ -1,6 +1,6 @@
 import { db } from '@/db'
 import { carbs, glucose, insulin, userTable } from '@/schema'
-import { startOfMinute } from 'date-fns'
+import { startOfMinute, subHours } from 'date-fns'
 import {
   ColumnsSelection,
   and,
@@ -591,7 +591,11 @@ export class Statistics {
     const range_tf = Statistics.range_timeframe(start, end)
     const cumulativeInsulin = Statistics.cumulativeInsulin(range_tf, userId)
 
-    const carbs_tf = Statistics.carbs_timeframe(userId, start, end)
+    const carbs_tf = Statistics.carbs_timeframe(
+      userId,
+      subHours(start, 12), // make sure that we catch all observed carbs on currently active meals
+      end
+    )
     const carbs_observed = Statistics.observedCarbsPerMeal(
       carbs_tf,
       userId,
