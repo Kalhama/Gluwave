@@ -623,7 +623,10 @@ export class Statistics {
         .from(range_tf)
         .leftJoin(
           carbs_observed,
-          and(gte(range_tf.timestamp, carbs_observed.timestamp))
+          and(
+            gte(range_tf.timestamp, carbs_observed.timestamp),
+            sql`${carbs_observed.timestamp} + MAKE_INTERVAL(mins => ${carbs_observed.decay}) >= ${start.toISOString()}::timestamp` // esxclude carbs that are not active
+          )
         )
         .groupBy(range_tf.timestamp)
         .orderBy(range_tf.timestamp)
