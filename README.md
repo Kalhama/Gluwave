@@ -65,6 +65,7 @@ Final section is about your daily carbs and how they have been absorbed over tim
 <img src="./images/carbs.png" width="30%">
 
 If you view the list of carbs you can see how much carbs we actually observed
+
 <img src="./images/carbs-list.png" width="30%">
 
 ## Algorithm
