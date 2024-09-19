@@ -108,25 +108,6 @@ export function Settings({ defaultValues }: Props) {
           </FormItem>
           <FormField
             control={form.control}
-            name="target"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Target blood glucose (mmol/l)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={field.value}
-                    onChange={(val) => field.onChange(val.target.value)}
-                  />
-                </FormControl>
-                <FormDescription />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
             name="insulinOnBoardOffset"
             render={({ field }) => (
               <FormItem className="hidden">

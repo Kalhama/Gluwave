@@ -1,170 +1,117 @@
-# insulin on board calculator
+# Insulin on board calculator
 
-Simple web based calculator / diary for logging insulin, carbs and glucose and making predictions based on them.
+Web based open loop application for diabetes management
 
-![image of the app main screen](examples/main.png)
+## Features
 
-Example of this is hosted at [iob.kalhama.fi](https://iob.kalhama.fi/)
+- [x] Smart glucose [prediction algorithm](#algorithm)
+- [x] Integrate glucose from Freestyle Libre 2 / 3, or manually input fingerprick results
+- [x] Calculate insulin on board
+- [x] Log meals
 
-## How to start developing
+## Installation
 
-1. Install a postgresql `docker run --name postgres -e 
-POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres`
+You can use publicly available instance at https://iob.kalhama.fi/ or you can [self host](#self-hosting)
 
-- Optional: Install pgadmin: `docker run -p 5050:5050 -e 'PGADMIN_LISTEN_PORT=5050' -e 'PGADMIN_DEFAULT_EMAIL=admin@admin.com' -e 'PGADMIN_DEFAULT_PASSWORD=admin' -d --name pgadmin4 dpage/pgadmin4` Then use 172.17.0.1:5432 to access database at host
+## Using app
 
-2. Create .env file which has got all the fields from `src/config.mjs`. If you want to disable some of the OAuth providers you can do it first.
-3. `pnpm install`
-4. `pnpm exec drizzle-orm push`
-5. `pnpm dev`
-6. Go to [localhost:3000](http://localhost:3000) to see server running
+Using app is simple with followin steps
 
-## Tech
+### Configure settings
 
-- framework: [Next.js](https://nextjs.org/docs)
-- orm: Drizzle + postgres
-- forms: [react-hook-form](https://react-hook-form.com/)
-- validation: [zod](https://github.com/colinhacks/zod)
-- styles: [tailwindcss](https://tailwindcss.com/), sass, normalize.css
+Update your carbohydrate ratio and correction ratio in the settings
+
+<img src="./images/settings.png" width="30%">
+
+### Adding entries (glucose, carbohydrate and insulin)
+
+You can add new glucose, carbohydrate and insulin entries from the bottom toolbar.
+
+**Example of adding new meal entry:**
+
+1. When was the meal
+2. How big was the meal in carbs
+3. How long do you expect your body to absorb the meal
+
+<img src="./images/add-carbs.png" width="30%">
+
+### Main screen
+
+Main screen is split into three sections:
+
+#### Glucose
+
+First of them is historical glucose and predictions. Green predictioon is what predictions would be without any insulin and red is without any meal. These serve just as a "confidence interval". The gray line is the real prediction.
+
+You can see the list of your blood glucose entries if you click the `Eventually Y mmol/l` on top right
+
+<img src="./images/blood-glucose.png" width="30%">
+
+[Read more](#algorithm) about prediction algorithm
+
+#### Insulin
+
+Second section is for insulin on board. Again you can view and edit the insulin entries by clicking the `IOB X U` on top right.
+
+<img src="./images/insulin.png" width="30%">
+
+> [!WARNING]  
+> All insulin is assumed to be Fiasp. [Open an issue](https://github.com/Kalhama/iob-calculator-nextjs/issues) for new insulin types
+
+#### Carbs
+
+Final section is about your daily carbs and how they have been absorbed over time.
+
+<img src="./images/carbs.png" width="30%">
+
+If you view the list of carbs you can see how much carbs we actually observed
+<img src="./images/carbs-list.png" width="30%">
+
+## Algorithm
+
+Algorithm is based on three things
+
+1. Last known blood glucose:
+2. Remaining carbs, that is reported carbs minus observed carbs until now
+   - Remaining carb abosrption speed is same as originally reported absorption speed ($rate = carbs / absorption time$)
+3. Remaining insulin
+
+Then insulin is assumed to continue its decay, carbs are predicted to decay at their original rates. Combine them and you get the final prediction.
+
+## Integrating with Freestyle Libre 2 / 3
+
+If you want to integrate Freestyle Libre into the app you need to run the piece of integration yourself. The documentation of it is in separate repo: [Github - librelinkup-to-iob-calculator](https://github.com/Kalhama/iob-calculator-nextjs/tree/master/librelinkup-to-iob-calculator)
+
+## Credits
+
+Big credits to folks at Loop. I have shamelessly copied many of their achievements and concepts.
+
+## Self hosting
+
+Check the example [docker-compose.yml](https://github.com/Kalhama/iob-calculator-nextjs/blob/master/nextjs/docker-compose.yml)
+
+## Technology stack
+
+- Framework: [Next.js](https://nextjs.org/docs)
+- ORM and database: Drizzle + postgres
+- Forms: [react-hook-form](https://react-hook-form.com/)
+- (Form) validation: [zod](https://github.com/colinhacks/zod)
+- Styles: [tailwindcss](https://tailwindcss.com/), sass, normalize.css
 - UI libraries: [shadcn/ui](https://ui.shadcn.com/)
-- icons: [lucide-react](https://lucide.dev/icons/)
-- linter: ESLint
-- formatter: Prettier
-- misc:
-  - axios
+- Icons: [lucide-react](https://lucide.dev/icons/)
+- Linter: ESLint
+- Formatter: Prettier
+- Misc:
+  - Axios
   - [react-datepicker](https://reactdatepicker.com/)
   - [@tanstack/react-table](https://tanstack.com/table/latest)
-  - package.json
-- authorization: [lucia-auth](https://lucia-auth.com/)
+  - and other at [package.json](./nextjs/package.json)
+- Authorization: [lucia-auth](https://lucia-auth.com/)
 
-## How to add additional OAuth methods
+## Bug reports, feature reqeusts, support
 
-Familiarize yourself with how the existing OAuth methods work. On high level process goes like this.
+Please fill a new [Github issuse](https://github.com/Kalhama/iob-calculator-nextjs/issues)
 
-1. Redirect user to `GET /login/:provider`
-2. This use OAuth provider adapter (preferably from `arctic`) to redirect user to Oauth2 provder consent screen. Remember to add email to scope.
-3. Provider should redirect user back to our service into `GET /login/:provider/callback`
+## Contact
 
-4. Validate input parameters and possible additional cookies set in `GET /login/:provider`
-5. Validate authorization code with provider adapter (preferably from `arctic`)
-6. Get user data from OAuth provider
-7. Check if user email already exists in users table. If it does add new OAuth provider into existing account. If not, create a new user account
-8. Finally create a new session
-9. Redirect user back to `/`
-
-## Adding new env variables
-
-The `config.mjs` file serves as a configuration module for your server environment. It utilizes the `zod` library to enforce a schema for the environment variables, ensuring their correctness and type safety.
-
-### Step 1: Define the Schema
-
-Open the `config.mjs`. Within the `z.object({...})` block, add a new key-value pair for your new environment variable. The key should be the name of the variable, and the value should be the validation type from `zod`. For example, if you want to add a variable named `NEW_VARIABLE`, and it's expected to be a string, you would add:
-
-```typescript
-const schema = z.object({
-  NODE_ENV: z.string(),
-  DATABASE_URL: z.string(),
-  GITHUB_ID: z.string(),
-  GITHUB_SECRET: z.string(),
-  GOOGLE_ID: z.string(),
-  GOOGLE_SECRET: z.string(),
-  HOST: z.string(),
-});
-```
-
-```typescript
-NEW_VARIABLE: z.string(),
-```
-
-### Step 2: Access the New Variable in Your Application
-
-After adding the variable to the schema, save the changes to `config.mjs`. You can now access this new environment variable within your application code using the `config` object exported from `config.mjs`.
-
-```typescript
-import config from "./config.mjs";
-
-const newVariableValue = config.NEW_VARIABLE;
-```
-
-### Step 3: Set the Variable in Your `.env` File
-
-Open your `.env` file and add a new line for the variable you've just added. Assign it an appropriate value according to its purpose. For example:
-
-```
-NEW_VARIABLE=my_value
-```
-
-## Protecting routes
-
-To protect routes using the `validateRequest` method, you can utilize it app / api routes. This ensures that only authenticated users can access certain routes. Here's how you can implement it:
-
-```typescript
-const { user } = await validateRequest()
-
-// Example route / template
-const routeOrPage = () => {
-  try {
-    const { user } = await validateRequest()
-
-    if (!user) {
-      // Redirect or throw
-    }
-
-    // Proceed with authenticated user
-}
-```
-
-## Server action utlities (wrapServerAction and ServerActionError)
-
-It's recommended to wrap server actions with `wrapServerAction`. This wraps the return into object containing `success: true` and data. Additionally if you throw `ServerActionError` it returns object with `success: false` and corresonding error.
-
-```typescript
-'server action'
-
-import { wrapServerAction } from '@/lib/wrap-server-action'
-import { ServerActionError } from '@/lib/server-action-error'
-
-// in @/actions/example-action.ts
-
-export const exampleAction = wrapServerAction(async (/* params */) => {
-  // put your server action here
-
-  if (/* some error */) {
-    throw new ServerActionError('Error with input')
-  }
-})
-```
-
-## useServerAction hook
-
-```typescript
-import { useServerAction } from "@/lib/use-server-action";
-
-export default function Page() {
-  const { action, loading, data, message } = useServerAction(serverAction);
-
-  return <div>...</div>;
-}
-```
-
-## Typography
-
-Use [Shadcn/ui typography](https://ui.shadcn.com/docs/components/typography) with `Typography` component. ([Credits](https://github.com/shadcn-ui/ui/issues/315#issuecomment-1882739488))
-
-```typescript
-import { Typography } from '@/components/typography'
-
-export const YourComponent = () => {
-  return (
-    ...
-    <Typography variant="p" affects"muted">Muted paragraph</Typography>
-    ...
-  )
-}
-```
-
-## TODO
-
-- [ ] Lint-staged
-- [ ] semantic-release OR release-please
-- [ ] Logging
+If you want to reach me personally you can reach me via mail [max@kalhama.fi](mailto:max@kalhama.fi)
