@@ -13,13 +13,13 @@ importers:
         version: 7.25.0
       '@diakem/libre-link-up-api-client':
         specifier: github:Kalhama/libre-link-up-api-client
-        version: https://codeload.github.com/Kalhama/libre-link-up-api-client/tar.gz/b25886dd66a72e42feb25433613fb00371a983f8
+        version: git+https://git@github.com:Kalhama/libre-link-up-api-client.git#b25886dd66a72e42feb25433613fb00371a983f8
       axios:
         specifier: ^1.7.4
         version: 1.7.4
       date-fns:
-        specifier: ^3.6.0
-        version: 3.6.0
+        specifier: ^4.1.0
+        version: 4.1.0
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
@@ -53,8 +53,8 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@diakem/libre-link-up-api-client@https://codeload.github.com/Kalhama/libre-link-up-api-client/tar.gz/b25886dd66a72e42feb25433613fb00371a983f8':
-    resolution: {tarball: https://codeload.github.com/Kalhama/libre-link-up-api-client/tar.gz/b25886dd66a72e42feb25433613fb00371a983f8}
+  '@diakem/libre-link-up-api-client@git+https://git@github.com:Kalhama/libre-link-up-api-client.git#b25886dd66a72e42feb25433613fb00371a983f8':
+    resolution: {commit: b25886dd66a72e42feb25433613fb00371a983f8, repo: git@github.com:Kalhama/libre-link-up-api-client.git, type: git}
     version: 0.6.1
 
   '@esbuild/aix-ppc64@0.23.1':
@@ -288,8 +288,8 @@ packages:
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
 
-  date-fns@3.6.0:
-    resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
+  date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
 
   delayed-stream@1.0.0:
     resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
@@ -538,7 +538,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@diakem/libre-link-up-api-client@https://codeload.github.com/Kalhama/libre-link-up-api-client/tar.gz/b25886dd66a72e42feb25433613fb00371a983f8':
+  '@diakem/libre-link-up-api-client@git+https://git@github.com:Kalhama/libre-link-up-api-client.git#b25886dd66a72e42feb25433613fb00371a983f8':
     dependencies:
       axios: 0.27.2
     transitivePeerDependencies:
@@ -706,7 +706,7 @@ snapshots:
 
   create-require@1.1.1: {}
 
-  date-fns@3.6.0: {}
+  date-fns@4.1.0: {}
 
   delayed-stream@1.0.0: {}
 
