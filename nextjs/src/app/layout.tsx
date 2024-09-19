@@ -8,9 +8,9 @@ import './globals.sass'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'IOB-calc',
+  title: 'Gluwave',
   description:
-    'Web based open loop application for diabetes management. Predict blood glucose based on insulin, meal entries and blood glucose development',
+    'Gluwave is a Web based open loop application for diabetes management. Predict blood glucose based on insulin, meal entries and blood glucose development.',
 }
 
 export const viewport: Viewport = {

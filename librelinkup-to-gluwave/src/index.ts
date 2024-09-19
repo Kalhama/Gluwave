@@ -40,9 +40,9 @@ const job = async (full: "full" | undefined) => {
       device: "LIBRELINKUP",
     });
 
-    await axios.post(config.IOB_CALC_ENDPOINT, parsed, {
+    await axios.post(config.GLUWAVE_ENDPOINT, parsed, {
       params: {
-        API_KEY: config.IOB_CALC_API_KEY,
+        API_KEY: config.GLUWAVE_API_KEY,
       },
     });
 

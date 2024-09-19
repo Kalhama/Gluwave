@@ -1,5 +1,5 @@
 services:
-  librelinkup-to-iob-calculator:
+  librelinkup-to-gluwave:
     build:
       context: .
       dockerfile: Dockerfile

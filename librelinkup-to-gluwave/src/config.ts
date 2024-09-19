@@ -7,8 +7,8 @@ const schema = z.object({
     .transform((v) => v ?? "development"),
   LIBRELINKUP_USERNAME: z.string(),
   LIBRELINKUP_PASSWORD: z.string(),
-  IOB_CALC_ENDPOINT: z.string(),
-  IOB_CALC_API_KEY: z.string(),
+  GLUWAVE_ENDPOINT: z.string(),
+  GLUWAVE_API_KEY: z.string(),
   INTERVAL: z.coerce.number().gte(1),
   SINGLE_SHOT_HISTORY: z
     .string()

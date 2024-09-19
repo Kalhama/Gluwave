@@ -1,6 +1,8 @@
-# Insulin on board calculator
+<img src="./logos/full_transparent.png">
 
-Web based open loop application for diabetes management
+# Gluwave
+
+Gluwave is a web based open loop application for diabetes management
 
 ## Features
 
@@ -13,9 +15,9 @@ Web based open loop application for diabetes management
 
 You can use publicly available instance at https://iob.kalhama.fi/ or you can [self host](#self-hosting)
 
-## Using app
+## Using Gluwave
 
-Using app is simple with followin steps
+Using Gluwave is simple with followin steps
 
 ### Configure settings
 
@@ -56,7 +58,7 @@ Second section is for insulin on board. Again you can view and edit the insulin 
 <img src="./images/insulin.png" width="30%">
 
 > [!WARNING]  
-> All insulin is assumed to be Fiasp. [Open an issue](https://github.com/Kalhama/iob-calculator-nextjs/issues) for new insulin types
+> All insulin is assumed to be Fiasp. [Open an issue](https://github.com/Kalhama/gluwave/issues) for new insulin types
 
 #### Carbs
 
@@ -81,7 +83,7 @@ Then insulin is assumed to continue its decay, carbs are predicted to decay at t
 
 ## Integrating with Freestyle Libre 2 / 3
 
-If you want to integrate Freestyle Libre into the app you need to run the piece of integration yourself. The documentation of it is in separate repo: [Github - librelinkup-to-iob-calculator](https://github.com/Kalhama/iob-calculator-nextjs/tree/master/librelinkup-to-iob-calculator)
+If you want to integrate Freestyle Libre into the app you need to run the piece of integration yourself. The documentation of it is in separate repo: [Github - librelinkup-to-iob-calculator](https://github.com/Kalhama/gluwave/tree/master/librelinkup-to-iob-calculator)
 
 ## Credits
 
@@ -89,7 +91,7 @@ Big credits to folks at Loop. I have shamelessly copied many of their achievemen
 
 ## Self hosting
 
-Check the example [docker-compose.yml](https://github.com/Kalhama/iob-calculator-nextjs/blob/master/nextjs/docker-compose.yml)
+Check the example [docker-compose.yml](https://github.com/Kalhama/gluwave/blob/master/nextjs/docker-compose.yml)
 
 ## Technology stack
 
@@ -111,7 +113,7 @@ Check the example [docker-compose.yml](https://github.com/Kalhama/iob-calculator
 
 ## Bug reports, feature reqeusts, support
 
-Please fill a new [Github issuse](https://github.com/Kalhama/iob-calculator-nextjs/issues)
+Please fill a new [Github issuse](https://github.com/Kalhama/gluwave/issues)
 
 ## Contact
 

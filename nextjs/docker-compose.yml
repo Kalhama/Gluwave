@@ -17,7 +17,7 @@ services:
       interval: 1s
       timeout: 5s
       retries: 10
-  nextjs:
+  gluwave:
     build:
       context: .
       dockerfile: Dockerfile
