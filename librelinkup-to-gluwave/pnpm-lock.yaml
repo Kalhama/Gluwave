@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@babel/runtime':
-        specifier: ^7.25.0
-        version: 7.25.0
+        specifier: ^7.25.6
+        version: 7.25.6
       '@diakem/libre-link-up-api-client':
         specifier: github:Kalhama/libre-link-up-api-client
-        version: https://codeload.github.com/Kalhama/libre-link-up-api-client/tar.gz/b25886dd66a72e42feb25433613fb00371a983f8
+        version: git+https://git@github.com:Kalhama/libre-link-up-api-client.git#b25886dd66a72e42feb25433613fb00371a983f8
       axios:
         specifier: ^1.7.4
         version: 1.7.4
@@ -45,16 +45,16 @@ importers:
 
 packages:
 
-  '@babel/runtime@7.25.0':
-    resolution: {integrity: sha512-7dRy4DwXwtzBrPbZflqxnvfxLF8kdZXPkhymtDeFoFqE6ldzjQFgYTtYIFARcLEYDrqfBfYcZt1WqFxRoyC9Rw==}
+  '@babel/runtime@7.25.6':
+    resolution: {integrity: sha512-VBj9MYyDb9tuLq7yzqjgzt6Q+IBQLrGZfdjOekyEirZPHxXWoTSGUTMrpsfi58Up73d13NfYLv8HT9vmznjzhQ==}
     engines: {node: '>=6.9.0'}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@diakem/libre-link-up-api-client@https://codeload.github.com/Kalhama/libre-link-up-api-client/tar.gz/b25886dd66a72e42feb25433613fb00371a983f8':
-    resolution: {tarball: https://codeload.github.com/Kalhama/libre-link-up-api-client/tar.gz/b25886dd66a72e42feb25433613fb00371a983f8}
+  '@diakem/libre-link-up-api-client@git+https://git@github.com:Kalhama/libre-link-up-api-client.git#b25886dd66a72e42feb25433613fb00371a983f8':
+    resolution: {commit: b25886dd66a72e42feb25433613fb00371a983f8, repo: git@github.com:Kalhama/libre-link-up-api-client.git, type: git}
     version: 0.6.1
 
   '@esbuild/aix-ppc64@0.23.1':
@@ -530,7 +530,7 @@ packages:
 
 snapshots:
 
-  '@babel/runtime@7.25.0':
+  '@babel/runtime@7.25.6':
     dependencies:
       regenerator-runtime: 0.14.1
 
@@ -538,7 +538,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@diakem/libre-link-up-api-client@https://codeload.github.com/Kalhama/libre-link-up-api-client/tar.gz/b25886dd66a72e42feb25433613fb00371a983f8':
+  '@diakem/libre-link-up-api-client@git+https://git@github.com:Kalhama/libre-link-up-api-client.git#b25886dd66a72e42feb25433613fb00371a983f8':
     dependencies:
       axios: 0.27.2
     transitivePeerDependencies:
