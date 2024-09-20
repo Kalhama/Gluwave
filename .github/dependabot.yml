@@ -9,7 +9,7 @@ updates:
     allow:
       - dependency-type: "direct"
     commit-message:
-      prefix: "chore(dependencies)"
+      prefix: "chore(gluwave)"
   - package-ecosystem: "npm"
     directory: "/librelinkup-to-gluwave"
     schedule:
@@ -17,4 +17,4 @@ updates:
     allow:
       - dependency-type: "direct"
     commit-message:
-      prefix: "chore(dependencies)"
+      prefix: "chore(librelinkup-to-gluwave)"

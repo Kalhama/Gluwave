@@ -2,5 +2,6 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+  "conventionalCommits.scopes": ["gluwave", "librelinkup-to-gluwave"]
 }
