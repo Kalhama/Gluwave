@@ -1,4 +1,4 @@
-<img src="./logos/full_transparent.png">
+<img src="gluwave/public/full_transparent.png">
 
 # Gluwave
 
