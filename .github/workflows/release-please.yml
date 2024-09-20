@@ -16,6 +16,5 @@ jobs:
       - uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: simple
           path: ./gluwave
           release-type: node
