@@ -1,0 +1,10 @@
+{
+  "packages": {
+    "gluwave": {
+      "release-type": "node"
+    },
+    "librelinkup-to-gluwave": {
+      "release-type": "node"
+    }
+  }
+}
