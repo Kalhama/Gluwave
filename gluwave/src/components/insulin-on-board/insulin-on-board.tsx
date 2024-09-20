@@ -12,8 +12,9 @@ import {
   VictoryZoomContainer,
 } from 'victory'
 
+import { GraphContainer, GraphContent, GraphTitle } from '../graph-container'
+
 type InsulinData = Awaited<ReturnType<typeof calculateUserInsulinData>>
-type InsulinDataItem = InsulinData[0]
 
 interface Props {
   data: InsulinData
@@ -33,8 +34,8 @@ export const InsulinOnBoard = ({ data }: Props) => {
   )
 
   return (
-    <div>
-      <div className="flex flex-row justify-between items-center pt-2 px-4">
+    <GraphContainer>
+      <GraphTitle className="flex justify-between">
         <h2 className="font-semibold">Insulin on board</h2>
         <Link href="/insulin/list">
           <div className="flex items-center">
@@ -45,11 +46,11 @@ export const InsulinOnBoard = ({ data }: Props) => {
               })}{' '}
               U
             </span>
-            <ChevronRight />
+            <ChevronRight className="-mr-1" />
           </div>
         </Link>
-      </div>
-      <div className="p-2">
+      </GraphTitle>
+      <GraphContent>
         <VictoryChart
           padding={{ top: 10, bottom: 25, left: 30, right: 15 }}
           height={130}
@@ -89,7 +90,7 @@ export const InsulinOnBoard = ({ data }: Props) => {
             y="insulinOnBoard"
           />
         </VictoryChart>
-      </div>
-    </div>
+      </GraphContent>
+    </GraphContainer>
   )
 }

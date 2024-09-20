@@ -1,6 +1,5 @@
 'use client'
 
-import { type Statistics } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -12,6 +11,8 @@ import {
   VictoryTheme,
   VictoryZoomContainer,
 } from 'victory'
+
+import { GraphContainer, GraphContent, GraphTitle } from '../graph-container'
 
 interface Props {
   bloodGlucoseData: {
@@ -45,8 +46,8 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
     predictions[predictions.length - 1]?.totalEffect
 
   return (
-    <div>
-      <div className="flex flex-row justify-between items-center pt-2 px-4">
+    <GraphContainer>
+      <GraphTitle className="flex justify-between">
         <h2 className="font-semibold">Blood glucose</h2>
         <Link href="/glucose/list">
           <div className="flex items-center">
@@ -58,11 +59,11 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
               })}{' '}
               mmol/l
             </span>
-            <ChevronRight />
+            <ChevronRight className="-mr-1" />
           </div>
         </Link>
-      </div>
-      <div className="p-2">
+      </GraphTitle>
+      <GraphContent>
         <VictoryChart
           padding={{ top: 10, bottom: 25, left: 30, right: 15 }}
           height={200}
@@ -137,7 +138,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
             y="value"
           />
         </VictoryChart>
-      </div>
-    </div>
+      </GraphContent>
+    </GraphContainer>
   )
 }

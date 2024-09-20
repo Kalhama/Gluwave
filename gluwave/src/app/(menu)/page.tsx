@@ -44,14 +44,14 @@ export default async function App() {
   return (
     <>
       <GlucoseBar />
-      <div className="p-2">
-        <div className="space-y-2 w-full border rounded-sm">
-          <AutoReload minutes={5} />
-          <BloodGlucoseProvider />
-          <InsulinOnBoardProvider />
-          <CarbsOnBoard />
-        </div>
+
+      <div className="space-y-2 w-full p-2 max-w-md mx-auto">
+        <AutoReload minutes={5} />
+        <BloodGlucoseProvider />
+        <InsulinOnBoardProvider />
+        <CarbsOnBoard />
       </div>
+
       <Toolbar authenticated={!!user} />
     </>
   )

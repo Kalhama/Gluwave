@@ -9,6 +9,8 @@ import Link from 'next/link'
 import { useEffect } from 'react'
 import { DomainTuple, VictoryChart, VictoryLine, VictoryTheme } from 'victory'
 
+import { GraphContainer, GraphContent, GraphTitle } from './graph-container'
+
 interface Props {}
 
 export const CarbsOnBoard = ({}: Props) => {
@@ -61,26 +63,24 @@ export const CarbsOnBoard = ({}: Props) => {
   ] as DomainTuple
 
   return (
-    <div>
-      <div className="pt-2 px-4">
-        <div className="flex flex-row justify-between items-center">
-          <h2 className="font-semibold">Observed vs predicted carbs</h2>
-          <Link href="/carbs/list">
-            <div className="flex items-center">
-              <span className="mt-0 text-sm">
-                Remaining COB{' '}
-                {current?.carbsOnBoard.toLocaleString(undefined, {
-                  maximumFractionDigits: 0,
-                  minimumFractionDigits: 0,
-                })}{' '}
-                g
-              </span>
-              <ChevronRight />
-            </div>
-          </Link>
-        </div>
-      </div>
-      <div className="p-2">
+    <GraphContainer>
+      <GraphTitle className="flex justify-between">
+        <h2 className="font-semibold">Observed vs predicted carbs</h2>
+        <Link href="/carbs/list">
+          <div className="flex items-center">
+            <span className="mt-0 text-sm">
+              COB{' '}
+              {current?.carbsOnBoard.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+                minimumFractionDigits: 0,
+              })}{' '}
+              g
+            </span>
+            <ChevronRight className="-mr-1" />
+          </div>
+        </Link>
+      </GraphTitle>
+      <GraphContent>
         <VictoryChart
           padding={{ top: 10, bottom: 25, left: 35, right: 15 }}
           height={200}
@@ -130,7 +130,7 @@ export const CarbsOnBoard = ({}: Props) => {
             y="cumulativeDecayedCarbs"
           />
         </VictoryChart>
-      </div>
-    </div>
+      </GraphContent>
+    </GraphContainer>
   )
 }
