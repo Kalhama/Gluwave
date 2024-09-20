@@ -1,5 +1,3 @@
-import { validateRequest } from '@/auth'
-import { Menu } from '@/components/menu'
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 
@@ -25,12 +23,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const { user } = await validateRequest()
   return (
     <html lang="en">
       <body className={inter.className}>
-        <main className="pb-20">{children}</main>
-        <Menu authenticated={!!user} />
+        <main>{children}</main>
       </body>
     </html>
   )

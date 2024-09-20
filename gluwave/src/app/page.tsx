@@ -3,6 +3,7 @@ import { AutoReload } from '@/components/auto-reload'
 import BloodGlucoseProvider from '@/components/blood-glucose'
 import { CarbsOnBoard } from '@/components/carbs-on-board'
 import InsulinOnBoardProvider from '@/components/insulin-on-board'
+import { Menu } from '@/components/menu'
 import { TopBar } from '@/components/top-bar'
 import { db } from '@/db'
 import { glucose } from '@/schema'
@@ -38,6 +39,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function App() {
+  const { user } = await validateRequest()
+
   return (
     <>
       <TopBar />
@@ -49,6 +52,7 @@ export default async function App() {
           <CarbsOnBoard />
         </div>
       </div>
+      <Menu authenticated={!!user} />
     </>
   )
 }

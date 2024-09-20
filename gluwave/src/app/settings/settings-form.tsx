@@ -24,7 +24,7 @@ interface Props {
   defaultValues: z.infer<typeof updateSettingsSchema>
 }
 
-export function Settings({ defaultValues }: Props) {
+export function SettingsForm({ defaultValues }: Props) {
   const { action, loading } = useServerAction(updateSettings)
 
   const form = useForm<z.infer<typeof updateSettingsSchema>>({
@@ -39,11 +39,7 @@ export function Settings({ defaultValues }: Props) {
   return (
     <div className="space-y-4">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-8 border rounded-sm p-4"
-        >
-          <h1 className="text-xl font-bold">Update your personal settings</h1>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
             control={form.control}
             name="carbohydrateRatio"
@@ -138,12 +134,6 @@ export function Settings({ defaultValues }: Props) {
           </Button>
         </form>
       </Form>
-      <div className="space-y-4 border rounded-sm p-4">
-        <h1 className="text-xl font-bold">Logout</h1>
-        <Button>
-          <a href="/logout">Logout</a>
-        </Button>
-      </div>
     </div>
   )
 }
