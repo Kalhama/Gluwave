@@ -2,9 +2,9 @@ import { validateRequest } from '@/auth'
 import { AutoReload } from '@/components/auto-reload'
 import BloodGlucoseProvider from '@/components/blood-glucose'
 import { CarbsOnBoard } from '@/components/carbs-on-board'
+import { GlucoseBar } from '@/components/glucose-bar'
 import InsulinOnBoardProvider from '@/components/insulin-on-board'
-import { Menu } from '@/components/menu'
-import { TopBar } from '@/components/top-bar'
+import { Toolbar } from '@/components/toolbar'
 import { db } from '@/db'
 import { glucose } from '@/schema'
 import { and, desc, eq } from 'drizzle-orm'
@@ -43,7 +43,7 @@ export default async function App() {
 
   return (
     <>
-      <TopBar />
+      <GlucoseBar />
       <div className="p-2">
         <div className="space-y-2 w-full border rounded-sm">
           <AutoReload minutes={5} />
@@ -52,7 +52,7 @@ export default async function App() {
           <CarbsOnBoard />
         </div>
       </div>
-      <Menu authenticated={!!user} />
+      <Toolbar authenticated={!!user} />
     </>
   )
 }

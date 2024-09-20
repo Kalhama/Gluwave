@@ -6,6 +6,8 @@ import { and, desc, eq, gte, lte, ne } from 'drizzle-orm'
 import { MoveRight } from 'lucide-react'
 import { redirect } from 'next/navigation'
 
+import { BurgerMenu } from './burger-menu'
+
 const glucoseTrend = async (last: {
   value: number
   id: number
@@ -41,7 +43,7 @@ const glucoseTrend = async (last: {
   return trend
 }
 
-export const TopBar = async () => {
+export const GlucoseBar = async () => {
   const { user } = await validateRequest()
   if (!user) {
     redirect('/login')
@@ -60,6 +62,7 @@ export const TopBar = async () => {
 
   const minutesDelta = differenceInMinutes(new Date(), last.timestamp)
   const stale = minutesDelta > 30
+  const veryStale = minutesDelta > 60
   const status = (() => {
     if (stale) return 'border-slate-300'
     else if (last.value < 3.8) return 'border-red-600'
@@ -68,16 +71,18 @@ export const TopBar = async () => {
   })()
 
   return (
-    <div className="border-b px-4 py-2 flex justify-between items-center">
+    <div className="border-b px-4 py-2 flex justify-between items-center bg-slate-50">
       <div
-        className={`flex items-center border-4 px-4 py-1 rounded-full ${status}`}
+        className={`flex items-center border-4 px-4 py-1 rounded-full bg-white ${status}`}
       >
-        <div className="rounded-full inline">
+        <div className="rounded-full inline ">
           <span className="text-2xl font-bold">
-            {last.value.toLocaleString(undefined, {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1,
-            })}
+            {veryStale
+              ? '-.-'
+              : last.value.toLocaleString(undefined, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })}
           </span>
           <span className="text-sm"> mmol/l</span>
         </div>
@@ -85,14 +90,7 @@ export const TopBar = async () => {
           <MoveRight className="ml-2" style={{ rotate: `${trend}deg` }} />
         )}
       </div>
-      <div>
-        {stale && (
-          <>
-            Last value {minutesDelta > 60 ? 'over 60' : minutesDelta} minutes
-            ago
-          </>
-        )}
-      </div>
+      <BurgerMenu />
     </div>
   )
 }

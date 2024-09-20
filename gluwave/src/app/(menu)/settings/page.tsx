@@ -15,8 +15,7 @@ export default async function Settings() {
       <div>
         <Typography variant="h3">Insulin sensitivity settings</Typography>
         <p className="text-sm text-muted-foreground">
-          Update your account settings. Set your preferred language and
-          timezone.
+          Adjust your insulin sensitivity
         </p>
       </div>
       <Separator />

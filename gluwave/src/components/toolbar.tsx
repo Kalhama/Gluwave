@@ -11,7 +11,7 @@ interface Props {
   authenticated: boolean
 }
 
-export const Menu = ({ authenticated }: Props) => {
+export const Toolbar = ({ authenticated }: Props) => {
   if (!authenticated) {
     return null
   }
@@ -33,11 +33,6 @@ export const Menu = ({ authenticated }: Props) => {
           <UtensilsCrossed />
         </Button>
       </CarbDialog>
-      <Button variant="link">
-        <Link href="/settings">
-          <Settings />
-        </Link>
-      </Button>
     </div>
   )
 }
