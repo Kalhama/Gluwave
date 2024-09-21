@@ -1,5 +1,6 @@
 import { validateRequest } from '@/auth'
 import { db } from '@/db'
+import { cn } from '@/lib/utils'
 import { glucose } from '@/schema'
 import { differenceInMinutes, subMinutes } from 'date-fns'
 import { and, desc, eq, gte, lte, ne } from 'drizzle-orm'
@@ -62,35 +63,35 @@ export const GlucoseBar = async () => {
 
   const minutesDelta = differenceInMinutes(new Date(), last.timestamp)
   const stale = minutesDelta > 30
-  const veryStale = minutesDelta > 60
+  const veryStale = false // minutesDelta > 60
   const status = (() => {
-    if (stale) return 'border-slate-300'
-    else if (last.value < 3.8) return 'border-red-600'
-    else if (last.value > 11) return 'border-orange-500'
-    else return 'border-green-600'
+    if (stale) return 'bg-slate-300 shadow-slate-300'
+    else if (last.value < 3.8) return 'bg-red-600 shadow-red-600'
+    else if (last.value > 11) return 'bg-orange-500 shadow-orange-500'
+    else return 'bg-green-600 bg-green-600'
   })()
 
   return (
-    <div className="border-b px-4 py-2 flex justify-between items-center bg-slate-50">
-      <div
-        className={`flex items-center border-4 px-4 py-1 rounded-full bg-white ${status}`}
-      >
-        <div className="rounded-full inline ">
-          <span className="text-2xl font-bold">
-            {veryStale
-              ? '-.-'
-              : last.value.toLocaleString(undefined, {
-                  minimumFractionDigits: 1,
-                  maximumFractionDigits: 1,
-                })}
-          </span>
-          <span className="text-sm"> mmol/l</span>
+    <div className="border-b shadow rounded-b-xl bg-white p-2 flex justify-between items-center">
+      <div className="flex justify-center items-center gap-2 mx-auto">
+        <div
+          className={cn('h-4 w-4 shadow-[0_0_6px] rounded-full mr-1', status)}
+        />
+        <div className="text-2xl font-bold">
+          {veryStale
+            ? '-.-'
+            : last.value.toLocaleString(undefined, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              })}
+          <span className="text-sm font-normal text-slate-700"> mmol/l</span>
         </div>
+
         {trend !== null && (
-          <MoveRight className="ml-2" style={{ rotate: `${trend}deg` }} />
+          <MoveRight className="h-4 w-4" style={{ rotate: `${trend}deg` }} />
         )}
       </div>
-      <BurgerMenu />
+      <BurgerMenu className="static" />
     </div>
   )
 }

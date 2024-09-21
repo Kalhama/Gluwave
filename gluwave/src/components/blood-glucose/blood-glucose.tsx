@@ -36,8 +36,8 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
     bloodGlucoseData[bloodGlucoseData.length - 1]?.value ?? 0
 
   const yDomain = [
-    0,
-    Math.max(12, ...bloodGlucoseData.map((bg) => bg.value)) + 2,
+    Math.min(3, ...bloodGlucoseData.map((bg) => bg.value)) - 1,
+    Math.max(10, ...bloodGlucoseData.map((bg) => bg.value)) + 2,
   ] as DomainTuple
 
   const eventually =
@@ -47,21 +47,18 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
 
   return (
     <GraphContainer>
-      <GraphTitle className="flex justify-between">
-        <h2 className="font-semibold">Blood glucose</h2>
-        <Link href="/glucose/list">
-          <div className="flex items-center">
-            <span className="mt-0 text-sm">
-              Eventually{' '}
-              {eventually.toLocaleString(undefined, {
-                maximumFractionDigits: 1,
-                minimumFractionDigits: 1,
-              })}{' '}
-              mmol/l
-            </span>
-            <ChevronRight className="-mr-1" />
-          </div>
-        </Link>
+      <GraphTitle href="/glucose/list">
+        <div>
+          <h2 className="font-semibold">Blood glucose</h2>
+          <span className="text-xs text-slate-600">
+            Eventually{' '}
+            {eventually.toLocaleString(undefined, {
+              maximumFractionDigits: 1,
+              minimumFractionDigits: 1,
+            })}{' '}
+            mmol/l
+          </span>
+        </div>
       </GraphTitle>
       <GraphContent>
         <VictoryChart

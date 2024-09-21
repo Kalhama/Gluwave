@@ -35,20 +35,18 @@ export const InsulinOnBoard = ({ data }: Props) => {
 
   return (
     <GraphContainer>
-      <GraphTitle className="flex justify-between">
-        <h2 className="font-semibold">Insulin on board</h2>
-        <Link href="/insulin/list">
-          <div className="flex items-center">
-            <span className="mt-0 text-sm">
-              {(current?.insulinOnBoard ?? 0).toLocaleString(undefined, {
-                maximumFractionDigits: 2,
-                minimumFractionDigits: 1,
-              })}{' '}
-              U
-            </span>
-            <ChevronRight className="-mr-1" />
-          </div>
-        </Link>
+      <GraphTitle href="/insulin/list">
+        <div>
+          <h2 className="font-semibold">Insulin on board</h2>
+
+          <span className="text-xs text-slate-700">
+            {(current?.insulinOnBoard ?? 0).toLocaleString(undefined, {
+              maximumFractionDigits: 2,
+              minimumFractionDigits: 1,
+            })}{' '}
+            U
+          </span>
+        </div>
       </GraphTitle>
       <GraphContent>
         <VictoryChart

@@ -42,17 +42,17 @@ export default async function App() {
   const { user } = await validateRequest()
 
   return (
-    <>
+    <div className="bg-slate-200 pb-32 min-h-screen">
       <GlucoseBar />
 
-      <div className="space-y-2 w-full p-2 max-w-md mx-auto">
-        <AutoReload minutes={5} />
+      <AutoReload minutes={5} />
+      <div className="mt-2 grid gap-2 mx-auto sm:grid-cols-2 max-w-5xl min-[420px]:px-2 md:px-4">
         <BloodGlucoseProvider />
         <InsulinOnBoardProvider />
         <CarbsOnBoard />
       </div>
 
       <Toolbar authenticated={!!user} />
-    </>
+    </div>
   )
 }

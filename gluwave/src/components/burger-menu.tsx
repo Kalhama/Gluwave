@@ -39,14 +39,20 @@ const links = [
   },
 ]
 
-export function BurgerMenu() {
+interface Props {
+  className?: string
+}
+
+export function BurgerMenu({ className }: Props) {
   const [open, onOpenChange] = useState(false)
   const pathname = usePathname()
 
   return (
     <Drawer.Root onOpenChange={onOpenChange} open={open} direction="right">
       <Drawer.Trigger asChild>
-        <Menu className="cursor-pointer absolute right-4 top-4" />
+        <Menu
+          className={cn('cursor-pointer absolute right-4 top-4', className)}
+        />
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />

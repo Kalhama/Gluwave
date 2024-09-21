@@ -4,8 +4,6 @@ import { getCarbsOnBoardAction } from '@/actions/get-carbs-on-board'
 import { getObservedCarbsAction } from '@/actions/get-observed-carbs'
 import { useServerAction } from '@/lib/use-server-action'
 import { addHours, addMinutes, setHours, startOfDay, subHours } from 'date-fns'
-import { ChevronRight } from 'lucide-react'
-import Link from 'next/link'
 import { useEffect } from 'react'
 import { DomainTuple, VictoryChart, VictoryLine, VictoryTheme } from 'victory'
 
@@ -40,6 +38,7 @@ export const CarbsOnBoard = ({}: Props) => {
       start,
       end,
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const now = new Date()
@@ -64,21 +63,20 @@ export const CarbsOnBoard = ({}: Props) => {
 
   return (
     <GraphContainer>
-      <GraphTitle className="flex justify-between">
-        <h2 className="font-semibold">Observed vs predicted carbs</h2>
-        <Link href="/carbs/list">
-          <div className="flex items-center">
-            <span className="mt-0 text-sm">
-              COB{' '}
-              {current?.carbsOnBoard.toLocaleString(undefined, {
-                maximumFractionDigits: 0,
-                minimumFractionDigits: 0,
-              })}{' '}
-              g
-            </span>
-            <ChevronRight className="-mr-1" />
-          </div>
-        </Link>
+      <GraphTitle href="/carbs/list" className="flex justify-between">
+        <div>
+          <h2 className="font-semibold">
+            Observed and predicted carbohydrates
+          </h2>
+          <span className="text-xs">
+            COB{' '}
+            {current?.carbsOnBoard.toLocaleString(undefined, {
+              maximumFractionDigits: 0,
+              minimumFractionDigits: 0,
+            })}{' '}
+            g
+          </span>
+        </div>
       </GraphTitle>
       <GraphContent>
         <VictoryChart
