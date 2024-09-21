@@ -1,0 +1,44 @@
+name: build-librelinkup-to-gluwave-docker-image # Name of the GitHub Actions workflow
+
+on:
+  push:
+    tags:
+      - librelinkup-to-gluwave-v* # Trigger workflow on push events with tags that match "gluwave-v*"
+
+env:
+  REGISTRY: ghcr.io # Define the container registry
+  IMAGE_NAME: ${{ github.repository_owner }}/librelinkup-to-gluwave # Define the image name
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest # Run the job on the latest Ubuntu runner
+    permissions:
+      contents: read # Read access to repository contents
+      packages: write # Write access to GitHub packages
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3 # Checkout the repository code
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2 # Log in to the Docker registry
+        with:
+          registry: ${{ env.REGISTRY }} # Use the registry defined in env
+          username: ${{ github.actor }} # Use the GitHub actor (user) for login
+          password: ${{ secrets.PERSONAL_ACCESS_TOKEN }} # Use a personal access token (PAT) from secrets
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta # Set an ID for this step to reference outputs
+        uses: docker/metadata-action@v4 # Use Docker metadata action to generate tags and labels
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} # Define the image name with registry
+          # Generate semantic versioning tags
+          tags: |
+            type=match,pattern=librelinkup-to-gluwave-v(\d+\.\d+\.\d+),group=1
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4 # Use Docker action to build and push the image
+        with:
+          context: ./librelinkup-to-gluwave # Set the build context directory
+          push: true # Push the image to the registry
+          tags: ${{ steps.meta.outputs.tags }} # Use tags generated from the metadata step
+          labels: ${{ steps.meta.outputs.labels }} # Use labels generated from the metadata step

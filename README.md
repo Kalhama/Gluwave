@@ -1,21 +1,19 @@
-<img src="gluwave/public/full_transparent.png">
+<img alt="Gluwve" src="gluwave/public/full_transparent.png">
 
-# Gluwave
-
-## Features
+## Features 🚀
 
 - [x] Smart glucose [prediction algorithm](#algorithm)
 - [x] Integrate glucose from Freestyle Libre 2 / 3, or manually input fingerprick results
 - [x] Calculate insulin on board
 - [x] Log meals
 
-## Installation
+## Demo 🎥
 
-You can use publicly available instance at https://iob.kalhama.fi/ or you can [self host](#self-hosting)
+Public instance is available for anyone at https://gluwave.com
 
-## Using Gluwave
+## How to use Gluwave 🛠️
 
-Using Gluwave is simple with followin steps
+Using Gluwave is simple with following steps
 
 ### Configure settings
 
@@ -41,7 +39,7 @@ Main screen is split into three sections:
 
 #### Glucose
 
-First of them is historical glucose and predictions. Green predictioon is what predictions would be without any insulin and red is without any meal. These serve just as a "confidence interval". The gray line is the real prediction.
+First of them is historical glucose and predictions. Green prediction is what predictions would be without any insulin and red is without any meal. These serve just as a "confidence interval". The gray line is the real prediction.
 
 You can see the list of your blood glucose entries if you click the `Eventually Y mmol/l` on top right
 
@@ -68,30 +66,67 @@ If you view the list of carbs you can see how much carbs we actually observed
 
 <img src="./images/carbs-list.png" width="30%">
 
-## Algorithm
+## Algorithm 📊
 
-Algorithm is based on three things
+<img src="./images/prediction.png" width="30%">
 
-1. Last known blood glucose:
-2. Remaining carbs, that is reported carbs minus observed carbs until now
-   - Remaining carb abosrption speed is same as originally reported absorption speed ($rate = carbs / absorption time$)
-3. Remaining insulin
+The algorithm predicts future blood glucose levels based on three factors:
 
-Then insulin is assumed to continue its decay, carbs are predicted to decay at their original rates. Combine them and you get the final prediction.
+1. **Last Known Blood Glucose**: This is the most recent measurement of blood glucose. It serves as the starting point for future predictions.
 
-## Integrating with Freestyle Libre 2 / 3
+2. **Remaining Carbs**: This represents the amount of carbohydrates from a meal that has not yet been absorbed.
 
-If you want to integrate Freestyle Libre into the app you need to run the piece of integration yourself. The documentation of it is in separate repo: [Github - librelinkup-to-iob-calculator](https://github.com/Kalhama/gluwave/tree/master/librelinkup-to-iob-calculator)
+   - It is calculated as the total carbs consumed minus the amount already absorbed.
+   - For remaining carbs, the absorption rate is assumed to continue at the original speed reported for the whole meal.
+     - $rate = carbs / decay$
+   - If there are multiple meals, the algorithm tracks and calculates the remaining carbs for each one individually.
 
-## Credits
+3. **Remaining Insulin**: This indicates the amount of active insulin in the body and its anticipated reduction over time.
+   - Insulin activity diminishes gradually, following a known decay profile based on the type and doses administered.
+
+The algorithm combines these three factors to predict future blood glucose levels. It does this by:
+
+- Estimating how remaining carbs will raise blood glucose as they continue to absorb.
+- Accounting for how remaining insulin will lower blood glucose as it decays.
+
+The final prediction is a balance of these opposing effects, providing an estimate of blood glucose levels over time. You can see all three factors in the prediction graph, where
+
+- green is the prediction without any insulin
+- red is prediction without any food
+- gray is the actual prediction considering both factors
+
+## Integrating with Freestyle Libre 2 / 3 📡
+
+If you want to integrate Freestyle Libre into the app you need to run the piece of integration yourself. The documentation for that is covered in here: [Github - librelinkup-to-iob-calculator](https://github.com/Kalhama/gluwave/tree/master/librelinkup-to-gluwave)
+
+## Credits 🙏
 
 Big credits to folks at Loop. I have shamelessly copied many of their achievements and concepts.
 
-## Self hosting
+## Self hosting with docker-compose 🐳
 
-Check the example [docker-compose.yml](https://github.com/Kalhama/gluwave/blob/master/nextjs/docker-compose.yml)
+1. `mkdir gluwave && cd gluwave`
+2. `wget -O docker-compose.yml https://github.com/Kalhama/gluwave/blob/master/gluwave/docker-compose.yml`
+3. Put following to `.env`
 
-## Technology stack
+```shell
+#gluway
+DATABASE_URL=postgresql://postgres:pass@postgres:5432/gluwave?schema=public
+DATABASE_URL_UNPOOLED=postgresql://postgres:pass@postgres:5432/gluwave?schema=public
+GITHUB_ID=_
+GITHUB_SECRET=_
+# Get secret and id from: github -> settings -> developer settings -> OAuth Apps -> New OAuth Apps
+
+#postgres, make sure these match with the conn url above
+POSTGRES_PASSWORD=pass
+POSTGRES_USER=postgres
+POSTGRES_DB=gluwave
+POSTGRES_DATA_DIR=./db
+```
+
+4. `docker compose up -d`
+
+## Technology stack 💻
 
 - Framework: [Next.js](https://nextjs.org/docs)
 - ORM and database: Drizzle + postgres
@@ -109,10 +144,10 @@ Check the example [docker-compose.yml](https://github.com/Kalhama/gluwave/blob/m
   - and other at [package.json](./nextjs/package.json)
 - Authorization: [lucia-auth](https://lucia-auth.com/)
 
-## Bug reports, feature reqeusts, support
+## Bug reports, feature requests, support 🐞
 
 Please fill a new [Github issuse](https://github.com/Kalhama/gluwave/issues)
 
-## Contact
+## Contact 📬
 
 If you want to reach me personally you can reach me via mail [max@kalhama.fi](mailto:max@kalhama.fi)

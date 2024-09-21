@@ -1,7 +1,5 @@
 services:
   librelinkup-to-gluwave:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/kalhama/librelinkup-to-gluwave:latest
     env_file: .env
     restart: on-failure

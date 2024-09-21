@@ -6,31 +6,14 @@ interface CompProps extends React.HTMLAttributes<HTMLOrSVGElement> {
 }
 
 const variantToElement: Record<Variant, keyof JSX.IntrinsicElements> = {
-  h1: 'h1',
   h2: 'h2',
   h3: 'h3',
-  h4: 'h4',
-  h5: 'h5',
-  h6: 'h6',
-  subheading1: 'h6',
-  subheading2: 'h6',
-  p: 'p',
 }
 
-type Variant =
-  | 'h1'
-  | 'h2'
-  | 'h3'
-  | 'h4'
-  | 'h5'
-  | 'h6'
-  | 'h6'
-  | 'subheading1'
-  | 'subheading2'
-  | 'p'
+type Variant = 'h2' | 'h3'
 
 export const Typography: React.FunctionComponent<CompProps> = ({
-  variant: variant = 'p',
+  variant: variant = 'h2',
   children,
   ...props
 }) => {

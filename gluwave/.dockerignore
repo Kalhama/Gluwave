@@ -1,7 +1,4 @@
-.github/
 .husky/
 .next/
-.vscode/
 .env
 node_modules/
-.git
