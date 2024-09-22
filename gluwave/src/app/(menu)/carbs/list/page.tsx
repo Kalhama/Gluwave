@@ -30,7 +30,7 @@ async function ListCarbTable({ date }: Props) {
   const end = endOfDay(date)
 
   const tf = Statistics.carbs_timeframe(user.id, start, end)
-  const carbs = await Statistics.execute(
+  let carbs = await Statistics.execute(
     Statistics.observedCarbsPerMeal(
       tf,
       user.id,
@@ -39,54 +39,57 @@ async function ListCarbTable({ date }: Props) {
     )
   )
 
+  carbs = carbs.filter((carb) => carb.timestamp >= start)
+
   return (
     <div>
-      {carbs
-        .filter((carb) => carb.timestamp >= start)
-        .map((carb, i, arr) => {
-          const over = carb.observedCarbs > carb.carbs
-          if (carb.id !== -1) {
-            return (
-              <div key={carb.id}>
-                <div className="p-2">
-                  <div className="grid grid-cols-2 pb-2">
-                    <div>
-                      <div>{Math.round(carb.carbs)} g </div>
-                      <div>Observed: {Math.round(carb.observedCarbs)} g </div>
-                    </div>
-                    <div className="flex items-center gap-2 justify-end">
-                      <div>
-                        <ClientDateTime timestamp={carb.timestamp} /> +{' '}
-                        {(carb.decay / 60).toLocaleString([], {
-                          maximumFractionDigits: 1,
-                        })}
-                        <span> h</span>
-                      </div>
-                      <CarbDialog carb={carb}>
-                        <Button variant="link" className="p-2">
-                          <Pencil className="cursor-pointer w-4 h-4" />
-                        </Button>
-                      </CarbDialog>
-                      <DeleteDialog id={carb.id} action={deleteCarbs} />
-                    </div>
+      {carbs.map((carb, i, arr) => {
+        const over = carb.observedCarbs > carb.carbs
+        if (carb.id !== -1) {
+          return (
+            <div key={carb.id}>
+              <div className="p-2">
+                <div className="grid grid-cols-2 pb-2">
+                  <div>
+                    <div>{Math.round(carb.carbs)} g </div>
+                    <div>Observed: {Math.round(carb.observedCarbs)} g </div>
                   </div>
-                  {over ? (
-                    <Progress
-                      className="h-2 bg-orange-400"
-                      value={(carb.carbs / carb.observedCarbs) * 100}
-                    />
-                  ) : (
-                    <Progress
-                      className="h-2 "
-                      value={(carb.observedCarbs / carb.carbs) * 100}
-                    />
-                  )}
+                  <div className="flex items-center gap-2 justify-end">
+                    <div>
+                      <ClientDateTime timestamp={carb.timestamp} /> +{' '}
+                      {(carb.decay / 60).toLocaleString([], {
+                        maximumFractionDigits: 1,
+                      })}
+                      <span> h</span>
+                    </div>
+                    <CarbDialog carb={carb}>
+                      <Button variant="link" className="p-2">
+                        <Pencil className="cursor-pointer w-4 h-4" />
+                      </Button>
+                    </CarbDialog>
+                    <DeleteDialog id={carb.id} action={deleteCarbs} />
+                  </div>
                 </div>
-                {arr.length - 1 !== i && <Separator />}
+                {over ? (
+                  <Progress
+                    className="h-2 bg-orange-400"
+                    value={(carb.carbs / carb.observedCarbs) * 100}
+                  />
+                ) : (
+                  <Progress
+                    className="h-2 "
+                    value={(carb.observedCarbs / carb.carbs) * 100}
+                  />
+                )}
               </div>
-            )
-          }
-        })}
+              {arr.length - 1 !== i && <Separator />}
+            </div>
+          )
+        }
+      })}
+      {carbs.length === 0 && (
+        <p className="text-center p-2 text-slate-400">No entries</p>
+      )}
     </div>
   )
 }

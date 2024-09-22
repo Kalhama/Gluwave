@@ -72,6 +72,13 @@ async function ListBloodGlucoseTable({ date }: Props) {
               </TableCell>
             </TableRow>
           ))}
+          {results.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={3} className="text-slate-400">
+                No entries
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>
