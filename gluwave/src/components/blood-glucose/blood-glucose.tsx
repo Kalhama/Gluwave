@@ -1,15 +1,7 @@
 'use client'
 
 import { addHours, subHours } from 'date-fns'
-import {
-  DomainTuple,
-  VictoryChart,
-  VictoryClipContainer,
-  VictoryLine,
-  VictoryScatter,
-  VictoryTheme,
-  VictoryZoomContainer,
-} from 'victory'
+import { DomainTuple, VictoryLine, VictoryScatter } from 'victory'
 
 import { GraphContainer, GraphContent, GraphTitle } from '../graph-container'
 
@@ -58,71 +50,8 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions, now }: Props) => {
           </span>
         </div>
       </GraphTitle>
-      <GraphContent>
-        <VictoryChart
-          padding={{ top: 10, bottom: 25, left: 30, right: 15 }}
-          height={200}
-          domain={{
-            y: yDomain,
-          }}
-          containerComponent={
-            <VictoryZoomContainer
-              clipContainerComponent={<VictoryClipContainer clipId={1} />}
-              allowZoom={false}
-              zoomDomain={{
-                x: [subHours(now, 2), addHours(now, 2)],
-              }}
-            />
-          }
-          theme={VictoryTheme.material}
-        >
-          {/* empty chart in case there is no other data, so that x axis remains stable */}
-          <VictoryLine
-            data={[
-              { x: subHours(now, 24), y: null },
-              { x: addHours(now, 24), y: null },
-            ]}
-          />
-          <VictoryLine
-            style={{
-              data: {
-                strokeDasharray: '2 2',
-                strokeWidth: 1,
-                stroke: '#c43a31',
-              },
-            }}
-            data={[
-              { x: now, y: 0 },
-              { x: now, y: 100 },
-            ]}
-          />
-          <VictoryLine
-            style={{
-              data: { stroke: '#c43a31', strokeDasharray: '2 2' },
-              parent: { border: '1px solid #ccc', padding: 0 },
-            }}
-            data={predictions}
-            x="timestamp"
-            y={(d: Prediction) => d.insulinEffect + lastBloodGlucose}
-          />
-          <VictoryLine
-            style={{
-              data: { stroke: '#7a7a7a', strokeDasharray: '2 2' },
-              parent: { border: '1px solid #ccc', padding: 0 },
-            }}
-            data={predictions}
-            x="timestamp"
-            y={(d: Prediction) => d.totalEffect + lastBloodGlucose}
-          />
-          <VictoryLine
-            style={{
-              data: { stroke: '#31c449', strokeDasharray: '2 2' },
-              parent: { border: '1px solid #ccc', padding: 0 },
-            }}
-            data={predictions}
-            x="timestamp"
-            y={(d: Prediction) => d.carbEffect + lastBloodGlucose}
-          />
+      <GraphContent yDomain={yDomain} now={now}>
+        {bloodGlucoseData.length !== 0 && (
           <VictoryScatter
             style={{
               data: { stroke: '#c43a31' },
@@ -133,7 +62,55 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions, now }: Props) => {
             x="timestamp"
             y="value"
           />
-        </VictoryChart>
+        )}
+        <VictoryLine
+          style={{
+            data: {
+              strokeDasharray: '2 2',
+              strokeWidth: 1,
+              stroke: '#c43a31',
+            },
+          }}
+          data={[
+            { x: now, y: 0 },
+            { x: now, y: 100 },
+          ]}
+        />
+        <VictoryLine
+          style={{
+            data: { stroke: '#c43a31', strokeDasharray: '2 2' },
+            parent: { border: '1px solid #ccc', padding: 0 },
+          }}
+          data={predictions}
+          x="timestamp"
+          y={(d: Prediction) => d.insulinEffect + lastBloodGlucose}
+        />
+        <VictoryLine
+          style={{
+            data: { stroke: '#7a7a7a', strokeDasharray: '2 2' },
+            parent: { border: '1px solid #ccc', padding: 0 },
+          }}
+          data={predictions}
+          x="timestamp"
+          y={(d: Prediction) => d.totalEffect + lastBloodGlucose}
+        />
+        <VictoryLine
+          style={{
+            data: { stroke: '#31c449', strokeDasharray: '2 2' },
+            parent: { border: '1px solid #ccc', padding: 0 },
+          }}
+          data={predictions}
+          x="timestamp"
+          y={(d: Prediction) => d.carbEffect + lastBloodGlucose}
+        />
+
+        {/* empty chart in case there is no other data, so that x axis remains stable */}
+        <VictoryLine
+          data={[
+            { x: subHours(now, 24), y: null },
+            { x: addHours(now, 24), y: null },
+          ]}
+        />
       </GraphContent>
     </GraphContainer>
   )

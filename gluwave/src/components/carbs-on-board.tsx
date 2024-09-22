@@ -5,7 +5,7 @@ import { getObservedCarbsAction } from '@/actions/get-observed-carbs'
 import { useServerAction } from '@/lib/use-server-action'
 import { addHours, addMinutes, setHours, startOfDay, subHours } from 'date-fns'
 import { useEffect } from 'react'
-import { DomainTuple, VictoryChart, VictoryLine, VictoryTheme } from 'victory'
+import { Tuple, VictoryLine } from 'victory'
 
 import { GraphContainer, GraphContent, GraphTitle } from './graph-container'
 
@@ -24,11 +24,10 @@ export const CarbsOnBoard = ({}: Props) => {
     loading: COBLoading,
   } = useServerAction(getCarbsOnBoardAction)
 
+  const now = new Date()
+  const start = setHours(startOfDay(subHours(now, 4)), 4) // previous 4AM
+  const end = addHours(now, 6)
   useEffect(() => {
-    const now = new Date()
-    const start = setHours(startOfDay(subHours(now, 4)), 4) // previous 4AM
-    const end = addHours(now, 6)
-
     observedAction({
       start,
       end,
@@ -41,8 +40,6 @@ export const CarbsOnBoard = ({}: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const now = new Date()
-
   if (observedLoading || !observedCarbs || COBLoading || !carbsOnBoard)
     return 'loading...'
 
@@ -50,16 +47,19 @@ export const CarbsOnBoard = ({}: Props) => {
     (c) => now < c.timestamp && addMinutes(now, 1) >= c.timestamp
   )
 
-  const yDomain = [
-    Math.min(
-      ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
-      ...observedCarbs.map((c) => c.cumulative_observed_carbs)
-    ) - 5,
-    Math.max(
-      ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
-      ...observedCarbs.map((c) => c.cumulative_observed_carbs)
-    ) + 5,
-  ] as DomainTuple
+  const domain = {
+    y: [
+      Math.min(
+        ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
+        ...observedCarbs.map((c) => c.cumulative_observed_carbs)
+      ) - 5,
+      Math.max(
+        ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
+        ...observedCarbs.map((c) => c.cumulative_observed_carbs)
+      ) + 5,
+    ] as Tuple<number>,
+    x: [start, end] as Tuple<Date>,
+  }
 
   return (
     <GraphContainer>
@@ -78,36 +78,21 @@ export const CarbsOnBoard = ({}: Props) => {
           </span>
         </div>
       </GraphTitle>
-      <GraphContent>
-        <VictoryChart
-          padding={{ top: 10, bottom: 25, left: 35, right: 15 }}
-          height={200}
-          domain={{
-            y: yDomain,
+      <GraphContent yDomain={domain.y} now={now}>
+        <VictoryLine
+          style={{
+            data: {
+              strokeDasharray: '2 2',
+              strokeWidth: 1,
+              stroke: '#c43a31',
+            },
           }}
-          // containerComponent={
-          //   <VictoryZoomContainer
-          //     allowZoom={false}
-          //     // zoomDomain={{
-          //     //   x: [subHours(new Date(), 2), addHours(new Date(), 2)],
-          //     // }}
-          //   />
-          // }
-          theme={VictoryTheme.material}
-        >
-          <VictoryLine
-            style={{
-              data: {
-                strokeDasharray: '2 2',
-                strokeWidth: 1,
-                stroke: '#c43a31',
-              },
-            }}
-            data={[
-              { x: now, y: 0 },
-              { x: now, y: 5000 },
-            ]}
-          />
+          data={[
+            { x: now, y: 0 },
+            { x: now, y: 5000 },
+          ]}
+        />
+        {observedCarbs.length !== 0 && (
           <VictoryLine
             style={{
               data: { stroke: '#111111' },
@@ -118,6 +103,8 @@ export const CarbsOnBoard = ({}: Props) => {
             x="timestamp"
             y="cumulative_observed_carbs"
           />
+        )}
+        {observedCarbs.length !== 0 && (
           <VictoryLine
             style={{
               data: { stroke: '#c43a31' },
@@ -127,7 +114,15 @@ export const CarbsOnBoard = ({}: Props) => {
             x="timestamp"
             y="cumulativeDecayedCarbs"
           />
-        </VictoryChart>
+        )}
+
+        {/* empty chart in case there is no other data, so that x axis remains stable */}
+        <VictoryLine
+          data={[
+            { x: subHours(now, 24), y: null },
+            { x: addHours(now, 24), y: null },
+          ]}
+        />
       </GraphContent>
     </GraphContainer>
   )

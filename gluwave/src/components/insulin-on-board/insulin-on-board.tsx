@@ -1,15 +1,8 @@
 'use client'
 
 import { calculateUserInsulinData } from '@/lib/sql_utils'
-import { addHours, addMinutes, subHours } from 'date-fns'
-import {
-  DomainTuple,
-  VictoryChart,
-  VictoryClipContainer,
-  VictoryLine,
-  VictoryTheme,
-  VictoryZoomContainer,
-} from 'victory'
+import { addMinutes } from 'date-fns'
+import { DomainTuple, VictoryLine } from 'victory'
 
 import { GraphContainer, GraphContent, GraphTitle } from '../graph-container'
 
@@ -23,7 +16,7 @@ interface Props {
 export const InsulinOnBoard = ({ data, now }: Props) => {
   const yDomain = [
     0,
-    Math.max(5, ...data.map((insulin) => insulin.insulinOnBoard)) + 2,
+    Math.max(5.5, ...data.map((insulin) => insulin.insulinOnBoard)) + 2,
   ] as DomainTuple
 
   const current = data.find(
@@ -46,47 +39,29 @@ export const InsulinOnBoard = ({ data, now }: Props) => {
           </span>
         </div>
       </GraphTitle>
-      <GraphContent>
-        <VictoryChart
-          padding={{ top: 10, bottom: 25, left: 30, right: 15 }}
-          height={130}
-          domain={{
-            y: yDomain,
+      <GraphContent yDomain={yDomain} now={now} height={150}>
+        <VictoryLine
+          style={{
+            data: {
+              strokeDasharray: '2 2',
+              strokeWidth: 1,
+              stroke: '#c43a31',
+            },
           }}
-          containerComponent={
-            <VictoryZoomContainer
-              allowZoom={false}
-              clipContainerComponent={<VictoryClipContainer clipId={1} />}
-              zoomDomain={{
-                x: [subHours(now, 2), addHours(now, 2)],
-              }}
-            />
-          }
-          theme={VictoryTheme.material}
-        >
-          <VictoryLine
-            style={{
-              data: {
-                strokeDasharray: '2 2',
-                strokeWidth: 1,
-                stroke: '#c43a31',
-              },
-            }}
-            data={[
-              { x: now, y: 0 },
-              { x: now, y: 100 },
-            ]}
-          />
-          <VictoryLine
-            style={{
-              data: { stroke: '#c43a31' },
-              parent: { border: '1px solid #ccc', padding: 0 },
-            }}
-            data={data}
-            x="timestamp"
-            y="insulinOnBoard"
-          />
-        </VictoryChart>
+          data={[
+            { x: now, y: 0 },
+            { x: now, y: 100 },
+          ]}
+        />
+        <VictoryLine
+          style={{
+            data: { stroke: '#c43a31' },
+            parent: { border: '1px solid #ccc', padding: 0 },
+          }}
+          data={data}
+          x="timestamp"
+          y="insulinOnBoard"
+        />
       </GraphContent>
     </GraphContainer>
   )
