@@ -1,6 +1,8 @@
+import { deleteCarbs } from '@/actions/delete-carbs'
 import { validateRequest } from '@/auth'
 import { CarbDialog } from '@/components/carb-dialog'
 import { ClientDateTime } from '@/components/client-datetime'
+import { DeleteDialog } from '@/components/delete-dialog'
 import { PageDatePicker } from '@/components/page-date-picker'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -10,8 +12,6 @@ import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
 import { Pencil } from 'lucide-react'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
-
-import { DeleteCarbButton } from './delete-carbs-button'
 
 interface Props {
   date: Date
@@ -67,7 +67,7 @@ async function ListCarbTable({ date }: Props) {
                           <Pencil className="cursor-pointer w-4 h-4" />
                         </Button>
                       </CarbDialog>
-                      <DeleteCarbButton id={carb.id} />
+                      <DeleteDialog id={carb.id} action={deleteCarbs} />
                     </div>
                   </div>
                   {over ? (

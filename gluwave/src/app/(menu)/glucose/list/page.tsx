@@ -1,6 +1,8 @@
+import { deleteGlucose } from '@/actions/delete-glucose'
 import { validateRequest } from '@/auth'
 import { BloodGlucoseDialog } from '@/components/bloodglucose-dialog'
 import { ClientDateTime } from '@/components/client-datetime'
+import { DeleteDialog } from '@/components/delete-dialog'
 import { PageDatePicker } from '@/components/page-date-picker'
 import {
   Table,
@@ -17,8 +19,6 @@ import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { Pencil } from 'lucide-react'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
-
-import { DeleteBloodGlucoseButton } from './delete-blood-glucose-button'
 
 interface Props {
   date: Date
@@ -68,7 +68,7 @@ async function ListBloodGlucoseTable({ date }: Props) {
                 >
                   <Pencil className="cursor-pointer w-4 h-4" />
                 </BloodGlucoseDialog>
-                <DeleteBloodGlucoseButton id={glucose.id} />
+                <DeleteDialog action={deleteGlucose} id={glucose.id} />
               </TableCell>
             </TableRow>
           ))}

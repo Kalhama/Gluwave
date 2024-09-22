@@ -1,5 +1,7 @@
+import { deleteInsulin } from '@/actions/delete-insulin'
 import { validateRequest } from '@/auth'
 import { ClientDateTime } from '@/components/client-datetime'
+import { DeleteDialog } from '@/components/delete-dialog'
 import { InsulinDialog } from '@/components/insulin-dialog'
 import { PageDatePicker } from '@/components/page-date-picker'
 import {
@@ -18,8 +20,6 @@ import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { Pencil } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import * as React from 'react'
-
-import { DeleteInsulinButton } from './delete-insulin-button'
 
 interface Props {
   date: Date
@@ -64,7 +64,7 @@ async function ListInsulinTable({ date }: Props) {
                 <InsulinDialog insulin={insulin}>
                   <Pencil className="cursor-pointer w-4 h-4" />
                 </InsulinDialog>
-                <DeleteInsulinButton id={insulin.id} />
+                <DeleteDialog action={deleteInsulin} id={insulin.id} />
               </TableCell>
             </TableRow>
           ))}
