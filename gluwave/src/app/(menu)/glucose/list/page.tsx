@@ -89,9 +89,11 @@ export default async function BloodGlucoseListByDate({
   }
 
   return (
-    <div className="space-y-4 border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
+    <>
       <PageDatePicker date={date} />
-      <ListBloodGlucoseTable date={date} />
-    </div>
+      <div className="space-y-4 border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
+        <ListBloodGlucoseTable date={date} />
+      </div>
+    </>
   )
 }

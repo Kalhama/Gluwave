@@ -61,13 +61,15 @@ export function BurgerMenu({ className }: Props) {
             <div className="max-w-md mx-auto">
               <Drawer.Title className="font-medium mb-4">
                 <div className="flex justify-between">
-                  <Image
-                    src={'/noslogan_transparent.png'}
-                    width={400}
-                    height={400}
-                    alt={'logo'}
-                    className="w-auto h-auto max-h-8"
-                  />
+                  <Link href="/">
+                    <Image
+                      src={'/noslogan_transparent.png'}
+                      width={400}
+                      height={400}
+                      alt={'logo'}
+                      className="w-auto h-auto max-h-8"
+                    />
+                  </Link>
                   <button
                     className="cursor-pointer"
                     onClick={() => onOpenChange(false)}
@@ -83,6 +85,7 @@ export function BurgerMenu({ className }: Props) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={() => onOpenChange(false)}
                     className={cn(
                       buttonVariants({ variant: 'ghost' }),
                       (

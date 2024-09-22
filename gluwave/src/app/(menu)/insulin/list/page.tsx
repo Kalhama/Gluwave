@@ -96,9 +96,11 @@ export default async function InsulinListByDate({
   const date = searchParams.date ? parseISO(searchParams.date) : new Date()
 
   return (
-    <div className="space-y-4 border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
+    <>
       <PageDatePicker date={date} />
-      <ListInsulinTable date={date} />
-    </div>
+      <div className="space-y-4 border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
+        <ListInsulinTable date={date} />
+      </div>
+    </>
   )
 }
