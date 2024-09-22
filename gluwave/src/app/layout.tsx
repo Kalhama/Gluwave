@@ -25,7 +25,7 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`bg-slate-200 ${inter.className}`}>
         <main>{children}</main>
       </body>
     </html>

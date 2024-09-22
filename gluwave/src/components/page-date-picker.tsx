@@ -8,20 +8,22 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { formatISO, startOfDay, subDays } from 'date-fns'
-import { redirect } from 'next/navigation'
+import { redirect, usePathname } from 'next/navigation'
 
 interface Props {
   date: Date
 }
 
-export const CarbListDatePicker = ({ date }: Props) => {
+export const PageDatePicker = ({ date }: Props) => {
   const today = startOfDay(new Date())
   const selectableDays = Array.from({ length: 60 }).map((_, i) =>
     subDays(today, i)
   )
 
+  const route = usePathname()
+
   const handleDateChange = (val: string) => {
-    redirect(`/carbs/list/${val}`)
+    redirect(`${route}?date=${val}`)
   }
 
   return (

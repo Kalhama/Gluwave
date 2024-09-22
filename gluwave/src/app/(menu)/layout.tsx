@@ -1,4 +1,4 @@
-import { BurgerMenu } from '@/components/burger-menu'
+import { MenuBar } from '@/components/menu-bar'
 
 export default async function RootLayout({
   children,
@@ -7,7 +7,7 @@ export default async function RootLayout({
 }>) {
   return (
     <>
-      <BurgerMenu />
+      <MenuBar />
       {children}
     </>
   )

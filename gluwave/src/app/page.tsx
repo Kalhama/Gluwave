@@ -42,7 +42,7 @@ export default async function App() {
   const { user } = await validateRequest()
 
   return (
-    <div className="bg-slate-200 pb-32 min-h-screen">
+    <div className="pb-32 min-h-screen">
       <GlucoseBar />
 
       <AutoReload minutes={5} />

@@ -6,8 +6,9 @@ import { differenceInMinutes, subMinutes } from 'date-fns'
 import { and, desc, eq, gte, lte, ne } from 'drizzle-orm'
 import { MoveRight } from 'lucide-react'
 import { redirect } from 'next/navigation'
+import React from 'react'
 
-import { BurgerMenu } from './burger-menu'
+import { MenuBar } from './menu-bar'
 
 const glucoseTrend = async (last: {
   value: number
@@ -72,7 +73,7 @@ export const GlucoseBar = async () => {
   })()
 
   return (
-    <div className="border-b shadow rounded-b-xl bg-white p-2 flex justify-between items-center">
+    <MenuBar>
       <div className="flex justify-center items-center gap-2 mx-auto">
         <div
           className={cn('h-4 w-4 shadow-[0_0_6px] rounded-full mr-1', status)}
@@ -91,7 +92,6 @@ export const GlucoseBar = async () => {
           <MoveRight className="h-4 w-4" style={{ rotate: `${trend}deg` }} />
         )}
       </div>
-      <BurgerMenu className="static" />
-    </div>
+    </MenuBar>
   )
 }
