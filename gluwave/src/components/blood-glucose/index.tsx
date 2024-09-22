@@ -45,6 +45,7 @@ export default async function BloodGlucoseProvider() {
 
   return (
     <BloodGlucose
+      now={now}
       bloodGlucoseData={bloodGlucoseData}
       predictions={predictions}
     />

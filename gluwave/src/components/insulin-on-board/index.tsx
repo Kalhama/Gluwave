@@ -18,5 +18,5 @@ export default async function InsulinOnBoardProvider() {
     user.id
   )
 
-  return <InsulinOnBoard data={data} />
+  return <InsulinOnBoard data={data} now={now} />
 }

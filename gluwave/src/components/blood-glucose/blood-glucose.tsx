@@ -1,11 +1,10 @@
 'use client'
 
 import { addHours, subHours } from 'date-fns'
-import { ChevronRight } from 'lucide-react'
-import Link from 'next/link'
 import {
   DomainTuple,
   VictoryChart,
+  VictoryClipContainer,
   VictoryLine,
   VictoryScatter,
   VictoryTheme,
@@ -20,6 +19,7 @@ interface Props {
     value: number
   }[]
   predictions: Prediction[]
+  now: Date
 }
 
 type Prediction = {
@@ -29,9 +29,7 @@ type Prediction = {
   totalEffect: number
 }
 
-export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
-  const now = new Date()
-
+export const BloodGlucose = ({ bloodGlucoseData, predictions, now }: Props) => {
   const lastBloodGlucose =
     bloodGlucoseData[bloodGlucoseData.length - 1]?.value ?? 0
 
@@ -69,9 +67,10 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions }: Props) => {
           }}
           containerComponent={
             <VictoryZoomContainer
+              clipContainerComponent={<VictoryClipContainer clipId={1} />}
               allowZoom={false}
               zoomDomain={{
-                x: [subHours(new Date(), 2), addHours(new Date(), 2)],
+                x: [subHours(now, 2), addHours(now, 2)],
               }}
             />
           }

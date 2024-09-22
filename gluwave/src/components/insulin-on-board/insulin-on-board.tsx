@@ -2,11 +2,10 @@
 
 import { calculateUserInsulinData } from '@/lib/sql_utils'
 import { addHours, addMinutes, subHours } from 'date-fns'
-import { ChevronRight } from 'lucide-react'
-import Link from 'next/link'
 import {
   DomainTuple,
   VictoryChart,
+  VictoryClipContainer,
   VictoryLine,
   VictoryTheme,
   VictoryZoomContainer,
@@ -18,11 +17,10 @@ type InsulinData = Awaited<ReturnType<typeof calculateUserInsulinData>>
 
 interface Props {
   data: InsulinData
+  now: Date
 }
 
-export const InsulinOnBoard = ({ data }: Props) => {
-  const now = new Date()
-
+export const InsulinOnBoard = ({ data, now }: Props) => {
   const yDomain = [
     0,
     Math.max(5, ...data.map((insulin) => insulin.insulinOnBoard)) + 2,
@@ -58,8 +56,9 @@ export const InsulinOnBoard = ({ data }: Props) => {
           containerComponent={
             <VictoryZoomContainer
               allowZoom={false}
+              clipContainerComponent={<VictoryClipContainer clipId={1} />}
               zoomDomain={{
-                x: [subHours(new Date(), 2), addHours(new Date(), 2)],
+                x: [subHours(now, 2), addHours(now, 2)],
               }}
             />
           }
