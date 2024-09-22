@@ -1,8 +1,14 @@
 import { validateRequest } from '@/auth'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { db } from '@/db'
 import { cn } from '@/lib/utils'
 import { glucose } from '@/schema'
-import { differenceInMinutes, subMinutes } from 'date-fns'
+import { differenceInMinutes, formatDistance, subMinutes } from 'date-fns'
 import { and, desc, eq, gte, lte, ne } from 'drizzle-orm'
 import { MoveRight } from 'lucide-react'
 import { redirect } from 'next/navigation'
@@ -64,34 +70,59 @@ export const GlucoseBar = async () => {
 
   const minutesDelta = differenceInMinutes(new Date(), last.timestamp)
   const stale = minutesDelta > 30
-  const veryStale = false // minutesDelta > 60
+  const veryStale = minutesDelta > 60
   const status = (() => {
     if (stale) return 'bg-slate-300 shadow-slate-300'
     else if (last.value < 3.8) return 'bg-red-600 shadow-red-600'
     else if (last.value > 11) return 'bg-orange-500 shadow-orange-500'
-    else return 'bg-green-600 bg-green-600'
+    else return 'bg-green-600 shadow-green-600'
   })()
 
   return (
     <MenuBar>
-      <div className="flex justify-center items-center gap-2 mx-auto">
-        <div
-          className={cn('h-4 w-4 shadow-[0_0_6px] rounded-full mr-1', status)}
-        />
-        <div className="text-2xl font-bold">
-          {veryStale
-            ? '-.-'
-            : last.value.toLocaleString(undefined, {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
-              })}
-          <span className="text-sm font-normal text-slate-700"> mmol/l</span>
-        </div>
+      <div className="h-6 w-6" />
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex justify-center items-center gap-2 mx-auto cursor-pointer">
+              <div
+                className={cn(
+                  'h-4 w-4 shadow-[0_0_6px] rounded-full mr-1',
+                  status
+                )}
+              />
+              <div className="text-2xl font-bold">
+                {veryStale
+                  ? '-.-'
+                  : last.value.toLocaleString(undefined, {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    })}
+                <span className="text-sm font-normal text-slate-700">
+                  {' '}
+                  mmol/l
+                </span>
+              </div>
 
-        {trend !== null && (
-          <MoveRight className="h-4 w-4" style={{ rotate: `${trend}deg` }} />
-        )}
-      </div>
+              {trend !== null && (
+                <MoveRight
+                  className="h-4 w-4"
+                  style={{ rotate: `${trend}deg` }}
+                />
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>
+              Latest reading{' '}
+              {formatDistance(last.timestamp, new Date(), {
+                includeSeconds: false,
+              })}{' '}
+              ago
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </MenuBar>
   )
 }

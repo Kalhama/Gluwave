@@ -26,6 +26,7 @@
     "@radix-ui/react-select": "^2.1.1",
     "@radix-ui/react-separator": "^1.0.3",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.1.2",
     "@tanstack/react-table": "^8.20.5",
     "arctic": "^1.2.1",
     "axios": "^1.7.7",
