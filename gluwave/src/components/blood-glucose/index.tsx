@@ -3,19 +3,13 @@ import { db } from '@/db'
 import { Statistics } from '@/lib/sql_utils'
 import { glucose } from '@/schema'
 import { addHours, subHours } from 'date-fns'
-import { and, eq, gte } from 'drizzle-orm'
+import { and, eq, gte, lte } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
-import { BloodGlucose } from './blood-glucose'
+import { GraphContainer, GraphTitle } from '../graph-container'
+import { BloodGlucoseContent } from './blood-glucose-content'
 
-export default async function BloodGlucoseProvider() {
-  const { user } = await validateRequest()
-  if (!user) {
-    redirect('/login')
-  }
-
-  const now = new Date()
-
+const getGlucose = async (userId: string, from: Date, to: Date) => {
   const bloodGlucoseData = await db
     .select({
       timestamp: glucose.timestamp,
@@ -24,18 +18,35 @@ export default async function BloodGlucoseProvider() {
     .from(glucose)
     .where(
       and(
-        eq(glucose.userId, user.id),
-        gte(glucose.timestamp, subHours(now, 48))
+        eq(glucose.userId, userId),
+        gte(glucose.timestamp, from),
+        lte(glucose.timestamp, to)
       )
     )
     .orderBy(glucose.timestamp)
 
-  const latestBloodGlucose =
-    bloodGlucoseData[bloodGlucoseData.length - 1]?.timestamp ?? now
+  return bloodGlucoseData
+}
+
+export default async function BloodGlucose() {
+  const { user } = await validateRequest()
+  if (!user) {
+    redirect('/login')
+  }
+
+  const now = new Date()
+
+  const glucose = await getGlucose(
+    user.id,
+    subHours(now, 24),
+    addHours(now, 24)
+  )
+
+  const lastBloodGlucose = glucose[glucose.length - 1]
 
   const predictions = await Statistics.execute(
     Statistics.predict(
-      latestBloodGlucose,
+      lastBloodGlucose.timestamp ?? now,
       addHours(now, 6),
       user.id,
       user.carbohydrateRatio,
@@ -43,11 +54,33 @@ export default async function BloodGlucoseProvider() {
     )
   )
 
+  const eventually =
+    lastBloodGlucose.value ??
+    0 -
+      predictions[0]?.totalEffect +
+      predictions[predictions.length - 1]?.totalEffect
+
   return (
-    <BloodGlucose
-      now={now}
-      bloodGlucoseData={bloodGlucoseData}
-      predictions={predictions}
-    />
+    <GraphContainer>
+      <GraphTitle href="/glucose/list">
+        <div>
+          <h2 className="font-semibold">Blood glucose</h2>
+          <span className="text-xs text-slate-600">
+            Eventually{' '}
+            {eventually.toLocaleString(undefined, {
+              maximumFractionDigits: 1,
+              minimumFractionDigits: 1,
+            })}{' '}
+            mmol/l
+          </span>
+        </div>
+      </GraphTitle>
+      <BloodGlucoseContent
+        now={now}
+        glucose={glucose}
+        prediction={predictions}
+        lastBloodGlucose={lastBloodGlucose.value}
+      />
+    </GraphContainer>
   )
 }

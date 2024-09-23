@@ -1,16 +1,14 @@
 import { validateRequest } from '@/auth'
-import { db } from '@/db'
-import { Statistics, calculateUserCarbsData } from '@/lib/sql_utils'
+import { calculateUserCarbsData } from '@/lib/sql_utils'
 import { observedCarbs } from '@/lib/sql_utils'
-import { glucose } from '@/schema'
-import { addHours, setHours, startOfDay, subHours } from 'date-fns'
-import { and, eq, gte } from 'drizzle-orm'
+import { addHours, addMinutes, setHours, startOfDay, subHours } from 'date-fns'
 import { redirect } from 'next/navigation'
 import { Tuple } from 'victory'
 
-import { CarbsOnBoard } from './carbs-on-board'
+import { GraphContainer, GraphTitle } from '../graph-container'
+import { CarbsOnBoardContent } from './carbs-on-board-content'
 
-export default async function CarbsOnBoardProvider() {
+export default async function CarbsOnBoard() {
   const { user } = await validateRequest()
   if (!user) {
     redirect('/login')
@@ -37,12 +35,33 @@ export default async function CarbsOnBoardProvider() {
     x: [start, end] as Tuple<Date>,
   }
 
+  const current = predicted.find(
+    (c) => now < c.timestamp && addMinutes(now, 1) >= c.timestamp
+  )
+
   return (
-    <CarbsOnBoard
-      now={now}
-      predicted={predicted}
-      observed={observed}
-      domain={domain}
-    />
+    <GraphContainer>
+      <GraphTitle href="/carbs/list" className="flex justify-between">
+        <div>
+          <h2 className="font-semibold">
+            Observed and predicted carbohydrates
+          </h2>
+          <span className="text-xs">
+            COB{' '}
+            {current?.carbsOnBoard.toLocaleString(undefined, {
+              maximumFractionDigits: 0,
+              minimumFractionDigits: 0,
+            })}{' '}
+            g
+          </span>
+        </div>
+      </GraphTitle>
+      <CarbsOnBoardContent
+        now={now}
+        predicted={predicted}
+        observed={observed}
+        domain={domain}
+      />
+    </GraphContainer>
   )
 }

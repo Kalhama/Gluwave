@@ -1,9 +1,9 @@
 import { validateRequest } from '@/auth'
 import { AutoReload } from '@/components/auto-reload'
-import BloodGlucoseProvider from '@/components/blood-glucose'
+import BloodGlucose from '@/components/blood-glucose'
 import CarbsOnBoard from '@/components/carbs-on-board'
 import { GlucoseBar } from '@/components/glucose-bar'
-import InsulinOnBoardProvider from '@/components/insulin-on-board'
+import InsulinOnBoard from '@/components/insulin-on-board'
 import { Toolbar } from '@/components/toolbar'
 import { db } from '@/db'
 import { glucose } from '@/schema'
@@ -39,20 +39,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function App() {
-  const { user } = await validateRequest()
-
   return (
-    <div className="pb-32 min-h-screen">
-      <GlucoseBar />
-
-      <AutoReload minutes={5} />
-      <div className="mt-2 grid gap-2 mx-auto sm:grid-cols-2 max-w-5xl min-[420px]:px-2 md:px-4">
-        <BloodGlucoseProvider />
-        <InsulinOnBoardProvider />
-        <CarbsOnBoard />
-      </div>
-
-      <Toolbar authenticated={!!user} />
+    <div className="mt-2 grid gap-2 mx-auto sm:grid-cols-2 max-w-5xl min-[420px]:px-2 md:px-4">
+      <BloodGlucose />
+      <InsulinOnBoard />
+      <CarbsOnBoard />
     </div>
   )
 }
