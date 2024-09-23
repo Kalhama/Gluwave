@@ -1,14 +1,16 @@
 import { validateRequest } from '@/auth'
+import { AdjustGlucosePrediction } from '@/components/blood-glucose-prediction/adjust-glucose-prediction'
 import { db } from '@/db'
 import { Statistics } from '@/lib/sql_utils'
 import { glucose } from '@/schema'
 import { addHours, subHours } from 'date-fns'
 import { and, eq, gte, lte } from 'drizzle-orm'
+import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
-import { GlucoseChartContent } from '../blood-glucose-prediction/glucose-chart-content'
-import { GraphContainer, GraphTitle } from '../graph-container'
-
+export const metadata: Metadata = {
+  title: 'Gluwave - Predictions',
+}
 const getGlucose = async (userId: string, from: Date, to: Date) => {
   const bloodGlucoseData = await db
     .select({
@@ -28,7 +30,7 @@ const getGlucose = async (userId: string, from: Date, to: Date) => {
   return bloodGlucoseData
 }
 
-export default async function BloodGlucose() {
+export default async function Predictions() {
   const { user } = await validateRequest()
   if (!user) {
     redirect('/login')
@@ -54,35 +56,14 @@ export default async function BloodGlucose() {
     )
   )
 
-  const displayedPrediction = predictions.map((p) => {
-    return {
-      x: p.timestamp,
-      y: p.totalEffect + lastBloodGlucose.value,
-    }
-  })
-
-  const eventually = displayedPrediction[displayedPrediction.length - 1]?.y
-
   return (
-    <GraphContainer>
-      <GraphTitle href="/glucose/predictions">
-        <div>
-          <h2 className="font-semibold">Blood glucose</h2>
-          <span className="text-xs text-slate-600">
-            Eventually{' '}
-            {eventually.toLocaleString(undefined, {
-              maximumFractionDigits: 1,
-              minimumFractionDigits: 1,
-            })}{' '}
-            mmol/l
-          </span>
-        </div>
-      </GraphTitle>
-      <GlucoseChartContent
+    <div className="mt-2 mx-auto max-w-2xl min-[420px]:px-2 md:px-4 space-y-6">
+      <AdjustGlucosePrediction
         now={now}
         glucose={glucose}
-        prediction={displayedPrediction}
+        prediction={predictions}
+        lastBloodGlucose={lastBloodGlucose.value}
       />
-    </GraphContainer>
+    </div>
   )
 }

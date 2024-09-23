@@ -110,7 +110,7 @@ Big credits to folks at Loop. I have shamelessly copied many of their achievemen
 3. Put following to `.env`
 
 ```shell
-#gluway
+#gluwve
 DATABASE_URL=postgresql://postgres:pass@postgres:5432/gluwave?schema=public
 DATABASE_URL_UNPOOLED=postgresql://postgres:pass@postgres:5432/gluwave?schema=public
 GITHUB_ID=_

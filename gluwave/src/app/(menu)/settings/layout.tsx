@@ -6,7 +6,7 @@ import { SidebarNav } from './sidebar-nav'
 import { Typography } from './typography'
 
 export const metadata: Metadata = {
-  title: 'Gluway - Settings',
+  title: 'Gluwave - Settings',
   description: 'Adjust your application settings',
 }
 

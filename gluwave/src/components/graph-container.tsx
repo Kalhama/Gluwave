@@ -22,8 +22,7 @@ interface Props {
 }
 
 interface TitleProps extends Props {
-  href: string
-  chevron?: boolean
+  href?: string
 }
 
 export const GraphContainer = ({ className, children }: Props) => {
@@ -34,23 +33,21 @@ export const GraphContainer = ({ className, children }: Props) => {
   )
 }
 
-export const GraphTitle = ({
-  href: href = '/',
-  className,
-  chevron: chevron = true,
-  children,
-}: TitleProps) => {
+export const GraphTitle = ({ href, className, children }: TitleProps) => {
+  const Comp = href ? Link : 'div'
+
   return (
-    <Link
-      href={href}
+    <Comp
+      href={href ?? ''}
       className={cn(
-        'p-2 px-4 border-b flex justify-between items-center hover:bg-slate-50 transition-colors',
+        'p-2 px-4 border-b flex justify-between items-center ',
+        href ? 'hover:bg-slate-50 transition-colors' : '',
         className
       )}
     >
       {children}
-      {chevron && <ChevronRight className="h-4 w-4" />}
-    </Link>
+      {href && <ChevronRight className="h-4 w-4" />}
+    </Comp>
   )
 }
 
