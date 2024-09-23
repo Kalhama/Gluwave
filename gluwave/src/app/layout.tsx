@@ -1,9 +1,7 @@
+import { inter } from '@/components/inter'
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 
 import './globals.sass'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Gluwave',

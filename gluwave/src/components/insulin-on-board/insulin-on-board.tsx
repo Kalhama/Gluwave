@@ -2,7 +2,7 @@
 
 import { calculateUserInsulinData } from '@/lib/sql_utils'
 import { addMinutes } from 'date-fns'
-import { DomainTuple, VictoryLine } from 'victory'
+import { DomainTuple, VictoryArea, VictoryLine } from 'victory'
 
 import { GraphContainer, GraphContent, GraphTitle } from '../graph-container'
 
@@ -14,10 +14,16 @@ interface Props {
 }
 
 export const InsulinOnBoard = ({ data, now }: Props) => {
-  const yDomain = [
-    0,
-    Math.max(5.5, ...data.map((insulin) => insulin.insulinOnBoard)) + 2,
-  ] as DomainTuple
+  const domain = {
+    y: [
+      0,
+      Math.max(5.5, ...data.map((insulin) => insulin.insulinOnBoard)) + 2,
+    ] as DomainTuple,
+    x: [
+      new Date(Math.min(...data.map((d) => d.timestamp.getTime()))),
+      new Date(Math.max(...data.map((d) => d.timestamp.getTime()))),
+    ] as DomainTuple,
+  }
 
   const current = data.find(
     (insulin) =>
@@ -39,7 +45,7 @@ export const InsulinOnBoard = ({ data, now }: Props) => {
           </span>
         </div>
       </GraphTitle>
-      <GraphContent yDomain={yDomain} now={now} height={150}>
+      <GraphContent domain={domain} now={now} height={150}>
         <VictoryLine
           style={{
             data: {
@@ -53,9 +59,10 @@ export const InsulinOnBoard = ({ data, now }: Props) => {
             { x: now, y: 100 },
           ]}
         />
-        <VictoryLine
+        <VictoryArea
           style={{
-            data: { stroke: '#c43a31' },
+            /* tailwind red-700 */
+            data: { fill: '#b91c1c33', stroke: '#b91c1c', strokeWidth: 2 },
             parent: { border: '1px solid #ccc', padding: 0 },
           }}
           data={data}

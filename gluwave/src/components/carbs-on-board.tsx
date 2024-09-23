@@ -5,7 +5,7 @@ import { getObservedCarbsAction } from '@/actions/get-observed-carbs'
 import { useServerAction } from '@/lib/use-server-action'
 import { addHours, addMinutes, setHours, startOfDay, subHours } from 'date-fns'
 import { useEffect } from 'react'
-import { Tuple, VictoryLine } from 'victory'
+import { Tuple, VictoryArea, VictoryLine } from 'victory'
 
 import { GraphContainer, GraphContent, GraphTitle } from './graph-container'
 
@@ -52,11 +52,11 @@ export const CarbsOnBoard = ({}: Props) => {
       Math.min(
         ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
         ...observedCarbs.map((c) => c.cumulative_observed_carbs)
-      ) - 5,
+      ),
       Math.max(
         ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
         ...observedCarbs.map((c) => c.cumulative_observed_carbs)
-      ) + 5,
+      ) + 10,
     ] as Tuple<number>,
     x: [start, end] as Tuple<Date>,
   }
@@ -78,7 +78,7 @@ export const CarbsOnBoard = ({}: Props) => {
           </span>
         </div>
       </GraphTitle>
-      <GraphContent yDomain={domain.y} now={now}>
+      <GraphContent domain={domain} now={now}>
         <VictoryLine
           style={{
             data: {
@@ -88,14 +88,15 @@ export const CarbsOnBoard = ({}: Props) => {
             },
           }}
           data={[
-            { x: now, y: 0 },
+            { x: now, y: -5000 },
             { x: now, y: 5000 },
           ]}
         />
         {observedCarbs.length !== 0 && (
-          <VictoryLine
+          <VictoryArea
             style={{
-              data: { stroke: '#111111' },
+              /* tailwind green-700 */
+              data: { stroke: '#15803d', fill: '#15803d33', strokeWidth: 2 },
               parent: { border: '1px solid #ccc', padding: 0 },
             }}
             interpolation="stepAfter"
@@ -107,7 +108,8 @@ export const CarbsOnBoard = ({}: Props) => {
         {observedCarbs.length !== 0 && (
           <VictoryLine
             style={{
-              data: { stroke: '#c43a31' },
+              /* tailwind slate-700 */
+              data: { stroke: '#334155' },
               parent: { border: '1px solid #ccc', padding: 0 },
             }}
             data={carbsOnBoard}

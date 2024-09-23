@@ -25,10 +25,26 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions, now }: Props) => {
   const lastBloodGlucose =
     bloodGlucoseData[bloodGlucoseData.length - 1]?.value ?? 0
 
-  const yDomain = [
-    Math.min(3, ...bloodGlucoseData.map((bg) => bg.value)) - 1,
-    Math.max(10, ...bloodGlucoseData.map((bg) => bg.value)) + 2,
-  ] as DomainTuple
+  const domain = {
+    y: [
+      Math.min(3, ...bloodGlucoseData.map((bg) => bg.value)) - 1,
+      Math.max(10, ...bloodGlucoseData.map((bg) => bg.value)) + 2,
+    ] as DomainTuple,
+    x: [
+      new Date(
+        Math.min(
+          ...bloodGlucoseData.map((d) => d.timestamp.getTime()),
+          ...predictions.map((d) => d.timestamp.getTime())
+        )
+      ),
+      new Date(
+        Math.max(
+          ...bloodGlucoseData.map((d) => d.timestamp.getTime()),
+          ...predictions.map((d) => d.timestamp.getTime())
+        )
+      ),
+    ] as DomainTuple,
+  }
 
   const eventually =
     lastBloodGlucose -
@@ -50,7 +66,7 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions, now }: Props) => {
           </span>
         </div>
       </GraphTitle>
-      <GraphContent yDomain={yDomain} now={now}>
+      <GraphContent domain={domain} now={now}>
         {bloodGlucoseData.length !== 0 && (
           <VictoryScatter
             style={{
@@ -78,7 +94,8 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions, now }: Props) => {
         />
         <VictoryLine
           style={{
-            data: { stroke: '#c43a31', strokeDasharray: '2 2' },
+            /* tailwind red-700 */
+            data: { stroke: '#b91c1c', strokeDasharray: '2 2' },
             parent: { border: '1px solid #ccc', padding: 0 },
           }}
           data={predictions}
@@ -87,7 +104,8 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions, now }: Props) => {
         />
         <VictoryLine
           style={{
-            data: { stroke: '#7a7a7a', strokeDasharray: '2 2' },
+            /* tailwind slate-900 */
+            data: { stroke: '#0f172a', strokeDasharray: '2 2' },
             parent: { border: '1px solid #ccc', padding: 0 },
           }}
           data={predictions}
@@ -96,7 +114,8 @@ export const BloodGlucose = ({ bloodGlucoseData, predictions, now }: Props) => {
         />
         <VictoryLine
           style={{
-            data: { stroke: '#31c449', strokeDasharray: '2 2' },
+            /* tailwind green-700 */
+            data: { stroke: '#15803d', strokeDasharray: '2 2' },
             parent: { border: '1px solid #ccc', padding: 0 },
           }}
           data={predictions}

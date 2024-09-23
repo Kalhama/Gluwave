@@ -1,14 +1,18 @@
 import { cn } from '@/lib/utils'
-import { addHours, subHours } from 'date-fns'
+import * as d3 from 'd3'
+import { addHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import { useMemo, useState } from 'react'
 import {
   DomainTuple,
+  VictoryAxis,
   VictoryChart,
   VictoryClipContainer,
-  VictoryTheme,
   VictoryZoomContainer,
 } from 'victory'
+
+import { victoryTheme } from './victory-theme'
 
 interface Props {
   children: React.ReactNode
@@ -49,7 +53,10 @@ export const GraphTitle = ({
 }
 
 interface ContentProps extends Props {
-  yDomain: DomainTuple
+  domain: {
+    x: DomainTuple
+    y: DomainTuple
+  }
   now: Date
   height?: number
 }
@@ -57,33 +64,56 @@ interface ContentProps extends Props {
 export const GraphContent = ({
   className,
   children,
-  yDomain,
+  domain,
   now,
   height: height = 200,
 }: ContentProps) => {
+  const initialZoomDomain = {
+    x: [addHours(now, -2), addHours(now, 2)] as DomainTuple,
+  }
+  const [zoomDomain, onZoomDomainChange] = useState(initialZoomDomain)
+
+  const [ticks, formatter] = useMemo(() => {
+    var timeScaledomain = d3.scaleTime().domain(zoomDomain.x)
+    const ticks = timeScaledomain.ticks(5)
+    const formatter = timeScaledomain.tickFormat()
+
+    return [ticks, formatter]
+  }, [zoomDomain])
+
   return (
     <div className={cn('p-2', className)}>
       <VictoryChart
         padding={padding}
         height={height}
         domain={{
-          y: yDomain,
+          y: domain.y,
         }}
         containerComponent={
           <VictoryZoomContainer
             clipContainerComponent={<VictoryClipContainer clipId={1} />}
             allowZoom={false}
-            zoomDomain={{
-              x: [subHours(now, 6), addHours(now, 6)],
-            }}
+            /* zoomDomain is actually just a initial zoom domain. If we pass zoomDomain on every change, whole chart rerenders causing performance issues */
+            zoomDomain={initialZoomDomain}
+            onZoomDomainChange={onZoomDomainChange}
           />
         }
-        theme={VictoryTheme.material}
+        theme={victoryTheme}
       >
+        <VictoryAxis
+          tickValues={ticks}
+          tickFormat={formatter}
+          offsetY={padding.bottom}
+        />
+        <VictoryAxis
+          crossAxis={false}
+          tickFormat={(v) => Math.round(v)}
+          dependentAxis
+        />
         {children}
       </VictoryChart>
     </div>
   )
 }
 
-export const padding = { top: 10, bottom: 25, left: 30, right: 15 }
+export const padding = { top: 10, bottom: 25, left: 27, right: 15 }
