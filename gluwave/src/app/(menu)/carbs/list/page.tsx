@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Statistics } from '@/lib/sql_utils'
-import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
+import { addHours, endOfDay, isValid, parseISO, startOfDay } from 'date-fns'
 import { Pencil } from 'lucide-react'
 import { notFound, redirect } from 'next/navigation'
 import * as React from 'react'
@@ -26,8 +26,8 @@ async function ListCarbTable({ date }: Props) {
   if (!user) redirect('/login')
   const now = new Date()
 
-  const start = startOfDay(date)
-  const end = endOfDay(date)
+  const start = date
+  const end = addHours(date, 24)
 
   const tf = Statistics.carbs_timeframe(user.id, start, end)
   let carbs = await Statistics.execute(
@@ -39,7 +39,11 @@ async function ListCarbTable({ date }: Props) {
     )
   )
 
-  carbs = carbs.filter((carb) => carb.timestamp >= start)
+  carbs = carbs.filter(
+    (carb) =>
+      carb.timestamp.getTime() >= start.getTime() &&
+      carb.timestamp.getTime() <= end.getTime()
+  )
 
   return (
     <div>

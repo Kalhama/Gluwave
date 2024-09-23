@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { addDays, formatISO, parseISO, startOfDay, subDays } from 'date-fns'
+import { addDays, formatISO, startOfDay } from 'date-fns'
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -28,8 +28,21 @@ export function PageDatePicker({ date: defaultValue }: Props) {
   const [date, setDate] = useState<Date>(defaultValue)
 
   useEffect(() => {
-    if (date !== defaultValue) {
-      redirect(`${route}?date=${formatISO(date, { representation: 'date' })}`)
+    const handleRedirect = (date: Date) =>
+      redirect(
+        `${route}?date=${encodeURIComponent(formatISO(startOfDay(date)))}`
+      )
+    const isDateChanged = (d1: Date, d2: Date) => d1.getTime() !== d2.getTime()
+    const isClientTimezone = (d: Date) =>
+      d.getTimezoneOffset() !== new Date().getTimezoneOffset()
+    const isStartofDay = (d: Date) => startOfDay(d).getTime() !== d.getTime()
+
+    if (isDateChanged(date, defaultValue)) {
+      handleRedirect(date)
+    } else if (isClientTimezone(date)) {
+      handleRedirect(new Date())
+    } else if (isStartofDay(date)) {
+      handleRedirect(date)
     }
   }, [defaultValue, date, route])
 

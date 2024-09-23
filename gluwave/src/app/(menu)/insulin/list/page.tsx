@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table'
 import { db } from '@/db'
 import { insulin } from '@/schema'
-import { endOfDay, parseISO, startOfDay } from 'date-fns'
+import { addHours, parseISO } from 'date-fns'
 import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { Pencil } from 'lucide-react'
 import { redirect } from 'next/navigation'
@@ -37,8 +37,8 @@ async function ListInsulinTable({ date }: Props) {
     .from(insulin)
     .where(
       and(
-        gte(insulin.timestamp, startOfDay(date)),
-        lt(insulin.timestamp, endOfDay(date)),
+        gte(insulin.timestamp, date),
+        lt(insulin.timestamp, addHours(date, 24)),
         eq(insulin.userId, user.id)
       )
     )
