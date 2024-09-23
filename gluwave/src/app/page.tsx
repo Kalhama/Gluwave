@@ -1,7 +1,7 @@
 import { validateRequest } from '@/auth'
 import { AutoReload } from '@/components/auto-reload'
 import BloodGlucoseProvider from '@/components/blood-glucose'
-import { CarbsOnBoard } from '@/components/carbs-on-board'
+import CarbsOnBoard from '@/components/carbs-on-board'
 import { GlucoseBar } from '@/components/glucose-bar'
 import InsulinOnBoardProvider from '@/components/insulin-on-board'
 import { Toolbar } from '@/components/toolbar'

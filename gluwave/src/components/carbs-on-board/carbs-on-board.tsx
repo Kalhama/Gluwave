@@ -1,65 +1,25 @@
 'use client'
 
-import { getCarbsOnBoardAction } from '@/actions/get-carbs-on-board'
-import { getObservedCarbsAction } from '@/actions/get-observed-carbs'
-import { useServerAction } from '@/lib/use-server-action'
-import { addHours, addMinutes, setHours, startOfDay, subHours } from 'date-fns'
-import { useEffect } from 'react'
-import { Tuple, VictoryArea, VictoryLine } from 'victory'
+import { calculateUserCarbsData, observedCarbs } from '@/lib/sql_utils'
+import { addHours, addMinutes, subHours } from 'date-fns'
+import { DomainTuple, Tuple, VictoryArea, VictoryLine } from 'victory'
 
-import { GraphContainer, GraphContent, GraphTitle } from './graph-container'
+import { GraphContainer, GraphContent, GraphTitle } from '../graph-container'
 
-interface Props {}
+interface Props {
+  now: Date
+  observed: Awaited<ReturnType<typeof observedCarbs>>
+  predicted: Awaited<ReturnType<typeof calculateUserCarbsData>>
+  domain: {
+    x: Tuple<Date>
+    y: DomainTuple
+  }
+}
 
-export const CarbsOnBoard = ({}: Props) => {
-  const {
-    action: observedAction,
-    data: observedCarbs,
-    loading: observedLoading,
-  } = useServerAction(getObservedCarbsAction)
-
-  const {
-    action: COBAction,
-    data: carbsOnBoard,
-    loading: COBLoading,
-  } = useServerAction(getCarbsOnBoardAction)
-
-  const now = new Date()
-  const start = setHours(startOfDay(subHours(now, 4)), 4) // previous 4AM
-  const end = addHours(now, 6)
-  useEffect(() => {
-    observedAction({
-      start,
-      end,
-    })
-
-    COBAction({
-      start,
-      end,
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  if (observedLoading || !observedCarbs || COBLoading || !carbsOnBoard)
-    return 'loading...'
-
-  const current = carbsOnBoard.find(
+export const CarbsOnBoard = ({ now, observed, predicted, domain }: Props) => {
+  const current = predicted.find(
     (c) => now < c.timestamp && addMinutes(now, 1) >= c.timestamp
   )
-
-  const domain = {
-    y: [
-      Math.min(
-        ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
-        ...observedCarbs.map((c) => c.cumulative_observed_carbs)
-      ),
-      Math.max(
-        ...carbsOnBoard.map((c) => c.cumulativeDecayedCarbs),
-        ...observedCarbs.map((c) => c.cumulative_observed_carbs)
-      ) + 10,
-    ] as Tuple<number>,
-    x: [start, end] as Tuple<Date>,
-  }
 
   return (
     <GraphContainer>
@@ -92,7 +52,7 @@ export const CarbsOnBoard = ({}: Props) => {
             { x: now, y: 5000 },
           ]}
         />
-        {observedCarbs.length !== 0 && (
+        {observed.length !== 0 && (
           <VictoryArea
             style={{
               /* tailwind green-700 */
@@ -100,19 +60,19 @@ export const CarbsOnBoard = ({}: Props) => {
               parent: { border: '1px solid #ccc', padding: 0 },
             }}
             interpolation="stepAfter"
-            data={observedCarbs}
+            data={observed}
             x="timestamp"
             y="cumulative_observed_carbs"
           />
         )}
-        {observedCarbs.length !== 0 && (
+        {predicted.length !== 0 && (
           <VictoryLine
             style={{
               /* tailwind slate-700 */
               data: { stroke: '#334155' },
               parent: { border: '1px solid #ccc', padding: 0 },
             }}
-            data={carbsOnBoard}
+            data={predicted}
             x="timestamp"
             y="cumulativeDecayedCarbs"
           />

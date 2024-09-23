@@ -1,3 +1,5 @@
+'use client'
+
 import { cn } from '@/lib/utils'
 import * as d3 from 'd3'
 import { addHours } from 'date-fns'
