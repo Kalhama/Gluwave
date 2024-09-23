@@ -6,5 +6,6 @@
     "librelinkup-to-gluwave": {
       "release-type": "node"
     }
-  }
+  },
+  "draft": false
 }
