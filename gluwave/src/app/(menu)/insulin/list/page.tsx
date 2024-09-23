@@ -4,6 +4,7 @@ import { ClientDateTime } from '@/components/client-datetime'
 import { DeleteDialog } from '@/components/delete-dialog'
 import { InsulinDialog } from '@/components/insulin-dialog'
 import { PageDatePicker } from '@/components/page-date-picker'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -60,9 +61,11 @@ async function ListInsulinTable({ date }: Props) {
                 <ClientDateTime timestamp={insulin.timestamp} />
               </TableCell>
               <TableCell>{insulin.amount} U</TableCell>
-              <TableCell className="text-right flex gap-2 justify-end">
+              <TableCell className="text-right flex justify-end">
                 <InsulinDialog insulin={insulin}>
-                  <Pencil className="cursor-pointer w-4 h-4" />
+                  <Button variant="ghost" className="p-2">
+                    <Pencil className="cursor-pointer w-4 h-4" />
+                  </Button>
                 </InsulinDialog>
                 <DeleteDialog action={deleteInsulin} id={insulin.id} />
               </TableCell>

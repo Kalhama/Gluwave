@@ -77,9 +77,7 @@ export function BloodGlucoseDialog({
         setOpenChange(s)
       }}
     >
-      <DrawerTrigger asChild>
-        <div>{children}</div>
-      </DrawerTrigger>
+      <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent className="sm:max-w-[350px] mx-auto">
         <DrawerHeader>
           <DrawerTitle>

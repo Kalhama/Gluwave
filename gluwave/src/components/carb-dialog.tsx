@@ -84,9 +84,7 @@ export function CarbDialog({ carb, children }: PropsWithChildren<Props>) {
         setOpenChange(s)
       }}
     >
-      <DrawerTrigger asChild>
-        <div>{children}</div>
-      </DrawerTrigger>
+      <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent className="sm:max-w-[350px] mx-auto">
         <DrawerHeader>
           <DrawerTitle>{editing ? 'Edit carbs' : 'Add carbs'}</DrawerTitle>

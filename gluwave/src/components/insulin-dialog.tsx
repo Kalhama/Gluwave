@@ -74,9 +74,7 @@ export function InsulinDialog({ insulin, children }: PropsWithChildren<Props>) {
         setOpenChange(s)
       }}
     >
-      <DrawerTrigger asChild>
-        <div>{children}</div>
-      </DrawerTrigger>
+      <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent className="sm:max-w-[350px] mx-auto">
         <DrawerHeader>
           <DrawerTitle>{editing ? 'Edit ' : 'Add '} insulin</DrawerTitle>

@@ -62,12 +62,14 @@ async function ListCarbTable({ date }: Props) {
                       })}
                       <span> h</span>
                     </div>
-                    <CarbDialog carb={carb}>
-                      <Button variant="link" className="p-2">
-                        <Pencil className="cursor-pointer w-4 h-4" />
-                      </Button>
-                    </CarbDialog>
-                    <DeleteDialog id={carb.id} action={deleteCarbs} />
+                    <div>
+                      <CarbDialog carb={carb}>
+                        <Button variant="ghost" className="p-2">
+                          <Pencil className="cursor-pointer w-4 h-4" />
+                        </Button>
+                      </CarbDialog>
+                      <DeleteDialog id={carb.id} action={deleteCarbs} />
+                    </div>
                   </div>
                 </div>
                 {over ? (

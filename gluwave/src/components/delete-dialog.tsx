@@ -15,6 +15,8 @@ import { useServerAction } from '@/lib/use-server-action'
 import { ServerActionResult } from '@/lib/wrap-server-action'
 import { Loader2, Trash2 } from 'lucide-react'
 
+import { Button } from './ui/button'
+
 interface Props {
   id: number
   action: (...args: any[]) => Promise<ServerActionResult<void>>
@@ -24,13 +26,15 @@ export const DeleteDialog = ({ id, action: serverAction }: Props) => {
   const { action, loading } = useServerAction(serverAction)
 
   if (loading) {
-    return <Loader2 className="w-4 h-4 animate-spin" />
+    return <Loader2 className="w-4 h-4 p-2 animate-spin" />
   }
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger>
-        <Trash2 className="cursor-pointer w-4 h-4" />
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" className="p-2">
+          <Trash2 className="cursor-pointer w-4 h-4" />
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

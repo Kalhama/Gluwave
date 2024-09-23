@@ -4,6 +4,7 @@ import { BloodGlucoseDialog } from '@/components/bloodglucose-dialog'
 import { ClientDateTime } from '@/components/client-datetime'
 import { DeleteDialog } from '@/components/delete-dialog'
 import { PageDatePicker } from '@/components/page-date-picker'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -59,14 +60,16 @@ async function ListBloodGlucoseTable({ date }: Props) {
                 <ClientDateTime timestamp={glucose.timestamp} />
               </TableCell>
               <TableCell>{glucose.value} mmol/l</TableCell>
-              <TableCell className="text-right flex gap-2 justify-end">
+              <TableCell className="text-right flex justify-end">
                 <BloodGlucoseDialog
                   glucose={{
                     ...glucose,
                     glucose: glucose.value,
                   }}
                 >
-                  <Pencil className="cursor-pointer w-4 h-4" />
+                  <Button variant="ghost" className="p-2">
+                    <Pencil className="cursor-pointer w-4 h-4" />
+                  </Button>
                 </BloodGlucoseDialog>
                 <DeleteDialog action={deleteGlucose} id={glucose.id} />
               </TableCell>
