@@ -1,10 +1,9 @@
 'use client'
 
 import { addHours, subHours } from 'date-fns'
-import { timestamp } from 'drizzle-orm/pg-core'
 import { DomainTuple, VictoryLine, VictoryScatter } from 'victory'
 
-import { GraphContent, GraphTitle } from '../graph-container'
+import { GraphContent } from '../graph-container'
 
 interface Props {
   glucose: {
@@ -58,12 +57,7 @@ export const GlucoseChartContent = ({ glucose, prediction, now }: Props) => {
               parent: { border: '1px solid #ccc', padding: 0 },
             }}
             size={2}
-            data={glucose.map((g) => {
-              return {
-                timestamp: g.timestamp,
-                value: g.value - 5,
-              }
-            })}
+            data={glucose}
             x="timestamp"
             y="value"
           />
@@ -91,12 +85,7 @@ export const GlucoseChartContent = ({ glucose, prediction, now }: Props) => {
             },
             parent: { border: '1px solid #ccc', padding: 0 },
           }}
-          data={prediction.map((p) => {
-            return {
-              x: p.x,
-              y: p.y - 5,
-            }
-          })}
+          data={prediction}
         />
 
         {/* empty chart in case there is no other data, so that x axis remains stable */}
