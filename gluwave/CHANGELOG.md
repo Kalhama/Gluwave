@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.2.0...gluwave-v1.2.1) (2024-09-23)
+
+
+### Bug Fixes
+
+* **gluwave:** :ambulance: carbs list crash ([d5f840c](https://github.com/Kalhama/Gluwave/commit/d5f840c6089ef4e9b2e50381a0cac0007e7e4f36))
+* **gluwave:** :ambulance: glucose value offset ([2ec2edc](https://github.com/Kalhama/Gluwave/commit/2ec2edcc9b67dc7e00ed6c8cdd2bc351de59e927))
+
 ## [1.2.0](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.1.0...gluwave-v1.2.0) (2024-09-23)
 
 
