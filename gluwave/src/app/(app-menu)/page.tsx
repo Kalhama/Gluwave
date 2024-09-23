@@ -1,6 +1,7 @@
 import { validateRequest } from '@/auth'
 import BloodGlucose from '@/components/blood-glucose'
-import CarbsOnBoard from '@/components/carbs-on-board'
+import CarbsRate from '@/components/carbohydrate-rate'
+import { CarbohydratesOnBoard } from '@/components/carbohydrates-on-board'
 import InsulinOnBoard from '@/components/insulin-on-board'
 import { db } from '@/db'
 import { glucose } from '@/schema'
@@ -40,7 +41,8 @@ export default async function App() {
     <div className="mt-2 grid gap-2 mx-auto sm:grid-cols-2 max-w-5xl min-[420px]:px-2 md:px-4">
       <BloodGlucose />
       <InsulinOnBoard />
-      <CarbsOnBoard />
+      {/* <CarbsRate /> */}
+      <CarbohydratesOnBoard />
     </div>
   )
 }

@@ -58,6 +58,9 @@ interface ContentProps extends Props {
   }
   now: Date
   height?: number
+  initialZoomDomain?: {
+    x: DomainTuple
+  }
 }
 
 export const GraphContent = ({
@@ -66,10 +69,14 @@ export const GraphContent = ({
   domain,
   now,
   height: height = 200,
+  initialZoomDomain,
 }: ContentProps) => {
-  const initialZoomDomain = {
-    x: [addHours(now, -2), addHours(now, 2)] as DomainTuple,
+  if (!initialZoomDomain) {
+    initialZoomDomain = {
+      x: [addHours(now, -2), addHours(now, 2)] as DomainTuple,
+    }
   }
+
   const [zoomDomain, onZoomDomainChange] = useState(initialZoomDomain)
 
   const [ticks, formatter] = useMemo(() => {

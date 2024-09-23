@@ -77,8 +77,12 @@ export const GlucoseChartContent = ({ glucose, prediction, now }: Props) => {
         />
         <VictoryLine
           style={{
-            /* tailwind slate-900 */
-            data: { stroke: '#0f172a', strokeDasharray: '2 2' },
+            /* tailwind sky-600 */
+            data: {
+              stroke: '#0284c7aa',
+              strokeDasharray: '3 3',
+              strokeWidth: 3,
+            },
             parent: { border: '1px solid #ccc', padding: 0 },
           }}
           data={prediction}

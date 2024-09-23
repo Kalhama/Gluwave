@@ -75,240 +75,6 @@ export const calculateUserInsulinData = async (
   return insulin_on_board
 }
 
-// TODO remove / use Statistics class
-export const observedCarbs = async (from: Date, to: Date, userId: string) => {
-  /**
-   * Problems with this function
-   * 1. We calculate cumulative insulin decay for every blood glucose, but then later on we group by ~ 30 minutes.
-   *      - It would be more optimal to group by first and then calculate insulin decay for longer steps.
-   */
-
-  const user = (
-    await db.select().from(userTable).where(eq(userTable.id, userId))
-  )[0]
-
-  if (!user) {
-    throw new Error('user not found')
-  }
-
-  const timestamps = db.$with('timestamps').as(
-    db
-      .select({
-        timestamp: sql`MIN(timestamp)`
-          .mapWith(glucose.timestamp)
-          .as('timestamp'),
-        pool: sql`FLOOR(EXTRACT (EPOCH FROM timestamp) / EXTRACT (EPOCH FROM interval '15 minutes'))`
-          .mapWith(glucose.value)
-          .as('pool'),
-      })
-      .from(glucose)
-      .where(and(eq(glucose.userId, user.id)))
-      .orderBy(sql`timestamp`)
-      .groupBy(sql`pool`)
-  )
-
-  // calculate cumulative insulin decay for every timestamp
-  const cumulative_insulin_decay = db.$with('cumulative_insulin_decay').as(
-    db
-      .with(timestamps)
-      .select({
-        timestamp: sql`timestamps.timestamp`
-          .mapWith(glucose.timestamp)
-          .as('timestamp'),
-        cumulative_insulin_decay:
-          sql`COALESCE(SUM(((((EXTRACT(EPOCH FROM timestamps.timestamp - insulin.timestamp)/60/55)+1) * EXP(-((EXTRACT(EPOCH FROM timestamps.timestamp - insulin.timestamp)/60/55)))) - 1) * insulin.amount), 0)`.as(
-            'cumulative_insulin_decay'
-          ),
-      })
-      .from(timestamps)
-      .leftJoin(
-        insulin,
-        and(
-          sql`timestamps.timestamp >= insulin.timestamp`,
-          eq(insulin.userId, userId)
-        )
-      )
-      .where(
-        and(
-          eq(insulin.userId, userId),
-          sql`timestamps.timestamp > ${from}`,
-          sql`timestamps.timestamp < ${to}`
-        )
-      )
-      .groupBy(sql`timestamps.timestamp`)
-      .orderBy(sql`timestamps.timestamp`)
-  )
-
-  // for every timestamp, calculate how much insulin and glucose changes etc...
-  const insulin_decay_and_glucose_change = db
-    .$with('insulin_decay_and_glucose_change')
-    .as(
-      db
-        .with(cumulative_insulin_decay)
-        .select({
-          timestamp: sql`cumulative_insulin_decay.timestamp`
-            .mapWith(glucose.timestamp)
-            .as('timestamp'),
-          interval_length:
-            sql`cumulative_insulin_decay.timestamp - LAG(cumulative_insulin_decay.timestamp) OVER (ORDER BY cumulative_insulin_decay.timestamp)`.as(
-              'interval_length'
-            ),
-          glucose: sql`glucose.amount`.as('glucose'),
-          glucose_change:
-            sql`glucose.amount - LAG(glucose.amount) OVER (ORDER BY cumulative_insulin_decay.timestamp)`.as(
-              'glucose_change'
-            ),
-          insulin_decay:
-            sql`cumulative_insulin_decay - LAG(cumulative_insulin_decay) OVER (ORDER BY cumulative_insulin_decay.timestamp)`.as(
-              'insulin_decay'
-            ),
-        })
-        .from(cumulative_insulin_decay)
-        .leftJoin(
-          glucose,
-          and(
-            sql`glucose.timestamp = cumulative_insulin_decay.timestamp`,
-            eq(glucose.userId, userId)
-          )
-        )
-    )
-
-  // calculate how much carbs there needs to be for glucose change to be what it is
-  const observed_carbs = db.$with('observed_carbs').as(
-    db
-      .with(insulin_decay_and_glucose_change)
-      .select({
-        timestamp: sql`timestamp`.mapWith(glucose.timestamp).as('timestamp'),
-        interval_length: sql`COALESCE(EXTRACT (EPOCH FROM interval_length), 0)`
-          .mapWith(glucose.value)
-          .as('interval_length'),
-        // glucose: sql`glucose`.mapWith(glucose.value).as('glucose'),
-        glucose_change: sql`COALESCE(glucose_change, 0)`
-          .mapWith(glucose.value)
-          .as('glucose_change'),
-        insulin_decay: sql`COALESCE(insulin_decay, 0)`
-          .mapWith(glucose.value)
-          .as('insulin_decay'),
-        observed_carbs:
-          sql`COALESCE((glucose_change - insulin_decay * ${user.correctionRatio}) * (${user.carbohydrateRatio / user.correctionRatio}), 0)`
-            .mapWith(glucose.value)
-            .as('observed_carbs'),
-        cumulative_observed_carbs:
-          sql`COALESCE(SUM((glucose_change - insulin_decay * ${user.correctionRatio}) * (${user.carbohydrateRatio / user.correctionRatio})) OVER (ORDER BY timestamp), 0)`
-            .mapWith(carbs.amount)
-            .as('cumulative_observed_carbs'),
-        observed_carbs_rate:
-          sql`COALESCE((glucose_change - insulin_decay * ${user.correctionRatio}) * (${user.carbohydrateRatio / user.correctionRatio}) / EXTRACT (EPOCH FROM interval_length) * EXTRACT (EPOCH FROM interval '15 minutes'), 0)`
-            .mapWith(glucose.value)
-            .as('observed_carbs_rate'),
-      })
-      .from(insulin_decay_and_glucose_change)
-  )
-
-  // calculate sum of the values over longer time so that values are not so noisy
-  // const observed_carbs_group_by_time = db
-  //   .$with('observed_carbs_group_by_time')
-  //   .as(
-  //     db
-  //       .with(observed_carbs)
-  //       .select({
-  //         timestamp: sql`MIN(timestamp)`
-  //           .mapWith(glucose.timestamp)
-  //           .as('timestamp'),
-  //         interval_length: sql`SUM(EXTRACT (EPOCH FROM interval_length))`
-  //           .mapWith(glucose.value)
-  //           .as('interval_length'),
-  //         // glucose: sql`glucose`.as('glucose'), best woule be FIRST
-  //         glucose_change: sql`SUM(glucose_change)`
-  //           .mapWith(glucose.value)
-  //           .as('glucose_change'),
-  //         insulin_decay: sql`SUM(insulin_decay)`
-  //           .mapWith(glucose.value)
-  //           .as('insulin_decay'),
-  //         observed_carbs_rate:
-  //           sql`SUM(observed_carbs) / SUM(EXTRACT (EPOCH FROM interval_length)) * EXTRACT (EPOCH FROM interval '15 minutes')`
-  //             .mapWith(glucose.value)
-  //             .as('observed_carbs_rate'),
-  //         observed_carbs: sql`SUM(observed_carbs)`
-  //           .mapWith(glucose.value)
-  //           .as('observed_carbs'),
-  //         // group: sql`group`.as('group'),
-  //       })
-  //       .from(observed_carbs)
-  //       .groupBy(sql`observed_carbs.group`)
-  //   )
-
-  const data = await db
-    .with(observed_carbs)
-    .select()
-    .from(observed_carbs)
-    .orderBy(sql`timestamp`)
-
-  return data
-}
-
-// TODO remove / use Statistics class
-export const calculateUserCarbsData = async (
-  from: Date,
-  to: Date,
-  userId: string
-) => {
-  const minutes = db.$with('minutes').as(
-    db
-      .select({
-        timestamp: sql<Date>`timestamp`
-          .mapWith(carbs.timestamp)
-          .as('timestamp'),
-      })
-      .from(
-        sql`
-    generate_series(${from}, ${to}, '00:01:00'::interval) AS "timestamp"
-  `
-      )
-  )
-
-  const carbs_on_board = await db
-    .with(minutes)
-    .select({
-      timestamp: sql`minutes.timestamp`.mapWith(
-        carbs.timestamp
-      ) /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */,
-      carbsOnBoard: sql`sum(
-             CASE
-                 WHEN minutes."timestamp" >= carbs."timestamp" AND minutes."timestamp" < (carbs."timestamp" + MAKE_INTERVAL(mins => carbs.decay)) THEN 
-                    "carbs"."amount"::numeric * (1 - EXTRACT(epoch FROM minutes."timestamp" - carbs."timestamp") / 60.0 / carbs.decay)
-                 ELSE 0::numeric
-             END)`
-        .mapWith(carbs.amount)
-        .as('carbs_on_board'),
-      cumulativeDecayedCarbs: sql`sum(
-          CASE
-              WHEN minutes."timestamp" >= carbs."timestamp" AND minutes."timestamp" < (carbs."timestamp" + MAKE_INTERVAL(mins => carbs.decay)) THEN 
-                 "carbs"."amount"::numeric * (EXTRACT(epoch FROM minutes."timestamp" - carbs."timestamp") / 60.0 / carbs.decay)
-              WHEN minutes."timestamp" >= (carbs."timestamp" + MAKE_INTERVAL(mins => carbs.decay)) THEN
-                carbs.amount
-              ELSE 0::numeric
-          END)`
-        .mapWith(carbs.amount)
-        .as('cumulativeDecayedCarbs'),
-    })
-    .from(minutes)
-    .leftJoin(
-      carbs,
-      and(
-        sql`minutes."timestamp" >= carbs."timestamp"`,
-        eq(carbs.userId, userId),
-        sql`(carbs."timestamp" + MAKE_INTERVAL(mins => carbs.decay)) >= ${from}`
-      )
-    )
-    .groupBy(
-      sql`minutes.timestamp` /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */
-    )
-    .orderBy(minutes.timestamp)
-
-  return carbs_on_board
-}
-
 type Timeframe = WithSubqueryWithSelection<
   {
     timestamp: PgColumn<
@@ -565,6 +331,10 @@ export class Statistics {
           )`
             .mapWith(carbs.amount)
             .as('observedCarbs'),
+          interval:
+            sql`EXTRACT (epoch FROM LEAD(${timeframe.timestamp}) OVER (ORDER BY ${timeframe.timestamp}) - ${timeframe.timestamp})`
+              .mapWith(carbs.amount)
+              .as('interval'),
         })
         .from(timeframe)
         .leftJoin(
@@ -659,6 +429,116 @@ export class Statistics {
     return cte
   }
 
+  public static reported_carb_rate(timeframe: Timeframe, userId: string) {
+    const cte = db.$with('reported_carb_rate').as(
+      db
+        .with(timeframe)
+        .select({
+          timestamp: timeframe.timestamp,
+          rate: sql`COALESCE(SUM(${carbs.amount} / ${carbs.decay}), 0)`
+            .mapWith(carbs.amount)
+            .as('rate'),
+        })
+        .from(timeframe)
+        .leftJoin(
+          carbs,
+          and(
+            eq(carbs.userId, userId),
+            gte(
+              sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
+              timeframe.timestamp
+            ),
+            lte(carbs.timestamp, timeframe.timestamp)
+          )
+        )
+        .groupBy(timeframe.timestamp)
+        .orderBy(timeframe.timestamp)
+    )
+
+    return cte
+  }
+
+  public static observed_carbs_on_board(
+    timeframe: Timeframe,
+    userId: string,
+    ISF: number,
+    ICR: number
+  ) {
+    const observedCarbs = Statistics.observedCarbs(timeframe, userId, ISF, ICR)
+
+    const observedCarbsPerMealPerTimestamp = db
+      .$with('observedCarbsPerMealPerTimestamp')
+      .as(
+        db
+          .with(observedCarbs)
+          .select({
+            timestamp: observedCarbs.timestamp,
+            id: sql`COALESCE(carbs.id, -1)`.mapWith(carbs.id).as('id'),
+
+            /* rate divided by total rate times observed carbs*/
+            observedCarbs: sql`COALESCE((${carbs.amount} / ${carbs.decay})
+            / 
+            (SUM(${carbs.amount} / ${carbs.decay}) OVER (PARTITION BY ${observedCarbs.timestamp})), 1)
+            *
+            ${observedCarbs.observedCarbs}`
+              .mapWith(carbs.amount)
+              .as('observedCarbs'),
+            carbs: carbs.amount,
+            carbsTimestamp: sql`carbs.timestamp`
+              .mapWith(carbs.timestamp)
+              .as('carbsTimestamp'),
+            decay: carbs.decay,
+          })
+          .from(observedCarbs)
+          .leftJoin(
+            carbs,
+            and(
+              eq(carbs.userId, userId),
+              lte(carbs.timestamp, observedCarbs.timestamp),
+              gt(
+                sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
+                observedCarbs.timestamp
+              )
+            )
+          )
+      )
+
+    const observed_carbs_on_board_by_meal_by_time = db
+      .$with('observed_carbs_on_board_by_meal_by_time')
+      .as(
+        db
+          .with(observedCarbsPerMealPerTimestamp)
+          .select({
+            observed_carbs_on_board: sql`GREATEST(
+              ${observedCarbsPerMealPerTimestamp.carbs} 
+              - SUM(${observedCarbsPerMealPerTimestamp.observedCarbs}) OVER(PARTITION BY ${observedCarbsPerMealPerTimestamp.id} ORDER BY ${observedCarbsPerMealPerTimestamp.timestamp}), 
+              0
+            )`
+              .mapWith(carbs.amount)
+              .as('absorbed_cumulative'),
+            id: observedCarbsPerMealPerTimestamp.id,
+            timestamp: observedCarbsPerMealPerTimestamp.timestamp,
+          })
+          .from(observedCarbsPerMealPerTimestamp)
+      )
+
+    const observed_carbs_on_board = db.$with('observed_carbs_on_board').as(
+      db
+        .with(observed_carbs_on_board_by_meal_by_time)
+        .select({
+          timestamp: observed_carbs_on_board_by_meal_by_time.timestamp,
+          observed_carbs_on_board:
+            sql`SUM(${observed_carbs_on_board_by_meal_by_time.observed_carbs_on_board})`
+              .mapWith(carbs.amount)
+              .as('observed_carbs_on_board'),
+        })
+        .from(observed_carbs_on_board_by_meal_by_time)
+        .groupBy(observed_carbs_on_board_by_meal_by_time.timestamp)
+    )
+
+    return observed_carbs_on_board
+  }
+
   public static carbs_timeframe(userId: string, start: Date, end: Date) {
     const tf = db.$with('timeframe').as(
       db
@@ -722,6 +602,40 @@ export class Statistics {
             })
             .from(
               sql`generate_series(${startOfMinute(start).toISOString()}::timestamp, ${startOfMinute(end).toISOString()}::timestamp, interval '1 minutes') as timestamp`
+            )
+        )
+    )
+
+    return tf
+  }
+
+  public static approximate_timeframe(userId: string, start: Date, end: Date) {
+    /* need to use a real table where we union the series, because otherwise tf.timestamp will refer to timestamp, not timeframe.timestamp */
+    const tf = db.$with('timeframe').as(
+      db
+        .select({
+          timestamp: carbs.timestamp,
+        })
+        .from(carbs)
+        .limit(0)
+        .union(
+          db
+            .select({
+              timestamp: sql`min(${glucose.timestamp})`
+                .mapWith(glucose.timestamp)
+                .as('timestamp'),
+            })
+            .from(glucose)
+            .where(
+              and(
+                eq(glucose.userId, userId),
+                gte(glucose.timestamp, start),
+                lte(glucose.timestamp, end)
+              )
+            )
+
+            .groupBy(
+              sql`FLOOR(EXTRACT (EPOCH FROM glucose.timestamp) / EXTRACT (EPOCH FROM interval '15 minutes'))`
             )
         )
     )
