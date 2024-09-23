@@ -1,8 +1,10 @@
+import { cn } from '@/lib/utils'
 import { cva } from 'class-variance-authority'
 import React from 'react'
 
 interface CompProps extends React.HTMLAttributes<HTMLOrSVGElement> {
   variant?: Variant
+  className?: string
 }
 
 const variantToElement: Record<Variant, keyof JSX.IntrinsicElements> = {
@@ -15,6 +17,7 @@ type Variant = 'h2' | 'h3'
 export const Typography: React.FunctionComponent<CompProps> = ({
   variant: variant = 'h2',
   children,
+  className,
   ...props
 }) => {
   const Wrapper = variantToElement[variant]
@@ -29,7 +32,7 @@ export const Typography: React.FunctionComponent<CompProps> = ({
   })
 
   return (
-    <Wrapper className={variantStyles({ variant })} {...props}>
+    <Wrapper className={cn(variantStyles({ variant }), className)} {...props}>
       {children}
     </Wrapper>
   )

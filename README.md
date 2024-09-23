@@ -19,7 +19,7 @@ Using Gluwave is simple with following steps
 
 Update your carbohydrate ratio and correction ratio in the settings
 
-<img src="./images/settings.png" width="30%">
+<img src="./images/settings.png" width="70%">
 
 ### Adding entries (glucose, carbohydrate and insulin)
 
@@ -31,7 +31,7 @@ You can add new glucose, carbohydrate and insulin entries from the bottom toolba
 2. How big was the meal in carbs
 3. How long do you expect your body to absorb the meal
 
-<img src="./images/add-carbs.png" width="30%">
+<img src="./images/add-carbs.png" width="40%">
 
 ### Main screen
 
@@ -39,36 +39,34 @@ Main screen is split into three sections:
 
 #### Glucose
 
-First of them is historical glucose and predictions. Green prediction is what predictions would be without any insulin and red is without any meal. These serve just as a "confidence interval". The gray line is the real prediction.
+First of them is historical glucose and predictions.
 
-You can see the list of your blood glucose entries if you click the `Eventually Y mmol/l` on top right
+<img src="./images/blood-glucose.png" width="50%">
 
-<img src="./images/blood-glucose.png" width="30%">
-
-[Read more](#algorithm) about prediction algorithm
+You can see more detailed prediction when you click "Eventually -.- mmmol/l"
 
 #### Insulin
 
 Second section is for insulin on board. Again you can view and edit the insulin entries by clicking the `IOB X U` on top right.
 
-<img src="./images/insulin.png" width="30%">
+<img src="./images/insulin.png" width="50%">
 
 > [!WARNING]  
 > All insulin is assumed to be Fiasp. [Open an issue](https://github.com/Kalhama/gluwave/issues) for new insulin types
 
-#### Carbs
+#### Carbohydrates
 
 Final section is about your daily carbs and how they have been absorbed over time.
 
-<img src="./images/carbs.png" width="30%">
+<img src="./images/carbs.png" width="50%">
 
 If you view the list of carbs you can see how much carbs we actually observed
 
-<img src="./images/carbs-list.png" width="30%">
+<img src="./images/carbs-list.png" width="50%">
 
 ## Algorithm 📊
 
-<img src="./images/prediction.png" width="30%">
+<img src="./images/prediction.png" width="50%">
 
 The algorithm predicts future blood glucose levels based on three factors:
 
