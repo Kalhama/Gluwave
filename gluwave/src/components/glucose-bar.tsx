@@ -11,6 +11,7 @@ import { glucose } from '@/schema'
 import { differenceInMinutes, formatDistance, subMinutes } from 'date-fns'
 import { and, desc, eq, gte, lte, ne } from 'drizzle-orm'
 import { MoveRight } from 'lucide-react'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import React from 'react'
 
@@ -84,7 +85,10 @@ export const GlucoseBar = async () => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex justify-center items-center gap-2 mx-auto cursor-pointer">
+            <Link
+              href="/"
+              className="flex justify-center items-center gap-2 mx-auto cursor-pointer"
+            >
               <div
                 className={cn(
                   'h-4 w-4 shadow-[0_0_6px] rounded-full mr-1',
@@ -110,7 +114,7 @@ export const GlucoseBar = async () => {
                   style={{ rotate: `${trend}deg` }}
                 />
               )}
-            </div>
+            </Link>
           </TooltipTrigger>
           <TooltipContent>
             <p>
