@@ -47,7 +47,7 @@ export default async function Predictions() {
   const lastBloodGlucose = glucose[glucose.length - 1]
 
   const predictions = await Statistics.execute(
-    Statistics.predict(
+    Statistics.predict_glucose(
       lastBloodGlucose.timestamp ?? now,
       addHours(now, 6),
       user.id,

@@ -102,17 +102,18 @@ type Timeframe = WithSubqueryWithSelection<
 
 export class Statistics {
   /**
-   * The function might return meals earlier than specified in timeframe selection
+   * @returns Meals and adds amount of observed carbs to each meal.
    *
-   * If there is no observed carbs on some time period used then observed carbs might be too low
+   * Warning: The function might return meals outside specified in timeframe selection if they had effect during the timeframe
+   * Warning: If there is no observed carbs on some time period used then observed carbs might be too low
    */
-  public static observedCarbsPerMeal(
+  public static observed_carbs_per_meal(
     timeframe: Timeframe,
     userId: string,
     ISF: number,
     ICR: number
   ) {
-    const observedCarbs = Statistics.observedCarbs(timeframe, userId, ISF, ICR)
+    const observedCarbs = Statistics.observed_carbs(timeframe, userId, ISF, ICR)
 
     const observedCarbsPerMealPerTimestamp = db
       .$with('observedCarbsPerMealPerTimestamp')
@@ -151,7 +152,7 @@ export class Statistics {
           )
       )
 
-    const observedCarbsPerMeal = db.$with('observedCarbsPerMeal').as(
+    const observed_carbs_per_meal = db.$with('observed_carbs_per_meal').as(
       db
         .with(observedCarbsPerMealPerTimestamp)
         .select({
@@ -176,10 +177,13 @@ export class Statistics {
         .orderBy(observedCarbsPerMealPerTimestamp.id)
     )
 
-    return observedCarbsPerMeal
+    return observed_carbs_per_meal
   }
 
-  public static interpolatedGlucose(timeframe: Timeframe, userId: string) {
+  /**
+   * @returns Glucose over time, values are interpolated linearly to the timeframe if needed
+   */
+  public static interpolated_glucose(timeframe: Timeframe, userId: string) {
     const adjacentGlucoseReadings = db.$with('adjacentGlucoseReadings').as(
       db
         .select({
@@ -198,7 +202,7 @@ export class Statistics {
         .where(eq(glucose.userId, userId))
     )
 
-    const interpolatedGlucose = db.$with('interpolatedGlucose').as(
+    const interpolated_glucose = db.$with('interpolated_glucose').as(
       db
         .with(timeframe, adjacentGlucoseReadings)
         .select({
@@ -224,11 +228,14 @@ export class Statistics {
         .groupBy(timeframe.timestamp)
     )
 
-    return interpolatedGlucose
+    return interpolated_glucose
   }
 
-  public static cumulativeInsulin(timeframe: Timeframe, userId: string) {
-    const cumulativeInsulin = db.$with('cumulativeInsulin').as(
+  /**
+   * @returns Total absorbed insulin cumulatively over time
+   */
+  public static cumulative_insulin(timeframe: Timeframe, userId: string) {
+    const cumulative_insulin = db.$with('cumulative_insulin').as(
       db
         .with(timeframe)
         .select({
@@ -263,16 +270,24 @@ export class Statistics {
         .groupBy(timeframe.timestamp)
     )
 
-    return cumulativeInsulin
+    return cumulative_insulin
   }
 
-  public static cumulativeCarbs(timeframe: Timeframe, userId: string) {
-    const cumulativeCarbs = db.$with('cumulativeCarbs').as(
-      db
-        .with(timeframe)
-        .select({
-          timestamp: timeframe.timestamp,
-          predictedCarbs: sql`COALESCE(SUM(total_carbs_absorbed(
+  /**
+   * @returns cumulative absorbed carbs as they were reported
+   */
+  public static cumulative_reported_absorbed_carbs(
+    timeframe: Timeframe,
+    userId: string
+  ) {
+    const cumulative_reported_absorbed_carbs = db
+      .$with('cumulative_reported_absorbed_carbs')
+      .as(
+        db
+          .with(timeframe)
+          .select({
+            timestamp: timeframe.timestamp,
+            predictedCarbs: sql`COALESCE(SUM(total_carbs_absorbed(
             t => ${timeframe.timestamp}, 
             start => ${carbs.timestamp}, 
             amount => ${carbs.amount}, 
@@ -285,36 +300,39 @@ export class Statistics {
             decay => ${carbs.decay}
           )), 0)) OVER (ORDER BY ${timeframe.timestamp})
           `
-            .mapWith(carbs.amount)
-            .as('predictedCarbs'),
-        })
-        .from(timeframe)
-        .leftJoin(
-          carbs,
-          and(
-            eq(carbs.userId, userId),
-            lt(carbs.timestamp, timeframe.timestamp)
-            // lt(sql`LEAST(timeframe.timestamp) - interval '12 hours'`, carbs.timestamp) with or without?
+              .mapWith(carbs.amount)
+              .as('predictedCarbs'),
+          })
+          .from(timeframe)
+          .leftJoin(
+            carbs,
+            and(
+              eq(carbs.userId, userId),
+              lt(carbs.timestamp, timeframe.timestamp)
+              // lt(sql`LEAST(timeframe.timestamp) - interval '12 hours'`, carbs.timestamp) with or without?
+            )
           )
-        )
-        .groupBy(timeframe.timestamp)
-    )
-    return cumulativeCarbs
+          .groupBy(timeframe.timestamp)
+      )
+    return cumulative_reported_absorbed_carbs
   }
 
-  public static observedCarbs(
+  /**
+   * @returns observed carbs based on glucose changes and insulin decay
+   */
+  public static observed_carbs(
     timeframe: Timeframe,
     userId: string,
     ISF: number,
     ICR: number
   ) {
-    const interpolatedGlucose = Statistics.interpolatedGlucose(
+    const interpolatedGlucose = Statistics.interpolated_glucose(
       timeframe,
       userId
     )
-    const cumulativeInsulin = Statistics.cumulativeInsulin(timeframe, userId)
+    const cumulativeInsulin = Statistics.cumulative_insulin(timeframe, userId)
 
-    const observedCarbs = db.$with('observedCarbs').as(
+    const observed_carbs = db.$with('observed_carbs').as(
       db
         .with(cumulativeInsulin, timeframe, interpolatedGlucose)
         .select({
@@ -348,10 +366,13 @@ export class Statistics {
         .orderBy(timeframe.timestamp)
     )
 
-    return observedCarbs
+    return observed_carbs
   }
 
-  public static predict(
+  /**
+   * @returns prediction of glucose based on future insulin and carbohydrates on board
+   */
+  public static predict_glucose(
     start: Date,
     end: Date,
     userId: string,
@@ -359,14 +380,14 @@ export class Statistics {
     ICR: number
   ) {
     const range_tf = Statistics.range_timeframe(start, end)
-    const cumulativeInsulin = Statistics.cumulativeInsulin(range_tf, userId)
+    const cumulativeInsulin = Statistics.cumulative_insulin(range_tf, userId)
 
     const carbs_tf = Statistics.carbs_timeframe(
       userId,
       subHours(start, 12), // make sure that we catch all observed carbs on currently active meals
       end
     )
-    const carbs_observed = Statistics.observedCarbsPerMeal(
+    const carbs_observed = Statistics.observed_carbs_per_meal(
       carbs_tf,
       userId,
       ISF,
@@ -402,7 +423,7 @@ export class Statistics {
         .orderBy(range_tf.timestamp)
     )
 
-    const cte = db.$with('predict').as(
+    const cte = db.$with('predict_glucose').as(
       db
         .with(predictedCarbs, cumulativeInsulin)
         .select({
@@ -429,6 +450,9 @@ export class Statistics {
     return cte
   }
 
+  /**
+   * @returns reported carb rate over time
+   */
   public static reported_carb_rate(timeframe: Timeframe, userId: string) {
     const cte = db.$with('reported_carb_rate').as(
       db
@@ -458,13 +482,16 @@ export class Statistics {
     return cte
   }
 
+  /**
+   * @returns carbs on board after reducing amount of carbs observed
+   */
   public static observed_carbs_on_board(
     timeframe: Timeframe,
     userId: string,
     ISF: number,
     ICR: number
   ) {
-    const observedCarbs = Statistics.observedCarbs(timeframe, userId, ISF, ICR)
+    const observedCarbs = Statistics.observed_carbs(timeframe, userId, ISF, ICR)
 
     const observedCarbsPerMealPerTimestamp = db
       .$with('observedCarbsPerMealPerTimestamp')
@@ -539,6 +566,9 @@ export class Statistics {
     return observed_carbs_on_board
   }
 
+  /**
+   * @returns timeframe of every time meal starts or ends, as well as lates glucose reading
+   */
   public static carbs_timeframe(userId: string, start: Date, end: Date) {
     const tf = db.$with('timeframe').as(
       db
@@ -584,6 +614,9 @@ export class Statistics {
     return tf
   }
 
+  /**
+   * @returns timeframe with one minute step
+   */
   public static range_timeframe(start: Date, end: Date) {
     /* need to use a real table where we union the series, because otherwise tf.timestamp will refer to timestamp, not timeframe.timestamp */
     const tf = db.$with('timeframe').as(
@@ -609,6 +642,9 @@ export class Statistics {
     return tf
   }
 
+  /**
+   * @returns timeframe of roughly 15 minute step aligning to glucose readings (ie. for every timestamp there will be a glucose reading)
+   */
   public static approximate_timeframe(userId: string, start: Date, end: Date) {
     /* need to use a real table where we union the series, because otherwise tf.timestamp will refer to timestamp, not timeframe.timestamp */
     const tf = db.$with('timeframe').as(
@@ -643,6 +679,9 @@ export class Statistics {
     return tf
   }
 
+  /**
+   * @returns selects and returns given CTE (common table expression)
+   */
   public static execute<T extends ColumnsSelection, K extends string>(
     cte: WithSubqueryWithSelection<T, K>
   ) {

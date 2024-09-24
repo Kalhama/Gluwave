@@ -20,7 +20,7 @@ export default async function CarbsRate() {
   const tf = Statistics.approximate_timeframe(user.id, start, end)
 
   const observed = await Statistics.execute(
-    Statistics.observedCarbs(
+    Statistics.observed_carbs(
       tf,
       user.id,
       user.carbohydrateRatio,
