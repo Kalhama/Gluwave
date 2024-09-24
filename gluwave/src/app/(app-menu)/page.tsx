@@ -1,23 +1,28 @@
 import { validateRequest } from '@/auth'
 import BloodGlucose from '@/components/blood-glucose'
-import CarbsRate from '@/components/carbohydrate-rate'
 import { CarbohydratesOnBoard } from '@/components/carbohydrates-on-board'
 import InsulinOnBoard from '@/components/insulin-on-board'
 import { db } from '@/db'
 import { glucose } from '@/schema'
-import { and, desc, eq } from 'drizzle-orm'
+import { addMinutes } from 'date-fns'
+import { and, desc, eq, gte } from 'drizzle-orm'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
-const getLastGlucose = async (userId: string) => {
+const getLastGlucose = async (userId: string): Promise<number | undefined> => {
   const [last] = await db
     .select()
     .from(glucose)
-    .where(and(eq(glucose.userId, userId)))
+    .where(
+      and(
+        eq(glucose.userId, userId),
+        gte(glucose.timestamp, addMinutes(new Date(), -60))
+      )
+    )
     .orderBy(desc(glucose.timestamp))
     .limit(1)
 
-  return last
+  return last?.value
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,8 +33,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const last = await getLastGlucose(user.id)
 
+  if (!last) {
+    return {}
+  }
+
   return {
-    title: `${last.value.toLocaleString(undefined, {
+    title: `${last.toLocaleString(undefined, {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
     })} mmol/l`,
