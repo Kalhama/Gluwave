@@ -4,16 +4,20 @@ import config from "./config.js";
 import axios from "axios";
 
 import { LibreLinkUpClient } from "@diakem/libre-link-up-api-client";
-import { addMinutes } from "date-fns";
+import { addMinutes, differenceInMinutes, parseISO, subHours } from "date-fns";
 
 const { read } = LibreLinkUpClient({
   username: config.LIBRELINKUP_USERNAME,
   password: config.LIBRELINKUP_PASSWORD,
 });
 
-let retries = 0;
+const wait = async (ms: number) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
 
-const job = async (full: "full" | undefined) => {
+const job = async () => {
+  let retries = 0;
+
   try {
     retries++;
     console.log(`[${new Date().toLocaleString()}]: job`);
@@ -22,16 +26,40 @@ const job = async (full: "full" | undefined) => {
 
     const parsed = [];
 
-    if (full === "full") {
-      const history = response.history.map((d) => {
-        return {
-          value: d.value,
-          timestamp: addMinutes(d.date, config.TIMESTAMP_OFFSET),
+    const { data: existingUpstreamGlucose } = await axios.get(
+      new URL("/glucose/api", config.GLUWAVE_ENDPOINT).toString(),
+      {
+        params: {
+          API_KEY: config.GLUWAVE_API_KEY,
+        },
+      }
+    );
+
+    for (const historicalValue of response.history) {
+      if (historicalValue.date > subHours(new Date(), 36)) {
+        const parsedHistoricalValue = {
+          value: historicalValue.value,
+          timestamp: addMinutes(
+            historicalValue.date,
+            config.TIMESTAMP_OFFSET - 2.5 // why 2.5? see https://github.com/Kalhama/Gluwave/issues/33
+          ),
           device: "LIBRELINKUP",
         };
-      });
 
-      parsed.push(...history);
+        const existingValue = existingUpstreamGlucose.find(
+          (g) =>
+            Math.abs(
+              differenceInMinutes(
+                parseISO(g.timestamp),
+                parsedHistoricalValue.timestamp
+              )
+            ) < 2
+        );
+
+        if (!existingValue) {
+          parsed.push(parsedHistoricalValue);
+        }
+      }
     }
 
     parsed.push({
@@ -40,26 +68,31 @@ const job = async (full: "full" | undefined) => {
       device: "LIBRELINKUP",
     });
 
-    await axios.post(config.GLUWAVE_ENDPOINT, parsed, {
-      params: {
-        API_KEY: config.GLUWAVE_API_KEY,
-      },
-    });
-
-    retries = 0;
+    await axios.post(
+      new URL("/glucose/api", config.GLUWAVE_ENDPOINT).toString(),
+      parsed,
+      {
+        params: {
+          API_KEY: config.GLUWAVE_API_KEY,
+        },
+      }
+    );
   } catch (e) {
     if (retries >= 5) {
       throw e;
     } else {
       console.log(`retry number ${retries}`);
       console.error(e);
+      await wait(Math.pow(retries, 4) * 1000);
     }
   }
 };
 
 if (config.SINGLE_SHOT_HISTORY) {
-  job("full");
+  job();
 } else {
-  job(undefined);
-  setInterval(job, config.INTERVAL * 1000 * 60);
+  while (true) {
+    job();
+    await wait(config.INTERVAL * 1000 * 60);
+  }
 }

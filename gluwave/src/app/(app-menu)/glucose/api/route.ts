@@ -1,7 +1,8 @@
 import { db } from '@/db'
 import { parseCommaFloat } from '@/lib/parse-comma-float'
 import { glucose, userTable } from '@/schema'
-import { and, eq, isNotNull } from 'drizzle-orm'
+import { subHours } from 'date-fns'
+import { and, eq, gte, isNotNull } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -80,4 +81,40 @@ export async function POST(request: NextRequest) {
   }
 
   return Response.json({ status: 'ok' })
+}
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const API_KEY = searchParams.get('API_KEY')
+
+  if (!API_KEY) {
+    return Response.json(
+      { error: 'Missing get param API_KEY' },
+      { status: 400 }
+    )
+  }
+
+  const user = (
+    await db
+      .select()
+      .from(userTable)
+      .where(and(isNotNull(userTable.apikey), eq(userTable.apikey, API_KEY)))
+      .limit(1)
+  )[0]
+
+  if (!user) {
+    return Response.json({ error: 'not authorized' }, { status: 401 })
+  }
+
+  const data = await db
+    .select()
+    .from(glucose)
+    .where(
+      and(
+        eq(glucose.userId, user.id),
+        gte(glucose.timestamp, subHours(new Date(), 48))
+      )
+    )
+
+  return Response.json(data)
 }

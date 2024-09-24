@@ -8,7 +8,7 @@ Following environment variables must be set
 | -------------------- | ----------------------------------------------------------------------------------- |
 | LIBRELINKUP_USERNAME | Your username / email to librelinkup service. Example: `example@example.com`        |
 | LIBRELINKUP_PASSWORD | Your password to librelinkup service. Example: `password`                           |
-| GLUWAVE_ENDPOINT     | Endpoint for Nextjs service. Example: `https://gluwave-5392.vercel.com/insulin/api` |
+| GLUWAVE_ENDPOINT     | Endpoint for Gluwave service. Example: `https://app.gluwave.com`                    |
 | GLUWAVE_API_KEY      | API key that can be generated in settings. Example: `Z4_g-aZAvfsK9hzypdf0s`         |
 | INTERVAL             | How often we should try to get data form libre and push it to Gluwave. Example: `5` |
 | SINGLE_SHOT_HISTORY  | Should we stream results or just single shot history once. Example: `false`         |
@@ -23,10 +23,9 @@ Following environment variables must be set
 ```shell
 LIBRELINKUP_USERNAME=your_librelinkup_username
 LIBRELINKUP_PASSWORD=your_librelinkup_password
-GLUWAVE_ENDPOINT=https://app.gluwave.com/insulin/api
+GLUWAVE_ENDPOINT=https://app.gluwave.com
 GLUWAVE_API_KEY= # Get your key from app.gluwave.com -> settings -> api key
 INTERVAL=1 # How often to get glucose (minutes)
-SINGLE_SHOT_HISTORY=false # Run once, but get history
 TIMESTAMP_OFFSET=-5 # Glucose lag
 ```
 

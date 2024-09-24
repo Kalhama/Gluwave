@@ -46,7 +46,7 @@ export default async function BloodGlucose() {
 
   const predictions = await Statistics.execute(
     Statistics.predict_glucose(
-      lastBloodGlucose.timestamp ?? now,
+      lastBloodGlucose?.timestamp ?? now,
       addHours(now, 6),
       user.id,
       user.carbohydrateRatio,
@@ -57,7 +57,7 @@ export default async function BloodGlucose() {
   const displayedPrediction = predictions.map((p) => {
     return {
       x: p.timestamp,
-      y: p.totalEffect + lastBloodGlucose.value,
+      y: p.totalEffect + lastBloodGlucose?.value ?? 0,
     }
   })
 
