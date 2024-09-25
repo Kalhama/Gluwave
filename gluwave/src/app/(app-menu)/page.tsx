@@ -8,6 +8,9 @@ import { addMinutes } from 'date-fns'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
+
+import { CarbohydratesPrediction } from './carbohydrates-prediction'
 
 const getLastGlucose = async (userId: string): Promise<number | undefined> => {
   const [last] = await db
@@ -51,7 +54,7 @@ export default async function App() {
       <BloodGlucose />
       <InsulinOnBoard />
       {/* <CarbsRate /> */}
-      <CarbohydratesOnBoard />
+      <CarbohydratesPrediction />
     </div>
   )
 }
