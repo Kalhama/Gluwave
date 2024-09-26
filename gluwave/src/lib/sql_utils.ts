@@ -498,8 +498,7 @@ export class Statistics {
     start: Date,
     end: Date
   ) {
-    const interval = 5
-    const timeframe = Statistics.range_timeframe(start, end, interval)
+    const timeframe = Statistics.range_timeframe(start, end, 1)
     const observed_carbs = Statistics.observed_carbs(
       timeframe,
       userId,
@@ -543,6 +542,8 @@ export class Statistics {
     // console.log((await db.with(base).select().from(base)).slice(-100))
     // return
 
+    const min_rate_lookback_period = 20
+
     const attributed_carbs = db
       .with(base)
       .select({
@@ -552,14 +553,20 @@ export class Statistics {
         // start: sql`start`,
         // amount: sql`amount`,
         // observed: sql`observed`,
-        // cumulative_attributed: sql`cumulative_attributed`,
+        // cumulative_attributed: sql`cumulative_attributed_last`,
+        // activee: sql`activee`,
         carbs_on_board: sql`carbs_on_board`,
       })
       .from(
         sql`(with recursive attributed_carbs as (
             SELECT 
-            timestamp, id, start, min_rate, amount, observed,
-            COALESCE(observed * min_rate / NULLIF(SUM(active::int * min_rate) OVER (), 0), 0) AS cumulative_attributed
+              timestamp, 
+              id, 
+              start, 
+              min_rate, 
+              amount, 
+              observed,
+              ARRAY[COALESCE(observed * min_rate / NULLIF(SUM(active::int * min_rate) OVER (), 0), 0)] AS cumulative_attributed
             FROM base,
             LATERAL (
               SELECT timestamp > base.start AND timestamp < base.end as active
@@ -578,30 +585,37 @@ export class Statistics {
               c.min_rate,
               c.amount,
               c.observed,
-              CASE WHEN active THEN
-                -- TODO ois hirvee fantsuu ku vertailtais keskiarvoa viimeisimmistä eikä vain viimeisestä
-                -- TODO ois hirvee fantsuu et jos ollaa tulevaisuudessa (ennusteessa) niin loppu menis GREATEST(havaittu, min_rate). mut se voi ehk olla erilline query selkeyden vuoks.
-
+              -- store previous values in array, so we can check if they are absorbing too slow
+              (array_prepend(CASE WHEN active THEN
                 -- wer're calculating carbs on board, so cap the amount to reported
                 LEAST(
                   c.amount,
-                  p.cumulative_attributed + 
-                  -- we're calculating carbs on board, so set minimum rate for attribution
-                  GREATEST(c.min_rate * ${interval} / 2, c.observed * c.min_rate / SUM (active::int * c.min_rate) OVER ())
+                  GREATEST(
+                    p.cumulative_attributed[1] + GREATEST(
+                      CASE 
+                        -- When decay has been too slow increase minimum attribution
+                        WHEN (p.cumulative_attributed[1] - p.cumulative_attributed[array_length(p.cumulative_attributed, 1)] < c.min_rate * (array_length(p.cumulative_attributed, 1)))
+                        THEN c.min_rate
+                        ELSE null
+                      END, 
+                      c.observed * c.min_rate / SUM (active::int * c.min_rate) OVER ()
+                    ),
+                    0
+                  )
                 )
               ELSE
-                p.cumulative_attributed
-              END AS cumulative_attributed
+                p.cumulative_attributed[1]
+              END, p.cumulative_attributed))[1:${min_rate_lookback_period}] AS cumulative_attributed
             FROM base c
-            INNER JOIN attributed_carbs p ON p.timestamp + INTERVAL '5 minute' = c.timestamp AND p.id = c.id,
+            INNER JOIN attributed_carbs p ON p.timestamp + INTERVAL '1 minute' = c.timestamp AND p.id = c.id,
             LATERAL (
-              SELECT c.timestamp > c.start AND (c.timestamp < c.end OR (p.cumulative_attributed < c.amount AND c.timestamp < c.end + MAKE_INTERVAL(mins => (c.decay / 2)::int))) AS active
+              SELECT c.timestamp > c.start AND (c.timestamp < c.end OR (p.cumulative_attributed[1] < c.amount AND c.timestamp < c.end + MAKE_INTERVAL(mins => (c.decay / 2)::int))) AS active
             )
         )
-            -- SELECT * FROM attributed_carbs
-        	  SELECT 
+            -- SELECT *, cumulative_attributed[1] as cumulative_attributed_last FROM attributed_carbs ORDER BY timestamp
+            SELECT 
             timestamp, 
-            COALESCE(SUM(amount - cumulative_attributed) FILTER (WHERE start < timestamp), 0) 
+            COALESCE(SUM(amount - cumulative_attributed[1]) FILTER (WHERE start < timestamp), 0) 
             as carbs_on_board 
             FROM attributed_carbs 
             GROUP BY timestamp 
@@ -609,43 +623,7 @@ export class Statistics {
         )`
       )
 
-    // -- TOOD looks future, returns attributed after the timestamp
-    // -- TODO if value depends on previous value we need to be careful which timestamp is the starting moment. We should pick a timestamp when there was no active meals for sure.
-
-    // console.log(attributed_carbs.toSQL())
-    // console.log((await attributed_carbs.execute()).slice(-100))
-
     return attributed_carbs
-
-    // const viewSQL = carbs_join_observed._.sql
-
-    // const finalSql2 = sql`select 1`
-
-    // const q = db.execute(viewSQL).getSQL() // .queryChunks
-
-    // console.log(await db.execute(viewSQL.append(sql`; select 1`)))
-
-    // console.log(rows)
-
-    // const { rows } = await db.with(carbs_join_observed).execute(sql`
-    //   SELECT
-    //     timestamp - interval '1 minutes' as timestamp,
-    //     1 AS row_number
-    //     timestamp as next_timestamp,
-    //     -1 AS id,
-    //     null AS carbs,
-    //     null AS decay,
-    //     null AS min_rate,
-    //     0 AS observed_carbs,
-    //     0 AS total_min_rate,
-    //     0 AS attributed_carbs
-    //     FROM carbs_join_observed
-    //     ORDER BY timestamp ASC
-    //   LIMIT 1
-    // `)
-    // console.log(rows)
-
-    // return await Statistics.execute(carbs_join_observed)
   }
 
   /**

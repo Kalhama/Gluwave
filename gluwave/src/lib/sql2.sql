@@ -43,8 +43,7 @@ WITH RECURSIVE meals AS (
 		CASE WHEN active THEN
 			p.cumulative_attributed + 
 			-- at least min rate
-			-- TODO ois hirvee fantsuu ku vertailtais keskiarvoa viimeisimmistä eikä vain viimeisestä
-			-- TODO ois hirvee fantsuu et jos ollaa tulevaisuudessa (ennusteessa) niin loppu menis GREATEST(havaittu, min_rate). mut se voi ehk olla erilline query selkeyden vuoks.
+
 			GREATEST(c.min_rate, c.observed * c.min_rate / SUM (active::int * c.min_rate) OVER ())
 		ELSE
 			p.cumulative_attributed
@@ -59,5 +58,3 @@ WITH RECURSIVE meals AS (
 SELECT timestamp, SUM(amount - cumulative_attributed) as carbs_on_board FROM attributed_carbs GROUP BY timestamp ORDER BY timestamp
 	
 
--- TOOD looks future, returns attributed after the timestamp
--- TODO if value depends on previous value we need to be careful which timestamp is the starting moment. We should pick a timestamp when there was no active meals for sure.

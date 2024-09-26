@@ -15,6 +15,7 @@ export const CarbohydratesOnBoard = async () => {
   const now = new Date()
   const start = subHours(now, 18)
   const end = addHours(now, 0)
+  const t = new Date()
   const data = await Statistics.observed_carbs_on_board(
     user.id,
     user.carbohydrateRatio,
@@ -22,6 +23,7 @@ export const CarbohydratesOnBoard = async () => {
     start,
     end
   )
+  console.log(`took ${new Date().getTime() - t.getTime()}ms`)
 
   const current = data.find(
     (d) => Math.abs(d.timestamp.getTime() - now.getTime()) < 1000 * 60 * 1

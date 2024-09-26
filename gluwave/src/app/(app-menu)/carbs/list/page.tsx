@@ -39,12 +39,14 @@ async function ListCarbTable({ date }: Props) {
     )
   )
 
-  carbs = carbs.filter(
-    (carb) =>
-      carb.id !== -1 &&
-      carb.timestamp.getTime() >= start.getTime() &&
-      carb.timestamp.getTime() <= end.getTime()
-  )
+  carbs = carbs
+    .filter(
+      (carb) =>
+        carb.id !== -1 &&
+        carb.timestamp.getTime() >= start.getTime() &&
+        carb.timestamp.getTime() <= end.getTime()
+    )
+    .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
   return (
     <div>
