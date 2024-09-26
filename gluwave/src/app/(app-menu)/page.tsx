@@ -1,6 +1,5 @@
 import { validateRequest } from '@/auth'
 import BloodGlucose from '@/components/blood-glucose'
-import { CarbohydratesOnBoard } from '@/components/carbohydrates-on-board'
 import InsulinOnBoard from '@/components/insulin-on-board'
 import { db } from '@/db'
 import { glucose } from '@/schema'
@@ -8,9 +7,9 @@ import { addMinutes } from 'date-fns'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { Suspense } from 'react'
 
 import { CarbohydratesPrediction } from './carbohydrates-prediction'
+import { ObservedCarbs } from './observed_carbs'
 
 const getLastGlucose = async (userId: string): Promise<number | undefined> => {
   const [last] = await db
@@ -55,6 +54,7 @@ export default async function App() {
       <InsulinOnBoard />
       {/* <CarbsRate /> */}
       <CarbohydratesPrediction />
+      <ObservedCarbs />
     </div>
   )
 }

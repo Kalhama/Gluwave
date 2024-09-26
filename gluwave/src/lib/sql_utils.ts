@@ -491,65 +491,48 @@ export class Statistics {
   /**
    * @returns carbs on board after reducing amount of carbs observed
    */
-  public static async carbs_join_observed(
-    tf: Timeframe,
+  public static async observed_carbs_on_board(
     userId: string,
     ISF: number,
-    ICR: number
+    ICR: number,
+    start: Date,
+    end: Date
   ) {
-    const observed_carbs = Statistics.observed_carbs(tf, userId, ISF, ICR)
-
-    const timeframe = db.$with('timeframe_next').as(
-      db
-        .with(tf)
-        .select({
-          timestamp: tf.timestamp,
-          next_timestamp:
-            sql`LEAD(${tf.timestamp}) OVER (ORDER BY ${tf.timestamp})`
-              .mapWith(tf.timestamp)
-              .as('next_timestamp'),
-        })
-        .from(tf)
+    const interval = 5
+    const timeframe = Statistics.range_timeframe(start, end, interval)
+    const observed_carbs = Statistics.observed_carbs(
+      timeframe,
+      userId,
+      ISF,
+      ICR
     )
 
-    const carbs_join_observed = db.$with('carbs_join_observed').as(
+    const base = db.$with('base').as(
       db
         .with(timeframe, observed_carbs)
         .select({
           timestamp: sql`${timeframe.timestamp}`
             .mapWith(timeframe.timestamp)
             .as('timestamp'),
-          next_timestamp: sql`${timeframe.next_timestamp}`
-            .mapWith(timeframe.timestamp)
-            .as('next_timestamp'),
-          start_time: sql`${carbs.timestamp}`
-            .mapWith(carbs.timestamp)
-            .as('start_time'),
-          end_time:
-            sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`
-              .mapWith(carbs.timestamp)
-              .as('end_time'),
-          id: sql`COALESCE(${carbs.id}, -1)`.mapWith(carbs.id).as('id'),
-          carbs: carbs.amount,
+          id: carbs.id,
           decay: carbs.decay,
-          min_rate: sql`${carbs.amount} / ${carbs.decay} / 1.5`
+          amount: carbs.amount,
+          start: sql`${carbs.timestamp}`.mapWith(carbs.timestamp).as('start'),
+          end: sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`
+            .mapWith(carbs.timestamp)
+            .as('end'),
+          rate: sql`1.0 * amount / decay`.mapWith(carbs.amount).as('rate'),
+          min_rate: sql`1.0 * amount / decay / 1.5`
             .mapWith(carbs.amount)
             .as('min_rate'),
-          observed_carbs: sql`${observed_carbs.observedCarbs}`.as(
-            'observed_carbs'
-          ),
+          observed: sql`${observed_carbs.observedCarbs}`
+            .mapWith(carbs.amount)
+            .as('observed'),
         })
         .from(timeframe)
         .leftJoin(
           carbs,
-          and(
-            eq(carbs.userId, userId),
-            gte(timeframe.timestamp, carbs.timestamp),
-            lte(
-              timeframe.timestamp,
-              sql`${carbs.timestamp} + MAKE_INTERVAL(mins => (${carbs.decay} * 1.5)::int)`
-            )
-          )
+          and(eq(carbs.userId, userId), gte(carbs.timestamp, start))
         )
         .leftJoin(
           observed_carbs,
@@ -557,79 +540,79 @@ export class Statistics {
         )
     )
 
-    const data = db
-      .with(carbs_join_observed)
+    // console.log((await db.with(base).select().from(base)).slice(-100))
+    // return
+
+    const attributed_carbs = db
+      .with(base)
       .select({
         timestamp: sql`timestamp`.mapWith(carbs.timestamp).as('timestamp'),
-        next_timestamp: sql`next_timestamp`,
-        id: sql`id`,
-        start_time: sql`start_time`,
-        end_time: sql`end_time`,
-        carbs: sql`carbs`,
-        decay: sql`decay`,
-        min_rate: sql`min_rate`,
-        observed_carbs: sql`observed_carbs`,
-        cumulative_attributed_carbs: sql`cumulative_attributed_carbs`,
+        // id: sql`id`,
+        // min_rate: sql`min_rate`,
+        // start: sql`start`,
+        // amount: sql`amount`,
+        // observed: sql`observed`,
+        // cumulative_attributed: sql`cumulative_attributed`,
+        carbs_on_board: sql`carbs_on_board`,
       })
       .from(
-        sql`(with recursive carbs_assign_observed as (
-          (SELECT 
-            ${carbs_join_observed.timestamp} - interval '1 minutes' as timestamp,
-            ${carbs_join_observed.timestamp} as next_timestamp,
-            -1 as id,
-            ROW_NUMBER() OVER (PARTITION BY timestamp) as row,
-            CAST(null AS timestamp) AS start_time,
-            CAST(null AS timestamp) AS end_time,
-            CAST(null as double precision) as carbs,
-            CAST(null as double precision) as decay,
-            CAST(null as double precision) as min_rate,
-            CAST(0 AS DOUBLE PRECISION) as observed_carbs,
-            CAST(0 AS DOUBLE PRECISION) AS cumulative_attributed_carbs
-          FROM ${carbs_join_observed}
-          ORDER BY ${carbs_join_observed.timestamp}
-          LIMIT 1)
-          
-          UNION
+        sql`(with recursive attributed_carbs as (
+            SELECT 
+            timestamp, id, start, min_rate, amount, observed,
+            COALESCE(observed * min_rate / NULLIF(SUM(active::int * min_rate) OVER (), 0), 0) AS cumulative_attributed
+            FROM base,
+            LATERAL (
+              SELECT timestamp > base.start AND timestamp < base.end as active
+            )
+            WHERE timestamp = (
+              SELECT timestamp FROM base ORDER BY timestamp LIMIT 1
+            )
+            
+            
+            UNION ALL
+            
+            SELECT 
+              c.timestamp,
+              c.id,
+              c.start,
+              c.min_rate,
+              c.amount,
+              c.observed,
+              CASE WHEN active THEN
+                -- TODO ois hirvee fantsuu ku vertailtais keskiarvoa viimeisimmistä eikä vain viimeisestä
+                -- TODO ois hirvee fantsuu et jos ollaa tulevaisuudessa (ennusteessa) niin loppu menis GREATEST(havaittu, min_rate). mut se voi ehk olla erilline query selkeyden vuoks.
 
-          (
-          -- Recursive case
-          SELECT
-              cjo.timestamp,
-              cjo.next_timestamp,
-              cjo.id,
-              ROW_NUMBER() OVER (PARTITION BY cjo.timestamp) as row,
-              cjo.start_time,
-              cjo.end_time,
-              cjo.amount as carbs,
-              cjo.decay,
-              cjo.amount / cjo.decay / 1.5 AS min_rate,
-              cjo.observed_carbs as observed_carbs,
-              -- check if meal is active
-              CASE WHEN r.cumulative_attributed_carbs < r.carbs THEN
-                r.cumulative_attributed_carbs + cjo.observed_carbs * r.min_rate
-                / -- sum of min_rate of other active meals
-                SUM(
-                  CASE WHEN r.cumulative_attributed_carbs < r.carbs THEN
-                    r.min_rate
-                  ELSE
-                    0
-                  END
-                ) OVER ()
-              ELSE 
-                r.cumulative_attributed_carbs -- why not r.carbs?
-              END
-              AS cumulative_attributed_carbs
-          FROM ${carbs_join_observed} cjo
-          JOIN carbs_assign_observed r ON cjo.timestamp = r.next_timestamp
-          )
-        ) 
-        select * from carbs_assign_observed LIMIT 10000)`
+                -- wer're calculating carbs on board, so cap the amount to reported
+                LEAST(
+                  c.amount,
+                  p.cumulative_attributed + 
+                  -- we're calculating carbs on board, so set minimum rate for attribution
+                  GREATEST(c.min_rate * ${interval} / 2, c.observed * c.min_rate / SUM (active::int * c.min_rate) OVER ())
+                )
+              ELSE
+                p.cumulative_attributed
+              END AS cumulative_attributed
+            FROM base c
+            INNER JOIN attributed_carbs p ON p.timestamp + INTERVAL '5 minute' = c.timestamp AND p.id = c.id,
+            LATERAL (
+              SELECT c.timestamp > c.start AND (c.timestamp < c.end OR (p.cumulative_attributed < c.amount AND c.timestamp < c.end + MAKE_INTERVAL(mins => (c.decay / 2)::int))) AS active
+            )
+        )
+            -- SELECT * FROM attributed_carbs
+        	  SELECT 
+            timestamp, 
+            COALESCE(SUM(amount - cumulative_attributed) FILTER (WHERE start < timestamp), 0) 
+            as carbs_on_board 
+            FROM attributed_carbs 
+            GROUP BY timestamp 
+            ORDER BY timestamp 
+        )`
       )
 
-    console.log(data.toSQL())
-    console.log((await data.execute()).slice(-100, -1))
+    // console.log(attributed_carbs.toSQL())
+    // console.log((await attributed_carbs.execute()).slice(-100))
 
-    return data
+    return attributed_carbs
 
     // const viewSQL = carbs_join_observed._.sql
 
@@ -711,9 +694,11 @@ export class Statistics {
   }
 
   /**
+   *
+   * @param step in minutes
    * @returns timeframe with one minute step
    */
-  public static range_timeframe(start: Date, end: Date) {
+  public static range_timeframe(start: Date, end: Date, step = 1) {
     /* need to use a real table where we union the series, because otherwise tf.timestamp will refer to timestamp, not timeframe.timestamp */
     const tf = db.$with('timeframe').as(
       db
@@ -730,7 +715,7 @@ export class Statistics {
                 .as('timestamp'),
             })
             .from(
-              sql`generate_series(${startOfMinute(start).toISOString()}::timestamp, ${startOfMinute(end).toISOString()}::timestamp, interval '1 minutes') as timestamp`
+              sql`generate_series(${startOfMinute(start).toISOString()}::timestamp, ${startOfMinute(end).toISOString()}::timestamp, MAKE_INTERVAL(mins => ${step})) as timestamp`
             )
         )
     )

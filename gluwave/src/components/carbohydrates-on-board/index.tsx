@@ -16,7 +16,7 @@ export const CarbohydratesOnBoard = async () => {
   const end = addHours(now, 0.2)
   const tf = Statistics.range_timeframe(start, end)
   const carbs_on_board = await Statistics.execute(
-    Statistics.carbs_join_observed(
+    Statistics.observed_carbs_on_board(
       tf,
       user.id,
       user.carbohydrateRatio,
