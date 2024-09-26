@@ -1,5 +1,6 @@
 import { validateRequest } from '@/auth'
 import BloodGlucose from '@/components/blood-glucose'
+import { CarbohydratesOnBoard } from '@/components/carbohydrates-on-board'
 import InsulinOnBoard from '@/components/insulin-on-board'
 import { db } from '@/db'
 import { glucose } from '@/schema'
@@ -7,9 +8,6 @@ import { addMinutes } from 'date-fns'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-
-import { CarbohydratesPrediction } from './carbohydrates-prediction'
-import { ObservedCarbs } from './observed_carbs'
 
 const getLastGlucose = async (userId: string): Promise<number | undefined> => {
   const [last] = await db
@@ -52,9 +50,8 @@ export default async function App() {
     <div className="mt-2 grid gap-2 mx-auto sm:grid-cols-2 max-w-5xl min-[420px]:px-2 md:px-4">
       <BloodGlucose />
       <InsulinOnBoard />
-      {/* <CarbsRate /> */}
-      <CarbohydratesPrediction />
-      <ObservedCarbs />
+      <CarbohydratesOnBoard />
+      {/* <ObservedCarbs /> */}
     </div>
   )
 }

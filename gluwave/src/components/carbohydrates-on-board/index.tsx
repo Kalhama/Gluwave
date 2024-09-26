@@ -1,6 +1,6 @@
 import { validateRequest } from '@/auth'
 import { Statistics } from '@/lib/sql_utils'
-import { addHours } from 'date-fns'
+import { addHours, subHours } from 'date-fns'
 import { redirect } from 'next/navigation'
 
 import { GraphContainer, GraphTitle } from '../graph-container'
@@ -11,20 +11,19 @@ export const CarbohydratesOnBoard = async () => {
   if (!user) {
     redirect('/login')
   }
+
   const now = new Date()
-  const start = addHours(now, -8)
-  const end = addHours(now, 0.2)
-  const tf = Statistics.range_timeframe(start, end)
-  const carbs_on_board = await Statistics.execute(
-    Statistics.observed_carbs_on_board(
-      tf,
-      user.id,
-      user.carbohydrateRatio,
-      user.correctionRatio
-    )
+  const start = subHours(now, 18)
+  const end = addHours(now, 0)
+  const data = await Statistics.observed_carbs_on_board(
+    user.id,
+    user.carbohydrateRatio,
+    user.correctionRatio,
+    start,
+    end
   )
 
-  const current = carbs_on_board.find(
+  const current = data.find(
     (d) => Math.abs(d.timestamp.getTime() - now.getTime()) < 1000 * 60 * 1
   )
 
@@ -35,7 +34,7 @@ export const CarbohydratesOnBoard = async () => {
           <h2 className="font-semibold">Carbohydrates on board</h2>
           <span className="text-xs">
             Current{' '}
-            {current?.observed_carbs_on_board.toLocaleString([], {
+            {current?.carbs_on_board.toLocaleString([], {
               maximumFractionDigits: 0,
             })}{' '}
             g
@@ -45,18 +44,13 @@ export const CarbohydratesOnBoard = async () => {
       <CarbohydratesOnBoardGraph
         domain={{
           x: [start, end],
-          y: [
-            0,
-            Math.max(
-              ...carbs_on_board.map((d) => d.observed_carbs_on_board + 10)
-            ),
-          ],
+          y: [0, Math.max(...data.map((d) => d.carbs_on_board + 10))],
         }}
         now={now}
-        data={carbs_on_board.map((d) => {
+        data={data.map((d) => {
           return {
             x: d.timestamp,
-            y: d.observed_carbs_on_board,
+            y: d.carbs_on_board,
           }
         })}
       />

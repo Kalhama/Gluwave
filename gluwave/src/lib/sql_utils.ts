@@ -609,6 +609,9 @@ export class Statistics {
         )`
       )
 
+    // -- TOOD looks future, returns attributed after the timestamp
+    // -- TODO if value depends on previous value we need to be careful which timestamp is the starting moment. We should pick a timestamp when there was no active meals for sure.
+
     // console.log(attributed_carbs.toSQL())
     // console.log((await attributed_carbs.execute()).slice(-100))
 

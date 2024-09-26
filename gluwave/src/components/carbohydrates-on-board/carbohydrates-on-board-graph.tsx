@@ -46,7 +46,7 @@ export const CarbohydratesOnBoardGraph = ({ now, data, domain }: Props) => {
           /* tailwind green-700 */
           data: { fill: '#15803d88' },
         }}
-        interpolation="stepAfter"
+        interpolation="linear"
         data={data}
       />
     </GraphContent>
