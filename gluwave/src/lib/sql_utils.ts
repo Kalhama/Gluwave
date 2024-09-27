@@ -564,6 +564,97 @@ export class Statistics {
   }
 
   /**
+   * @returns carbs on board after reducing amount of carbs observed
+   */
+  public static predict_carbs_on_board(
+    attributed_carbs: Awaited<
+      ReturnType<typeof Statistics.observed_carbs_attributed>
+    >,
+    start: Date,
+    end: Date
+  ) {
+    const timeframe = Statistics.range_timeframe(start, end)
+
+    const active_meals = db.$with('active_meals').as(
+      db
+        .with(attributed_carbs)
+        .select({
+          remaining:
+            sql`${attributed_carbs.amount} - ${attributed_carbs.cumulative_attributed}`.as(
+              'remaining'
+            ),
+          rate: sql`GREATEST(
+            ${attributed_carbs.cumulative_attributed} / minutes_between(${attributed_carbs.timestamp}, ${attributed_carbs.start}), -- observed rate
+            ${attributed_carbs.min_rate} * 1.5 -- TODO use rate
+          )`.as('rate'),
+          start: attributed_carbs.start,
+        })
+        .from(attributed_carbs)
+        .where(
+          and(
+            eq(
+              attributed_carbs.timestamp,
+              db
+                .with(attributed_carbs)
+                .select({ timestamp: attributed_carbs.timestamp })
+                .from(attributed_carbs)
+                .orderBy(desc(attributed_carbs.timestamp))
+                .limit(1)
+            ),
+            eq(attributed_carbs.active, true)
+          )
+        )
+    )
+
+    const prediction = db.$with('carb_predictoins').as(
+      db
+        .with(timeframe, active_meals)
+        .select({
+          timestamp: timeframe.timestamp,
+          carbs_on_board:
+            sql`SUM(${active_meals.remaining} - total_carbs_absorbed(
+            t => ${timeframe.timestamp}, 
+            start => ${start.toISOString()}, 
+            amount => ${active_meals.remaining}, 
+            decay => (${active_meals.remaining} / ${active_meals.rate})::integer /* TODO still hate this */
+        ))`
+              .mapWith(carbs.amount)
+              .as('carbs_on_board'),
+        })
+        .from(timeframe)
+        .leftJoin(active_meals, sql`true`)
+        .groupBy(timeframe.timestamp)
+        .orderBy(timeframe.timestamp)
+    )
+
+    return prediction
+  }
+
+  /**
+   * @returns carbs on board after reducing amount of carbs observed
+   */
+  public static async observed_carbs_on_board(
+    attributed_carbs: Awaited<
+      ReturnType<typeof Statistics.observed_carbs_attributed>
+    >
+  ) {
+    const carbs_on_board = db
+      .with(attributed_carbs)
+      .select({
+        timestamp: attributed_carbs.timestamp,
+        carbs_on_board:
+          sql`COALESCE(SUM(${attributed_carbs.amount} - ${attributed_carbs.cumulative_attributed}) FILTER (WHERE start < timestamp), 0)`
+            .mapWith(carbs.amount)
+            .as('carbs_on_board'),
+      })
+      .from(attributed_carbs)
+      .groupBy(attributed_carbs.timestamp)
+      .orderBy(attributed_carbs.timestamp)
+
+    return carbs_on_board
+  }
+
+  /**
    * @returns timeframe of every time meal starts or ends, as well as lates glucose reading
    */
   public static carbs_timeframe(userId: string, start: Date, end: Date) {

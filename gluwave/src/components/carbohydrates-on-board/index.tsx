@@ -13,20 +13,33 @@ export const CarbohydratesOnBoard = async () => {
   }
 
   const now = new Date()
+  const latestBloodGlucose = now // TODO
   const start = subHours(now, 18)
-  const end = addHours(now, 0)
+  const end = addHours(now, 6)
+
   const t = new Date()
   const attributed_carbs = await Statistics.observed_carbs_attributed(
     user.id,
     user.carbohydrateRatio,
     user.correctionRatio,
     start,
-    end
+    latestBloodGlucose
   )
-  const data = await Statistics.observed_carbs_on_board(attributed_carbs)
+  const observed = await Statistics.observed_carbs_on_board(attributed_carbs)
+
+  const prediction = await Statistics.execute(
+    await Statistics.predict_carbs_on_board(
+      attributed_carbs,
+      latestBloodGlucose,
+      end
+    )
+  )
+
   console.log(`took ${new Date().getTime() - t.getTime()}ms`)
 
-  const current = data.find(
+  const union = [...observed, ...prediction]
+
+  const current = union.find(
     (d) => Math.abs(d.timestamp.getTime() - now.getTime()) < 1000 * 60 * 1
   )
 
@@ -47,10 +60,10 @@ export const CarbohydratesOnBoard = async () => {
       <CarbohydratesOnBoardGraph
         domain={{
           x: [start, end],
-          y: [0, Math.max(...data.map((d) => d.carbs_on_board + 10))],
+          y: [0, Math.max(...union.map((d) => d.carbs_on_board + 10))],
         }}
         now={now}
-        data={data.map((d) => {
+        data={union.map((d) => {
           return {
             x: d.timestamp,
             y: d.carbs_on_board,
