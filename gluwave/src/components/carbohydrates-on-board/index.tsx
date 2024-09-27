@@ -1,6 +1,9 @@
 import { validateRequest } from '@/auth'
+import { db } from '@/db'
 import { Statistics } from '@/lib/sql_utils'
+import { carbs } from '@/schema'
 import { addHours, subHours } from 'date-fns'
+import { count } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
 import { GraphContainer, GraphTitle } from '../graph-container'

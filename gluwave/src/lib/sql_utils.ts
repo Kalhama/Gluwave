@@ -5,6 +5,7 @@ import {
   ColumnsSelection,
   SQL,
   and,
+  count,
   desc,
   eq,
   gt,
@@ -498,7 +499,39 @@ export class Statistics {
     start: Date,
     end: Date
   ) {
-    const timeframe = Statistics.range_timeframe(start, end, 1)
+    // pick a starting point for prediction
+    const timeframe_before = Statistics.range_timeframe(
+      subHours(start, 48),
+      start,
+      1
+    )
+    const [startpoint] = await db
+      .with(timeframe_before)
+      .select({
+        timestamp: timeframe_before.timestamp,
+      })
+      .from(timeframe_before)
+      .leftJoin(
+        carbs,
+        and(
+          eq(carbs.userId, userId),
+          gte(timeframe_before.timestamp, carbs.timestamp),
+          lte(
+            timeframe_before.timestamp,
+            sql`${carbs.timestamp} + MAKE_INTERVAL(mins => (${carbs.decay} * 1.5)::int)`
+          )
+        )
+      )
+      .groupBy(timeframe_before.timestamp)
+      .having(eq(count(carbs.id), 0))
+      .orderBy(desc(timeframe_before.timestamp))
+
+    if (!startpoint)
+      throw new Error(
+        'No viable starting point for prediction found in the past 48 hours'
+      )
+
+    const timeframe = Statistics.range_timeframe(startpoint.timestamp, end, 1)
     const observed_carbs = Statistics.observed_carbs(
       timeframe,
       userId,
@@ -566,7 +599,7 @@ export class Statistics {
               min_rate, 
               amount, 
               observed,
-              ARRAY[COALESCE(observed * min_rate / NULLIF(SUM(active::int * min_rate) OVER (), 0), 0)] AS cumulative_attributed,
+              ARRAY[CAST(0 AS DOUBLE PRECISION)] AS cumulative_attributed,
               active
             FROM base,
             LATERAL (
