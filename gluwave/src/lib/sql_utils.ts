@@ -3,7 +3,6 @@ import { carbs, glucose, insulin, userTable } from '@/schema'
 import { startOfMinute, subHours } from 'date-fns'
 import {
   ColumnsSelection,
-  SQL,
   and,
   count,
   desc,
@@ -82,7 +81,7 @@ export const calculateUserInsulinData = async (
   return insulin_on_board
 }
 
-type Timeframe = WithSubqueryWithSelection<
+export type Timeframe = WithSubqueryWithSelection<
   {
     timestamp: PgColumn<
       {
@@ -114,7 +113,7 @@ export class Statistics {
    * Warning: The function might return meals outside specified in timeframe selection if they had effect during the timeframe
    * Warning: If there is no observed carbs on some time period used then observed carbs might be too low
    */
-  public static observed_carbs_per_meal(
+  public static attributed_carbs_simple(
     timeframe: Timeframe,
     userId: string,
     ISF: number,
@@ -281,50 +280,6 @@ export class Statistics {
   }
 
   /**
-   * @returns cumulative absorbed carbs as they were reported
-   */
-  public static cumulative_reported_absorbed_carbs(
-    timeframe: Timeframe,
-    userId: string
-  ) {
-    const cumulative_reported_absorbed_carbs = db
-      .$with('cumulative_reported_absorbed_carbs')
-      .as(
-        db
-          .with(timeframe)
-          .select({
-            timestamp: timeframe.timestamp,
-            predictedCarbs: sql`COALESCE(SUM(total_carbs_absorbed(
-            t => ${timeframe.timestamp}, 
-            start => ${carbs.timestamp}, 
-            amount => ${carbs.amount}, 
-            decay => ${carbs.decay}
-          )), 0)
-           - FIRST_VALUE(COALESCE(SUM(total_carbs_absorbed(
-            t => ${timeframe.timestamp}, 
-            start => ${carbs.timestamp}, 
-            amount => ${carbs.amount}, 
-            decay => ${carbs.decay}
-          )), 0)) OVER (ORDER BY ${timeframe.timestamp})
-          `
-              .mapWith(carbs.amount)
-              .as('predictedCarbs'),
-          })
-          .from(timeframe)
-          .leftJoin(
-            carbs,
-            and(
-              eq(carbs.userId, userId),
-              lt(carbs.timestamp, timeframe.timestamp)
-              // lt(sql`LEAST(timeframe.timestamp) - interval '12 hours'`, carbs.timestamp) with or without?
-            )
-          )
-          .groupBy(timeframe.timestamp)
-      )
-    return cumulative_reported_absorbed_carbs
-  }
-
-  /**
    * @returns observed carbs based on glucose changes and insulin decay
    */
   public static observed_carbs(
@@ -394,7 +349,7 @@ export class Statistics {
       subHours(start, 12), // make sure that we catch all observed carbs on currently active meals
       end
     )
-    const carbs_observed = Statistics.observed_carbs_per_meal(
+    const carbs_observed = Statistics.attributed_carbs_simple(
       carbs_tf,
       userId,
       ISF,
@@ -406,7 +361,7 @@ export class Statistics {
         .with(range_tf, carbs_observed)
         .select({
           timestamp: range_tf.timestamp,
-          // don't really like how we come up with decay but whatever
+          // todo don't really like how we come up with decay but whatever
           predicted_carbs: sql`SUM(
             total_carbs_absorbed(
               t => ${range_tf.timestamp},
@@ -457,42 +412,7 @@ export class Statistics {
     return cte
   }
 
-  /**
-   * @returns reported carb rate over time
-   */
-  public static reported_carb_rate(timeframe: Timeframe, userId: string) {
-    const cte = db.$with('reported_carb_rate').as(
-      db
-        .with(timeframe)
-        .select({
-          timestamp: timeframe.timestamp,
-          rate: sql`COALESCE(SUM(${carbs.amount} / ${carbs.decay}), 0)`
-            .mapWith(carbs.amount)
-            .as('rate'),
-        })
-        .from(timeframe)
-        .leftJoin(
-          carbs,
-          and(
-            eq(carbs.userId, userId),
-            gte(
-              sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
-              timeframe.timestamp
-            ),
-            lte(carbs.timestamp, timeframe.timestamp)
-          )
-        )
-        .groupBy(timeframe.timestamp)
-        .orderBy(timeframe.timestamp)
-    )
-
-    return cte
-  }
-
-  /**
-   * @returns carbs on board after reducing amount of carbs observed
-   */
-  public static async observed_carbs_on_board(
+  public static async observed_carbs_attributed(
     userId: string,
     ISF: number,
     ICR: number,
@@ -572,80 +492,73 @@ export class Statistics {
         )
     )
 
-    // console.log((await db.with(base).select().from(base)).slice(-100))
-    // return
-
     const min_rate_lookback_period = 20
 
-    const attributed_carbs = db
-      .with(base)
-      .select({
-        timestamp: sql`timestamp`.mapWith(carbs.timestamp).as('timestamp'),
-        // id: sql`id`,
-        // min_rate: sql`min_rate`,
-        // start: sql`start`,
-        // amount: sql`amount`,
-        // observed: sql`observed`,
-        // cumulative_attributed: sql`cumulative_attributed_last`,
-        // activee: sql`activee`,
-        carbs_on_board: sql`carbs_on_board`,
-      })
-      .from(
-        sql`(with recursive attributed_carbs as (
-            SELECT 
-              timestamp, 
-              id, 
-              start, 
-              min_rate, 
-              amount, 
-              observed,
-              ARRAY[CAST(0 AS DOUBLE PRECISION)] AS cumulative_attributed,
-              active
-            FROM base,
-            LATERAL (
-              SELECT timestamp > base.start AND timestamp < base.start + MAKE_INTERVAL(mins => base.decay) as active
+    const attributed_carbs = db.$with('attributed_carbs').as(
+      db
+        .with(base)
+        .select({
+          timestamp: sql`timestamp`.mapWith(carbs.timestamp).as('timestamp'),
+          id: sql`id`.as('id'),
+          min_rate: sql`min_rate`.as('min_rate'),
+          start: sql`start`.mapWith(carbs.timestamp).as('start'),
+          amount: sql`amount`.as('amount'),
+          observed: sql`observed`.as('observed'),
+          cumulative_attributed: sql`cumulative_attributed_last`.as(
+            'cumulative_attributed_last'
+          ),
+          active: sql`active`.as('active'),
+        })
+        .from(
+          sql`(with recursive attributed_carbs as (
+                SELECT 
+                  timestamp, 
+                  id, 
+                  start, 
+                  min_rate, 
+                  amount, 
+                  observed,
+                  ARRAY[CAST(0 AS DOUBLE PRECISION)] AS cumulative_attributed,
+                  active
+                FROM base,
+                LATERAL (
+                  SELECT timestamp > base.start AND timestamp < base.start + MAKE_INTERVAL(mins => base.decay) as active
+                )
+                WHERE timestamp = (
+                  SELECT timestamp FROM base ORDER BY timestamp LIMIT 1
+                )
+                
+                
+                UNION ALL
+                
+                SELECT 
+                  c.timestamp,
+                  c.id,
+                  c.start,
+                  c.min_rate,
+                  c.amount,
+                  c.observed,
+                  -- store previous values in array, so we can check if they are absorbing too slow
+                  calculate_cumulative_attributed(
+                    active => p.active, -- use previous active se that we start observing at t=1, not t=0
+                    cumulative_attributed => p.cumulative_attributed,
+                    amount => p.amount,
+                    min_rate => p.min_rate,
+                    total_min_rate => SUM (p.active::int * p.min_rate) OVER (),
+                    observed => p.observed,
+                    lookback_period => ${min_rate_lookback_period}
+                  ) AS cumulative_attributed,
+                  l.active
+                FROM base c
+                INNER JOIN attributed_carbs p ON p.timestamp + INTERVAL '1 minute' = c.timestamp AND p.id = c.id,
+                LATERAL (
+                  SELECT c.timestamp > c.start AND (c.timestamp < c.start + MAKE_INTERVAL(mins => c.decay) OR (p.cumulative_attributed[1] < c.amount AND c.timestamp < c.start + MAKE_INTERVAL(mins => c.extended_decay))) AS active
+                ) as l
             )
-            WHERE timestamp = (
-              SELECT timestamp FROM base ORDER BY timestamp LIMIT 1
-            )
-            
-            
-            UNION ALL
-            
-            SELECT 
-              c.timestamp,
-              c.id,
-              c.start,
-              c.min_rate,
-              c.amount,
-              c.observed,
-              -- store previous values in array, so we can check if they are absorbing too slow
-              calculate_cumulative_attributed(
-                active => p.active, -- use previous active se that we start observing at t=1, not t=0
-                cumulative_attributed => p.cumulative_attributed,
-                amount => p.amount,
-                min_rate => p.min_rate,
-                total_min_rate => SUM (p.active::int * p.min_rate) OVER (),
-                observed => p.observed,
-                lookback_period => ${min_rate_lookback_period}
-              ) AS cumulative_attributed,
-              l.active
-            FROM base c
-            INNER JOIN attributed_carbs p ON p.timestamp + INTERVAL '1 minute' = c.timestamp AND p.id = c.id,
-            LATERAL (
-              SELECT c.timestamp > c.start AND (c.timestamp < c.start + MAKE_INTERVAL(mins => c.decay) OR (p.cumulative_attributed[1] < c.amount AND c.timestamp < c.start + MAKE_INTERVAL(mins => c.extended_decay))) AS active
-            ) as l
+                SELECT *, cumulative_attributed[1] as cumulative_attributed_last FROM attributed_carbs ORDER BY timestamp
+            )`
         )
-            -- SELECT *, cumulative_attributed[1] as cumulative_attributed_last FROM attributed_carbs ORDER BY timestamp
-            SELECT
-            timestamp, 
-            COALESCE(SUM(amount - cumulative_attributed[1]) FILTER (WHERE start < timestamp), 0) 
-            as carbs_on_board 
-            FROM attributed_carbs 
-            GROUP BY timestamp
-            ORDER BY timestamp 
-        )`
-      )
+    )
 
     return attributed_carbs
   }

@@ -1,9 +1,6 @@
 import { validateRequest } from '@/auth'
-import { db } from '@/db'
 import { Statistics } from '@/lib/sql_utils'
-import { carbs } from '@/schema'
 import { addHours, subHours } from 'date-fns'
-import { count } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
 import { GraphContainer, GraphTitle } from '../graph-container'
@@ -19,13 +16,14 @@ export const CarbohydratesOnBoard = async () => {
   const start = subHours(now, 18)
   const end = addHours(now, 0)
   const t = new Date()
-  const data = await Statistics.observed_carbs_on_board(
+  const attributed_carbs = await Statistics.observed_carbs_attributed(
     user.id,
     user.carbohydrateRatio,
     user.correctionRatio,
     start,
     end
   )
+  const data = await Statistics.observed_carbs_on_board(attributed_carbs)
   console.log(`took ${new Date().getTime() - t.getTime()}ms`)
 
   const current = data.find(
