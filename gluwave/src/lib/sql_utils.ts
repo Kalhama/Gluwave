@@ -585,7 +585,7 @@ export class Statistics {
             ),
           rate: sql`GREATEST(
             ${attributed_carbs.cumulative_attributed} / minutes_between(${attributed_carbs.timestamp}, ${attributed_carbs.start}), -- observed rate
-            ${attributed_carbs.min_rate} * 1.5 -- TODO use rate
+            ${attributed_carbs.min_rate}
           )`.as('rate'),
           start: attributed_carbs.start,
         })
@@ -633,7 +633,7 @@ export class Statistics {
   /**
    * @returns carbs on board after reducing amount of carbs observed
    */
-  public static async observed_carbs_on_board(
+  public static observed_carbs_on_board(
     attributed_carbs: Awaited<
       ReturnType<typeof Statistics.observed_carbs_attributed>
     >
