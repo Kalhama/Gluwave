@@ -566,7 +566,8 @@ export class Statistics {
               min_rate, 
               amount, 
               observed,
-              ARRAY[COALESCE(observed * min_rate / NULLIF(SUM(active::int * min_rate) OVER (), 0), 0)] AS cumulative_attributed
+              ARRAY[COALESCE(observed * min_rate / NULLIF(SUM(active::int * min_rate) OVER (), 0), 0)] AS cumulative_attributed,
+              active
             FROM base,
             LATERAL (
               SELECT timestamp > base.start AND timestamp < base.end as active
@@ -586,7 +587,7 @@ export class Statistics {
               c.amount,
               c.observed,
               -- store previous values in array, so we can check if they are absorbing too slow
-              (array_prepend(CASE WHEN active THEN
+              (array_prepend(CASE WHEN p.active THEN
                 -- wer're calculating carbs on board, so cap the amount to reported
                 LEAST(
                   c.amount,
@@ -598,19 +599,20 @@ export class Statistics {
                         THEN c.min_rate
                         ELSE null
                       END, 
-                      c.observed * c.min_rate / SUM (active::int * c.min_rate) OVER ()
+                      c.observed * c.min_rate / SUM (p.active::int * c.min_rate) OVER ()
                     ),
                     0
                   )
                 )
               ELSE
                 p.cumulative_attributed[1]
-              END, p.cumulative_attributed))[1:${min_rate_lookback_period}] AS cumulative_attributed
+              END, p.cumulative_attributed))[1:${min_rate_lookback_period}] AS cumulative_attributed,
+              l.active
             FROM base c
             INNER JOIN attributed_carbs p ON p.timestamp + INTERVAL '1 minute' = c.timestamp AND p.id = c.id,
             LATERAL (
               SELECT c.timestamp > c.start AND (c.timestamp < c.end OR (p.cumulative_attributed[1] < c.amount AND c.timestamp < c.end + MAKE_INTERVAL(mins => (c.decay / 2)::int))) AS active
-            )
+            ) as l
         )
             -- SELECT *, cumulative_attributed[1] as cumulative_attributed_last FROM attributed_carbs ORDER BY timestamp
             SELECT 
