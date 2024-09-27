@@ -550,9 +550,9 @@ export class Statistics {
           decay: carbs.decay,
           amount: carbs.amount,
           start: sql`${carbs.timestamp}`.mapWith(carbs.timestamp).as('start'),
-          end: sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`
-            .mapWith(carbs.timestamp)
-            .as('end'),
+          extended_decay: sql`(${carbs.decay} * 1.5)::integer`.as(
+            'extended_decay'
+          ),
           rate: sql`1.0 * amount / decay`.mapWith(carbs.amount).as('rate'),
           min_rate: sql`1.0 * amount / decay / 1.5`
             .mapWith(carbs.amount)
@@ -603,7 +603,7 @@ export class Statistics {
               active
             FROM base,
             LATERAL (
-              SELECT timestamp > base.start AND timestamp < base.end as active
+              SELECT timestamp > base.start AND timestamp < base.start + MAKE_INTERVAL(mins => base.decay) as active
             )
             WHERE timestamp = (
               SELECT timestamp FROM base ORDER BY timestamp LIMIT 1
@@ -620,40 +620,29 @@ export class Statistics {
               c.amount,
               c.observed,
               -- store previous values in array, so we can check if they are absorbing too slow
-              (array_prepend(CASE WHEN p.active THEN
-                -- wer're calculating carbs on board, so cap the amount to reported
-                LEAST(
-                  c.amount,
-                  GREATEST(
-                    p.cumulative_attributed[1] + GREATEST(
-                      CASE 
-                        -- When decay has been too slow increase minimum attribution
-                        WHEN (p.cumulative_attributed[1] - p.cumulative_attributed[array_length(p.cumulative_attributed, 1)] < c.min_rate * (array_length(p.cumulative_attributed, 1)))
-                        THEN c.min_rate
-                        ELSE null
-                      END, 
-                      c.observed * c.min_rate / SUM (p.active::int * c.min_rate) OVER ()
-                    ),
-                    0
-                  )
-                )
-              ELSE
-                p.cumulative_attributed[1]
-              END, p.cumulative_attributed))[1:${min_rate_lookback_period}] AS cumulative_attributed,
+              calculate_cumulative_attributed(
+                active => p.active, -- use previous active se that we start observing at t=1, not t=0
+                cumulative_attributed => p.cumulative_attributed,
+                amount => p.amount,
+                min_rate => p.min_rate,
+                total_min_rate => SUM (p.active::int * p.min_rate) OVER (),
+                observed => p.observed,
+                lookback_period => ${min_rate_lookback_period}
+              ) AS cumulative_attributed,
               l.active
             FROM base c
             INNER JOIN attributed_carbs p ON p.timestamp + INTERVAL '1 minute' = c.timestamp AND p.id = c.id,
             LATERAL (
-              SELECT c.timestamp > c.start AND (c.timestamp < c.end OR (p.cumulative_attributed[1] < c.amount AND c.timestamp < c.end + MAKE_INTERVAL(mins => (c.decay / 2)::int))) AS active
+              SELECT c.timestamp > c.start AND (c.timestamp < c.start + MAKE_INTERVAL(mins => c.decay) OR (p.cumulative_attributed[1] < c.amount AND c.timestamp < c.start + MAKE_INTERVAL(mins => c.extended_decay))) AS active
             ) as l
         )
             -- SELECT *, cumulative_attributed[1] as cumulative_attributed_last FROM attributed_carbs ORDER BY timestamp
-            SELECT 
+            SELECT
             timestamp, 
             COALESCE(SUM(amount - cumulative_attributed[1]) FILTER (WHERE start < timestamp), 0) 
             as carbs_on_board 
             FROM attributed_carbs 
-            GROUP BY timestamp 
+            GROUP BY timestamp
             ORDER BY timestamp 
         )`
       )
