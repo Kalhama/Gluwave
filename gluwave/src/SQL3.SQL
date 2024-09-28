@@ -1,5 +1,8 @@
+DROP TABLE IF EXISTS temp_base;
+SET SESSION enable_seqscan=true;
 
-WITH RECURSIVE glucose_rate AS (
+CREATE TEMPORARY TABLE temp_base AS (
+    WITH glucose_rate AS (
 	-- TODO limit amount of values we get if they are really dense. 5 mins should suffice.
 	SELECT
 		id as glucose_id,
@@ -73,7 +76,19 @@ WITH RECURSIVE glucose_rate AS (
 	FROM metrics
 	LEFT JOIN carbs
 		ON carbs.user_id = metrics.user_id
-), attributed_carbs as (
+	ORDER BY glucose_id, carbs.id
+)
+
+	SELECT * FROM base
+);
+
+CREATE INDEX idx_temp_base_glucose_id_id ON temp_base (glucose_id, id);
+
+-- Then use temp_base instead of base in your main query
+
+ -- EXPLAIN ANALYZE
+
+WITH recursive attributed_carbs as (
 	SELECT 
 	  timestamp, 
 	  glucose_id,
@@ -86,12 +101,11 @@ WITH RECURSIVE glucose_rate AS (
 	  observed,
 	  ARRAY[CAST(0 AS DOUBLE PRECISION)] AS cumulative_attributed,
 	  active
-	FROM base,
+	FROM temp_base base,
 	LATERAL (
 	  SELECT timestamp > base.start AND timestamp < base.start + MAKE_INTERVAL(mins => base.decay) as active
 	)
-	WHERE timestamp = '2024-09-24 02:23:26' -- TODO
-	-- IF I ADD id = 71 here, the query gets very slow. like wtf??
+	WHERE timestamp = '2024-09-24 02:23:26' -- TODO 
 	
 	UNION ALL
 	
@@ -117,7 +131,7 @@ WITH RECURSIVE glucose_rate AS (
 	  ) AS cumulative_attributed,
 	  l.active
 	FROM attributed_carbs p
-	INNER JOIN base c ON p.next_glucose_id = c.glucose_id AND p.id = c.id,
+	INNER JOIN temp_base c ON p.next_glucose_id = c.glucose_id AND p.id = c.id,
 	LATERAL (
 	  SELECT c.timestamp > c.start AND (c.timestamp < c.start + MAKE_INTERVAL(mins => c.decay) OR (p.cumulative_attributed[1] < c.amount AND c.timestamp < c.start + MAKE_INTERVAL(mins => c.extended_decay))) AS active
 	) as l
