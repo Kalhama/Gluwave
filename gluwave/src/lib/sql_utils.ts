@@ -549,8 +549,8 @@ export class Statistics {
                     lookback_period => ${min_rate_lookback_period}
                   ) AS cumulative_attributed,
                   l.active
-                FROM base c
-                INNER JOIN attributed_carbs p ON p.timestamp + INTERVAL '1 minute' = c.timestamp AND p.id = c.id,
+                FROM attributed_carbs p
+                INNER JOIN base c ON p.timestamp + INTERVAL '1 minute' = c.timestamp AND p.id = c.id,
                 LATERAL (
                   SELECT c.timestamp > c.start AND (c.timestamp < c.start + MAKE_INTERVAL(mins => c.decay) OR (p.cumulative_attributed[1] < c.amount AND c.timestamp < c.start + MAKE_INTERVAL(mins => c.extended_decay))) AS active
                 ) as l

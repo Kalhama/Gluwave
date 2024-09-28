@@ -1,4 +1,5 @@
 import { validateRequest } from '@/auth'
+import { db } from '@/db'
 import { Statistics } from '@/lib/sql_utils'
 import { addHours, subHours } from 'date-fns'
 import { redirect } from 'next/navigation'
@@ -17,7 +18,6 @@ export const CarbohydratesOnBoard = async () => {
   const start = subHours(now, 18)
   const end = addHours(now, 6)
 
-  const t = new Date()
   const attributed_carbs = await Statistics.observed_carbs_attributed(
     user.id,
     user.carbohydrateRatio,
@@ -27,6 +27,7 @@ export const CarbohydratesOnBoard = async () => {
   )
   const observed = await Statistics.observed_carbs_on_board(attributed_carbs)
 
+  const t = new Date()
   const prediction = await Statistics.execute(
     await Statistics.predict_carbs_on_board(
       attributed_carbs,
@@ -34,7 +35,6 @@ export const CarbohydratesOnBoard = async () => {
       end
     )
   )
-
   console.log(`took ${new Date().getTime() - t.getTime()}ms`)
 
   const union = [...observed, ...prediction]
