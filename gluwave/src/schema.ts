@@ -1,7 +1,10 @@
+import { sql } from 'drizzle-orm'
 import {
   doublePrecision,
   integer,
+  interval,
   pgTable,
+  pgView,
   serial,
   text,
   timestamp,
@@ -58,3 +61,70 @@ export const sessionTable = pgTable('session', {
     mode: 'date',
   }).notNull(),
 })
+
+// TODO add migration for this
+// TODO total_insulin_absorbed is numeric, not doublePrecision, but type casting works b etter now
+export const metrics = pgView('metrics', {
+  glucose_id: integer('glucose_id'),
+  next_glucose_id: integer('next_glucose_id'),
+  user_id: text('user_id'),
+  timestamp: timestamp('timestamp'),
+  glucose: doublePrecision('glucose'),
+  glucose_change: doublePrecision('glucose_change'),
+  step: interval('step'),
+  total_insulin_absorbed: doublePrecision('total_insulin_absorbed'),
+  observed_carbs: doublePrecision('observed_carbs'),
+}).as(sql`
+CREATE VIEW metrics AS (
+	WITH glucose_rate AS (
+		-- TODO limit amount of values we get if they are really dense. 5 mins should suffice.
+		SELECT
+			id as glucose_id,
+			user_id,
+			timestamp,
+			"amount" as glucose,
+			LEAD(amount) OVER (PARTITION BY "user_id" ORDER BY timestamp ) - "amount" AS glucose_change,
+			LEAD(timestamp) OVER (PARTITION BY "user_id" ORDER BY timestamp ) - "timestamp" AS step
+		FROM 
+			glucose
+	), insulin_rate AS (
+		SELECT
+			glucose_id,
+			total_insulin_absorbed,
+			LEAD(total_insulin_absorbed) OVER (PARTITION BY "user_id" ORDER BY timestamp ) - "total_insulin_absorbed" AS insulin_absorbed
+		FROM (
+			SELECT
+				glucose.user_id,
+				glucose.timestamp,
+				glucose.id as glucose_id,
+				COALESCE(SUM(total_insulin_absorbed(
+					t => glucose.timestamp,
+					start => insulin.timestamp,
+					amount => insulin.amount
+				)), 0) as total_insulin_absorbed
+			FROM glucose
+			LEFT JOIN insulin 
+				ON glucose.user_id = insulin.user_id 
+				AND insulin.timestamp <= glucose.timestamp 
+			GROUP BY glucose.id
+		)
+	)
+	
+	SELECT 
+		glucose_rate.glucose_id,
+		LEAD(glucose_rate.glucose_id) OVER (PARTITION BY user_id ORDER BY timestamp) AS next_glucose_id,
+		user_id,
+		timestamp,
+		glucose,
+		glucose_change,
+		step,
+		total_insulin_absorbed,
+		glucose_change / "user"."correctionRatio" * "user"."carbohydrateRatio" + insulin_absorbed * "user"."carbohydrateRatio" AS observed_carbs
+	FROM glucose_rate 
+	LEFT JOIN insulin_rate 
+	ON insulin_rate.glucose_id = glucose_rate.glucose_id
+	LEFT JOIN "user"
+	ON "user"."id" = glucose_rate.user_id
+	ORDER BY timestamp
+)  
+`)

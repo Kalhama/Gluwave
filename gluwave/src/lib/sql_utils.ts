@@ -769,6 +769,103 @@ export class Statistics {
     return tf
   }
 
+  public static async attributed_carbs() {
+    // TODO consider refactoring this (or maybe even metrics) into materialized view. then we don't need to do the temporary table. Also generating this table takes some time.
+
+    await db.execute(sql`
+      DROP TABLE IF EXISTS base;
+      -- SET SESSION enable_seqscan=false; -- force / encourage index use for debugging
+      
+      CREATE TEMPORARY TABLE base AS (
+        SELECT
+          metrics.glucose_id,
+          metrics.next_glucose_id,
+          metrics.user_id,
+          metrics.timestamp,
+          glucose,
+          glucose_change,
+          step,
+          total_insulin_absorbed,
+          observed_carbs as observed,
+          carbs.id as id,
+          carbs.timestamp as start,
+          amount,
+          decay,
+          LEAST(
+            carbs.timestamp + MAKE_INTERVAL(mins => (carbs.decay * 1.5)::integer),
+            metrics.timestamp + metrics.step
+          ) - GREATEST(carbs.timestamp, metrics.timestamp) AS active_time, -- todo broken
+          (carbs.decay * 1.5)::integer as extended_decay,
+          amount / decay as rate,
+          amount / decay / 1.5 as min_rate
+        FROM metrics
+        LEFT JOIN carbs
+          ON carbs.user_id = metrics.user_id
+        ORDER BY glucose_id, carbs.id
+      );
+      
+      CREATE INDEX idx_base_glucose_id_id ON base (glucose_id, id);
+      
+      -- EXPLAIN ANALYZE
+        `)
+
+    const res = await db.execute(
+      sql.raw(`
+      WITH recursive attributed_carbs as (
+        SELECT 
+          timestamp, 
+          glucose_id,
+          user_id,
+          next_glucose_id,
+          id, 
+          start, 
+          min_rate, 
+          amount, 
+          observed,
+          ARRAY[CAST(0 AS DOUBLE PRECISION)] AS cumulative_attributed,
+          active
+        FROM base base,
+        LATERAL (
+          SELECT timestamp > base.start AND timestamp < base.start + MAKE_INTERVAL(mins => base.decay) as active
+        )
+        WHERE timestamp = '2024-09-24 02:23:26' -- TODO 
+        
+        UNION ALL
+        
+        SELECT 
+          c.timestamp,
+          c.glucose_id,
+          c.user_id,
+          c.next_glucose_id,
+          c.id,
+          c.start,
+          c.min_rate,
+          c.amount,
+          c.observed,
+          -- store previous values in array, so we can check if they are absorbing too slow
+          calculate_cumulative_attributed(
+          active => p.active, -- use previous active se that we start observing at t=1, not t=0
+          cumulative_attributed => p.cumulative_attributed,
+          amount => p.amount,
+          min_rate => p.min_rate,
+          total_min_rate => SUM (p.active::int * p.min_rate) OVER (),
+          observed => p.observed,
+          lookback_period => 20
+          ) AS cumulative_attributed,
+          l.active
+        FROM attributed_carbs p
+        INNER JOIN base c ON p.next_glucose_id = c.glucose_id AND p.id = c.id,
+        LATERAL (
+          SELECT c.timestamp > c.start AND (c.timestamp < c.start + MAKE_INTERVAL(mins => c.decay) OR (p.cumulative_attributed[1] < c.amount AND c.timestamp < c.start + MAKE_INTERVAL(mins => c.extended_decay))) AS active
+        ) as l
+      )
+      
+      SELECT * FROM attributed_carbs;
+        `)
+    )
+    return res.rows
+  }
+
   /**
    * @returns selects and returns given CTE (common table expression)
    */
