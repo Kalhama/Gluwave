@@ -28,6 +28,7 @@ const attributed_carbs = sql`
     amount, 
     observed,
     ARRAY[CAST(0 AS DOUBLE PRECISION)] AS cumulative_attributed,
+    ARRAY[timestamp] AS timestamps,
     active
   FROM attributed_carbs_base base,
   LATERAL (
@@ -51,12 +52,15 @@ const attributed_carbs = sql`
     calculate_cumulative_attributed(
       active => p.active, -- use previous active se that we start observing at t=1, not t=0
       cumulative_attributed => p.cumulative_attributed,
+      timestamps => p.timestamps,
       amount => p.amount,
       min_rate => p.min_rate,
       total_min_rate => SUM (p.active::int * p.min_rate) OVER (),
       observed => p.observed,
-      lookback_period => 20
+      lookback_period => MAKE_INTERVAL(mins => 20),
+      ts => c.timestamp
     ) AS cumulative_attributed,
+     array_prepend(c.timestamp, p.timestamps) as timestamps,
     l.active
   FROM attributed_carbs p
   INNER JOIN attributed_carbs_base c ON p.next_glucose_id = c.glucose_id AND p.carbs_id = c.carbs_id,
