@@ -4,7 +4,7 @@ import { validateRequest } from '@/auth'
 import { db } from '@/db'
 import { ServerActionError } from '@/lib/server-action-error'
 import { wrapServerAction } from '@/lib/wrap-server-action'
-import { insulin } from '@/schema'
+import { attributed_carbs_base, insulin } from '@/schema'
 import { and, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -25,6 +25,8 @@ export const deleteInsulin = wrapServerAction(
     await db
       .delete(insulin)
       .where(and(eq(insulin.id, parsed.id), eq(insulin.userId, user.id)))
+
+    await db.refreshMaterializedView(attributed_carbs_base)
 
     revalidatePath('/insulin/list')
   }

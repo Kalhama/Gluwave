@@ -4,7 +4,7 @@ import { validateRequest } from '@/auth'
 import { db } from '@/db'
 import { ServerActionError } from '@/lib/server-action-error'
 import { wrapServerAction } from '@/lib/wrap-server-action'
-import { userTable } from '@/schema'
+import { attributed_carbs_base, userTable } from '@/schema'
 import { updateSettingsSchema } from '@/schemas/updateSettingsSchema'
 import { eq } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
@@ -28,6 +28,8 @@ export const updateSettings = wrapServerAction(
         insulinOnBoardOffset: parsed.insulinOnBoardOffset,
       })
       .where(eq(userTable.id, user.id))
+
+    await db.refreshMaterializedView(attributed_carbs_base)
 
     redirect('/')
   }

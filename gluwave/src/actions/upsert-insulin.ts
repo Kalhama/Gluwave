@@ -4,7 +4,7 @@ import { validateRequest } from '@/auth'
 import { db } from '@/db'
 import { ServerActionError } from '@/lib/server-action-error'
 import { wrapServerAction } from '@/lib/wrap-server-action'
-import { insulin } from '@/schema'
+import { attributed_carbs_base, insulin } from '@/schema'
 import { upsertInsulinSchema } from '@/schemas/upsertInsulinSchema'
 import { and, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -34,6 +34,8 @@ export const upsertInsulinAction = wrapServerAction(
         userId: user.id,
       })
     }
+
+    await db.refreshMaterializedView(attributed_carbs_base)
 
     revalidatePath('/insulin/list')
   }
