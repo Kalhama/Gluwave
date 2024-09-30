@@ -57,7 +57,7 @@ const attributed_carbs = sql`
       min_rate => p.min_rate,
       total_min_rate => SUM (p.active::int * p.min_rate) OVER (),
       observed => p.observed,
-      lookback_period => MAKE_INTERVAL(mins => 20),
+      lookback_period => 20,
       ts => c.timestamp
     ) AS cumulative_attributed,
      array_prepend(c.timestamp, p.timestamps) as timestamps,
