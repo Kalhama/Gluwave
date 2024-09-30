@@ -51,7 +51,7 @@ export default async function App() {
       <BloodGlucose />
       <InsulinOnBoard />
       <CarbohydratesOnBoard />
-      {/* <ObservedCarbs /> */}
+      {/* <CarbsRate /> */}
     </div>
   )
 }

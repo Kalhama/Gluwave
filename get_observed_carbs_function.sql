@@ -26,8 +26,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- results table where we collect the active meals and their attributed carbs over time
--- todo add user_id for safety
-DROP TABLE IF EXISTS results CASCADE;
+-- DROP TABLE IF EXISTS results CASCADE;
 CREATE TEMPORARY TABLE results(
 	carb_id integer,
 	"timestamp" timestamp,
@@ -35,25 +34,22 @@ CREATE TEMPORARY TABLE results(
 	carbs integer,
 	decay integer,
 	extended_decay integer,
-	attributed_carbs double precision
-	-- table_constraints todo
+	attributed_carbs double precision,
+	UNIQUE (carb_id, "timestamp")
 );
 
 -- table where we hold currently active meals
--- todo add user_id for safety
-DROP TABLE IF EXISTS active_meals CASCADE;
+-- DROP TABLE IF EXISTS active_meals CASCADE;
 CREATE TEMPORARY TABLE active_meals(
-	carb_id integer,
+	carb_id integer PRIMARY KEY,
 	"start" timestamp,
 	carbs integer,
 	decay integer,
 	extended_decay integer,
 	attributed_carbs double precision[]
-	-- table_constraints todo
 );
 
--- TODO add more filters
-CREATE OR REPLACE FUNCTION calculate_carbs_on_board(filter_user_id TEXT)
+CREATE OR REPLACE FUNCTION calculate_carbs_on_board(filter_user_id TEXT, start_time timestamp end_time timestamp)
 RETURNS SETOF results AS $$
 DECLARE
 	total_rate FLOAT;
@@ -66,6 +62,9 @@ DECLARE
 	new_attributed_carbs FLOAT;
 	rate FLOAT;
 BEGIN
+		DELETE * FROM results;
+		DELETE * FROM active_meals;
+
     FOR observation IN 
 		WITH base as (
 			SELECT 
@@ -73,31 +72,28 @@ BEGIN
 				observed_carbs,
 				ARRAY_AGG(metrics.timestamp) OVER (ORDER BY metrics.timestamp DESC ROWS BETWEEN CURRENT ROW AND 20 FOLLOWING) as "timestamp",
 				COALESCE(ARRAY_AGG(
-			        carbs.carbs
+			        JSONB_BUILD_OBJECT(
+						'carb_id', carbs.id,
+						'start', carbs.timestamp,
+						'carbs', carbs.amount,
+						'decay', carbs.decay,
+						'extended_decay', (carbs.decay * 1.5)::int,
+						'attributed_carbs', ARRAY[CAST(0 AS DOUBLE PRECISION)]
+					)
 			    ) FILTER (WHERE carbs.user_id IS NOT NULL), ARRAY[]::jsonb[])
 				AS new_meals
 			FROM 
 			(
-				SELECT *, LEAD(timestamp) OVER (PARTITION BY user_id ORDER BY timestamp) AS next_timestamp FROM metrics
+				SELECT 
+					*, 
+					LEAD(timestamp) OVER (PARTITION BY user_id ORDER BY timestamp) AS next_timestamp 
+				FROM metrics
 			) AS metrics
-			LEFT JOIN (
-				SELECT
-				id,
-				user_id,
-				carbs.timestamp,
-				JSON_BUILD_OBJECT(
-					'carb_id', carbs.id,
-					'start', carbs.timestamp,
-					'carbs', carbs.amount,
-					'decay', carbs.decay,
-					'extended_decay', (carbs.decay * 1.5)::int,
-					'attributed_carbs', ARRAY[CAST(0 AS DOUBLE PRECISION)]
-				)::jsonb as carbs
-				FROM carbs
-			) as carbs
+			LEFT JOIN carbs
 			ON metrics.user_id = carbs.user_id
 			AND metrics.timestamp <= carbs.timestamp AND carbs.timestamp < next_timestamp
-			-- WHERE metrics.user_id = filter_user_id
+			WHERE metrics.user_id = filter_user_id
+			AND start_time <= metrics.timestamp AND metrics.timestamp <= end_time
 			GROUP BY glucose_id, observed_carbs, metrics.timestamp, metrics.user_id
 			ORDER BY metrics.timestamp ASC
 		)
@@ -171,7 +167,11 @@ $$ LANGUAGE plpgsql;
 
 SELECT 
 	timestamp, SUM(carbs - attributed_carbs) 
-	FROM calculate_carbs_on_board('kf53skkawasqfuti')
+	FROM calculate_carbs_on_board(
+		'kf53skkawasqfuti',
+		'2020-09-28 10:15:00',
+		'2026-09-28 10:15:00'
+	)
 	GROUP BY timestamp
 	ORDER BY timestamp;
 

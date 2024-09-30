@@ -127,30 +127,3 @@ LEFT JOIN "user"
 ON "user"."id" = glucose_rate.user_id
 ORDER BY timestamp
 `)
-
-// TODO add this and index to migration
-export const attributed_carbs_base = pgMaterializedView(
-  'attributed_carbs_base',
-  {}
-).as(sql`
-   SELECT metrics.glucose_id,
-    metrics.next_glucose_id,
-    metrics.user_id,
-    metrics."timestamp",
-    metrics.glucose,
-    metrics.glucose_change,
-    metrics.step,
-    metrics.total_insulin_absorbed,
-    metrics.observed_carbs AS observed,
-    carbs.id AS carbs_id,
-    carbs."timestamp" AS start,
-    carbs.amount,
-    carbs.decay,
-    LEAST(carbs."timestamp" + make_interval(mins => (carbs.decay::numeric * 1.5)::integer), metrics."timestamp" + metrics.step) - GREATEST(carbs."timestamp", metrics."timestamp") AS active_time,
-    (carbs.decay::numeric * 1.5)::integer AS extended_decay,
-    carbs.amount / carbs.decay::double precision AS rate,
-    carbs.amount / carbs.decay::double precision / 1.5::double precision AS min_rate
-   FROM metrics
-     LEFT JOIN carbs ON carbs.user_id = metrics.user_id
-  ORDER BY metrics.glucose_id, carbs.id;
-  `)
