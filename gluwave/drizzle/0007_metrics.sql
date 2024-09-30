@@ -13,44 +13,30 @@ RETURNS RECORD AS $$
 DECLARE
     now TIMESTAMP := datetimes[1];
     i INT;
+	len INT;
 BEGIN
-    FOR i IN 1 .. array_length(attributed_carbs, 1) LOOP
+		len := GREATEST(array_length(attributed_carbs, 1), array_length(datetimes, 1));
+    FOR i IN 1 .. len LOOP
         IF now - datetimes[i] > MAKE_INTERVAL(mins => lookback_len) THEN
             RETURN (datetimes[i], attributed_carbs[i]);
         END IF;
     END LOOP;
 
     -- if no matches, return last
-    RETURN (datetimes[array_length(attributed_carbs, 1)], attributed_carbs[array_length(attributed_carbs, 1)]);
+    RETURN (datetimes[len], attributed_carbs[len]);
 END;
 $$ LANGUAGE plpgsql;
 
--- results table where we collect the active meals and their attributed carbs over time
--- DROP TABLE IF EXISTS results CASCADE;
-CREATE TEMPORARY TABLE results(
-	carb_id integer,
-	"timestamp" timestamp,
-	"start" timestamp,
-	carbs integer,
-	decay integer,
-	extended_decay integer,
-	attributed_carbs double precision,
-	UNIQUE (carb_id, "timestamp")
-);
-
--- table where we hold currently active meals
--- DROP TABLE IF EXISTS active_meals CASCADE;
-CREATE TEMPORARY TABLE active_meals(
-	carb_id integer PRIMARY KEY,
-	"start" timestamp,
-	carbs integer,
-	decay integer,
-	extended_decay integer,
-	attributed_carbs double precision[]
-);
-
-CREATE OR REPLACE FUNCTION calculate_carbs_on_board(filter_user_id TEXT, start_time timestamp end_time timestamp)
-RETURNS SETOF results AS $$
+CREATE OR REPLACE FUNCTION attribute_observed_to_meals(filter_user_id TEXT, start_time timestamp, end_time timestamp)
+RETURNS TABLE(
+			carb_id integer,
+			"timestamp" timestamp,
+			"start" timestamp,
+			carbs integer,
+			decay integer,
+			extended_decay integer,
+			attributed_carbs double precision
+		) AS $$
 DECLARE
 	total_rate FLOAT;
  	observation RECORD;
@@ -62,8 +48,27 @@ DECLARE
 	new_attributed_carbs FLOAT;
 	rate FLOAT;
 BEGIN
-		DELETE * FROM results;
-		DELETE * FROM active_meals;
+		-- results table where we collect the active meals and their attributed carbs over time
+		CREATE TEMPORARY TABLE IF NOT EXISTS results(
+			carb_id integer,
+			"timestamp" timestamp,
+			"start" timestamp,
+			carbs integer,
+			decay integer,
+			extended_decay integer,
+			attributed_carbs double precision
+		);
+
+		-- table where we hold currently active meals
+		CREATE TEMPORARY TABLE IF NOT EXISTS active_meals(
+			carb_id integer PRIMARY KEY,
+			"start" timestamp,
+			carbs integer,
+			decay integer,
+			extended_decay integer,
+			attributed_carbs double precision[]
+		);
+
 
     FOR observation IN 
 		WITH base as (
@@ -167,7 +172,7 @@ $$ LANGUAGE plpgsql;
 
 SELECT 
 	timestamp, SUM(carbs - attributed_carbs) 
-	FROM calculate_carbs_on_board(
+	FROM attribute_observed_to_meals(
 		'kf53skkawasqfuti',
 		'2020-09-28 10:15:00',
 		'2026-09-28 10:15:00'
