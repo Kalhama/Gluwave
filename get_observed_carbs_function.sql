@@ -14,14 +14,14 @@ DECLARE
     now TIMESTAMP := datetimes[1];
     i INT;
 BEGIN
-    FOR i IN 1 .. array_length(datetimes, 1) LOOP
+    FOR i IN 1 .. array_length(attributed_carbs, 1) LOOP
         IF now - datetimes[i] > MAKE_INTERVAL(mins => lookback_len) THEN
             RETURN (datetimes[i], attributed_carbs[i]);
         END IF;
     END LOOP;
 
     -- if no matches, return last
-    RETURN (datetimes[array_length(datetimes, 1)], attributed_carbs[array_length(attributed_carbs, 1)]);
+    RETURN (datetimes[array_length(attributed_carbs, 1)], attributed_carbs[array_length(attributed_carbs, 1)]);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -59,14 +59,19 @@ DECLARE
 	total_rate FLOAT;
  	observation RECORD;
 	meal RECORD;
-observed_attributed_carbs FLOAT;
+	observed_attributed_carbs FLOAT;
+	comparison_timestamp TIMESTAMP;
+	comparison_attributed FLOAT;
+	min_attributed_carbs FLOAT;
+	new_attributed_carbs FLOAT;
+	rate FLOAT;
 BEGIN
     FOR observation IN 
 		WITH base as (
 			SELECT 
 				glucose_id,
 				observed_carbs,
-				metrics.timestamp,
+				ARRAY_AGG(metrics.timestamp) OVER (ORDER BY metrics.timestamp DESC ROWS BETWEEN CURRENT ROW AND 20 FOLLOWING) as "timestamp",
 				COALESCE(ARRAY_AGG(
 			        carbs.carbs
 			    ) FILTER (WHERE carbs.user_id IS NOT NULL), ARRAY[]::jsonb[])
@@ -92,15 +97,16 @@ BEGIN
 			) as carbs
 			ON metrics.user_id = carbs.user_id
 			AND metrics.timestamp <= carbs.timestamp AND carbs.timestamp < next_timestamp
-			WHERE metrics.user_id = filter_user_id
+			-- WHERE metrics.user_id = filter_user_id
 			GROUP BY glucose_id, observed_carbs, metrics.timestamp, metrics.user_id
+			ORDER BY metrics.timestamp ASC
 		)
 		SELECT * FROM base
 	 AS observation LOOP
 		-- RAISE NOTICE 'new_meals %.', observation.new_meals;
 		-- filter active meals on current timestamp
 		DELETE FROM active_meals WHERE NOT is_active(
-			observation.timestamp, 
+			observation.timestamp[1], 
 			active_meals.start + MAKE_INTERVAL(mins => active_meals.decay), 
 			active_meals.start + MAKE_INTERVAL(mins => active_meals.extended_decay), 
 			active_meals.attributed_carbs[1], 
@@ -112,17 +118,26 @@ BEGIN
 
 		-- attribute carbs to each meal
 		FOR meal IN SELECT * FROM active_meals AS meal LOOP
-            observed_attributed_carbs := 1.0 * meal.carbs / meal.decay / total_rate * observation.observed_carbs + meal.attributed_carbs[1];
+			rate := 1.0 * meal.carbs / meal.decay;
 
-			-- TODO
-            -- Get comparison data for attributed carbs over the last 30 minutes
-            -- comparison := find_comparison_step(observation->'timestamps', meal->'attributed_carbs', 30);
-            -- min_attributed_carbs := (comparison.attributed + minutes_between(comparison.dt, (observation->>'timestamp')::TIMESTAMP)) * (meal->>'rate')::FLOAT / 1.5;
-            
-			-- Update active meals with new calculations
+			observed_attributed_carbs := rate / total_rate * observation.observed_carbs + meal.attributed_carbs[1];
+
+
+			SELECT * INTO comparison_timestamp, comparison_attributed FROM find_comparison_step(observation.timestamp, meal.attributed_carbs, 15) AS result(datetimes TIMESTAMP, attributed_carbs FLOAT);
+			min_attributed_carbs := comparison_attributed + minutes_between(observation.timestamp[1], comparison_timestamp) * rate / 1.5;
+
+			new_attributed_carbs := LEAST(
+				GREATEST(
+					observed_attributed_carbs, 
+					min_attributed_carbs
+				), 
+				meal.carbs
+			);
+			
 			UPDATE active_meals
-			SET attributed_carbs = (ARRAY_PREPEND(observed_attributed_carbs, attributed_carbs))[1:20]
-			WHERE carb_id = meal.carb_id;        END LOOP;
+			SET attributed_carbs = (ARRAY_PREPEND(new_attributed_carbs, attributed_carbs))[1:20]
+			WHERE carb_id = meal.carb_id;        
+		END LOOP;
 
 		-- append new meals from this observation step to be analyzed in next round
 		INSERT INTO active_meals (carb_id, "start", carbs, decay, extended_decay, attributed_carbs)
@@ -140,7 +155,7 @@ BEGIN
 		INSERT INTO results (carb_id, "timestamp", "start", carbs, decay, extended_decay, attributed_carbs)
 		SELECT 
 			carb_id,
-			observation.timestamp as timestamp,
+			observation.timestamp[1] as timestamp,
 			start,
 			carbs,
 			decay,
@@ -154,7 +169,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT * FROM calculate_carbs_on_board('kf53skkawasqfuti');
+SELECT 
+	timestamp, SUM(carbs - attributed_carbs) 
+	FROM calculate_carbs_on_board('kf53skkawasqfuti')
+	GROUP BY timestamp
+	ORDER BY timestamp;
 
 
 
