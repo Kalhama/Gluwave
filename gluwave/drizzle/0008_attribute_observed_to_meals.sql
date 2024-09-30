@@ -48,26 +48,30 @@ DECLARE
 	new_attributed_carbs FLOAT;
 	rate FLOAT;
 BEGIN
-		-- results table where we collect the active meals and their attributed carbs over time
-		CREATE TEMPORARY TABLE IF NOT EXISTS results(
-			carb_id integer,
-			"timestamp" timestamp,
-			"start" timestamp,
-			carbs integer,
-			decay integer,
-			extended_decay integer,
-			attributed_carbs double precision
-		);
+	-- results table where we collect the active meals and their attributed carbs over time
+	CREATE TEMPORARY TABLE IF NOT EXISTS results(
+		carb_id integer,
+		"timestamp" timestamp,
+		"start" timestamp,
+		carbs integer,
+		decay integer,
+		extended_decay integer,
+		attributed_carbs double precision
+	);
+	
+	-- table where we hold currently active meals
+	CREATE TEMPORARY TABLE IF NOT EXISTS active_meals(
+		carb_id integer PRIMARY KEY,
+		"start" timestamp,
+		carbs integer,
+		decay integer,
+		extended_decay integer,
+		attributed_carbs double precision[]
+	);
 
-		-- table where we hold currently active meals
-		CREATE TEMPORARY TABLE IF NOT EXISTS active_meals(
-			carb_id integer PRIMARY KEY,
-			"start" timestamp,
-			carbs integer,
-			decay integer,
-			extended_decay integer,
-			attributed_carbs double precision[]
-		);
+
+	DELETE FROM active_meals;
+	DELETE FROM results;
 
 
     FOR observation IN 
@@ -91,7 +95,7 @@ BEGIN
 			(
 				SELECT 
 					*, 
-					LEAD(timestamp) OVER (PARTITION BY user_id ORDER BY timestamp) AS next_timestamp 
+					LEAD(metrics.timestamp) OVER (PARTITION BY user_id ORDER BY metrics.timestamp) AS next_timestamp 
 				FROM metrics
 			) AS metrics
 			LEFT JOIN carbs
@@ -115,7 +119,7 @@ BEGIN
 		);
 
 		-- calculate total rate
-		total_rate := (SELECT SUM(1.0 * carbs / decay) FROM active_meals);
+		total_rate := (SELECT SUM(1.0 * active_meals.carbs / active_meals.decay) FROM active_meals);
 
 		-- attribute carbs to each meal
 		FOR meal IN SELECT * FROM active_meals AS meal LOOP
@@ -136,8 +140,8 @@ BEGIN
 			);
 			
 			UPDATE active_meals
-			SET attributed_carbs = (ARRAY_PREPEND(new_attributed_carbs, attributed_carbs))[1:20]
-			WHERE carb_id = meal.carb_id;        
+			SET attributed_carbs = (ARRAY_PREPEND(new_attributed_carbs, active_meals.attributed_carbs))[1:20]
+			WHERE active_meals.carb_id = meal.carb_id;        
 		END LOOP;
 
 		-- append new meals from this observation step to be analyzed in next round
@@ -155,13 +159,13 @@ BEGIN
 		-- push current active_meals to result set
 		INSERT INTO results (carb_id, "timestamp", "start", carbs, decay, extended_decay, attributed_carbs)
 		SELECT 
-			carb_id,
+			active_meals.carb_id,
 			observation.timestamp[1] as timestamp,
-			start,
-			carbs,
-			decay,
-			extended_decay,
-			attributed_carbs[1]
+			active_meals."start",
+			active_meals.carbs,
+			active_meals.decay,
+			active_meals.extended_decay,
+			active_meals.attributed_carbs[1] as attributed_carbs
 		from active_meals;
 	END LOOP;
 
@@ -169,16 +173,4 @@ BEGIN
 	RETURN QUERY SELECT * FROM results;
 END;
 $$ LANGUAGE plpgsql;
-
-SELECT 
-	timestamp, SUM(carbs - attributed_carbs) 
-	FROM attribute_observed_to_meals(
-		'kf53skkawasqfuti',
-		'2020-09-28 10:15:00',
-		'2026-09-28 10:15:00'
-	)
-	GROUP BY timestamp
-	ORDER BY timestamp;
-
-
 

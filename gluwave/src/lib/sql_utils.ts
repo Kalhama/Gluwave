@@ -1,10 +1,9 @@
 import { db } from '@/db'
-import { carbs, glucose, insulin, userTable } from '@/schema'
+import { carbs, glucose, insulin } from '@/schema'
 import { startOfMinute, subHours } from 'date-fns'
 import {
   ColumnsSelection,
   and,
-  count,
   desc,
   eq,
   gt,
@@ -483,6 +482,29 @@ export class Statistics {
     )
 
     return tf
+  }
+
+  public static get_carbs_on_board(userId: string, start: Date, end: Date) {
+    return db
+      .select({
+        timestamp: sql`glucose.timestamp`
+          .mapWith(glucose.timestamp)
+          .as('timesetamp'),
+        cob: sql`COALESCE(SUM(t.carbs - t.attributed_carbs), 0)`
+          .mapWith(carbs.amount)
+          .as('cob'),
+      })
+      .from(glucose)
+      .leftJoin(
+        sql`attribute_observed_to_meals(
+        ${userId},
+        ${start.toISOString()},
+        ${end.toISOString()}
+      ) t`,
+        and(eq(glucose.timestamp, sql`t.timestamp`), eq(glucose.userId, userId))
+      )
+      .groupBy(glucose.timestamp)
+      .orderBy(glucose.timestamp)
   }
 
   /**
