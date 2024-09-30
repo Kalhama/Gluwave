@@ -484,6 +484,67 @@ export class Statistics {
     return tf
   }
 
+  public static get_carbs_on_board_prediction(
+    userId: string,
+    start: Date,
+    end: Date
+  ) {
+    return db
+      .select({
+        timestamp: sql`timestamp`.mapWith(glucose.timestamp).as('timestamp'),
+        cob: sql`SUM(carbs)`.mapWith(carbs.amount).as('cob'),
+      })
+      .from(
+        sql`
+(WITH recursive genesis AS (
+	SELECT 
+		carb_id,
+		timestamp,
+		timestamp AS start,
+		GREATEST(
+			1.0 * carbs / decay / 1.5, -- min_rate,	
+			attributed_carbs / minutes_between(timestamp, start) -- observed_rate
+		) as predicted_rate,
+		carbs - attributed_carbs as carbs
+		FROM attribute_observed_to_meals(
+			${userId},
+			${start.toISOString()},
+			${end.toISOString()}
+		) 
+	WHERE timestamp = (
+		SELECT MAX(timestamp) FROM attribute_observed_to_meals(
+			${userId},
+			${start.toISOString()},
+			${end.toISOString()}
+		) 
+	)
+), prediction AS (
+	SELECT  
+		carb_id,
+		timestamp,
+		start,
+		carbs,
+		predicted_rate
+	FROM genesis
+	
+	UNION ALL
+
+	SELECT
+		carb_id,
+		timestamp + interval '1 minutes' as now,
+		start,
+		GREATEST(carbs - predicted_rate, 0) as carbs,
+		predicted_rate
+	FROM prediction
+	WHERE timestamp < start + MAKE_INTERVAL(hours => 6)
+)
+  SELECT * FROM prediction)
+        `
+      )
+      .groupBy(sql`timestamp`)
+      .orderBy(sql`timestamp`)
+  }
+
   public static get_carbs_on_board(userId: string, start: Date, end: Date) {
     return db
       .select({
