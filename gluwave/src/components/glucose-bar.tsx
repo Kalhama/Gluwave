@@ -9,7 +9,7 @@ import { db } from '@/db'
 import { cn } from '@/lib/utils'
 import { glucose } from '@/schema'
 import { differenceInMinutes, formatDistance, subMinutes } from 'date-fns'
-import { and, desc, eq, gte, lte, ne } from 'drizzle-orm'
+import { and, desc, eq, gte, lte, ne, sql } from 'drizzle-orm'
 import { MoveRight } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -37,7 +37,9 @@ const glucoseTrend = async (last: {
         ne(glucose.id, last.id)
       )
     )
-    .orderBy(desc(glucose.timestamp))
+    .orderBy(
+      sql`ABS(EXTRACT (EPOCH FROM ${glucose.timestamp} - ${subMinutes(new Date(), 30).toISOString()})) ASC`
+    )
     .limit(1)
 
   if (!first) return null

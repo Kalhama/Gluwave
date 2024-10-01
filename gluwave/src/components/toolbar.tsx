@@ -18,21 +18,21 @@ export const Toolbar = ({ authenticated }: Props) => {
 
   return (
     <div className="fixed bottom-0 bg-white w-full flex p-4 gap-2 border-t-2 justify-center rounded-t-xl shadow-[0_0_25px] shadow-slate-300">
-      <BloodGlucoseDialog>
-        <Button variant="ghost">
-          <Droplet />
-        </Button>
-      </BloodGlucoseDialog>
-      <InsulinDialog>
-        <Button variant="ghost">
-          <Syringe />
-        </Button>
-      </InsulinDialog>
       <CarbDialog>
         <Button variant="ghost">
           <UtensilsCrossed />
         </Button>
       </CarbDialog>
+      <InsulinDialog>
+        <Button variant="ghost">
+          <Syringe />
+        </Button>
+      </InsulinDialog>
+      <BloodGlucoseDialog>
+        <Button variant="ghost">
+          <Droplet />
+        </Button>
+      </BloodGlucoseDialog>
     </div>
   )
 }

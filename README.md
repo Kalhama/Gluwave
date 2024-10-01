@@ -1,8 +1,7 @@
 <img alt="Gluwve" src="gluwave/public/full_transparent.png">
 
 ## Features 🚀
-
-- [x] Smart glucose [prediction algorithm](#algorithm)
+- [x] Smart glucose [prediction algorithm](https://github.com/Kalhama/Gluwave?tab=readme-ov-file#algorithm-)
 - [x] Integrate glucose from Freestyle Libre 2 / 3, or manually input fingerprick results
 - [x] Calculate insulin on board
 - [x] Log meals

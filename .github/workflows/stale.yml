@@ -1,0 +1,16 @@
+name: Mark stale issues
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # Runs every day at midnight
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v8
+        with:
+          days-before-stale: 60  # Number of days of inactivity before marking as stale
+          stale-issue-message: "This issue has been marked as stale due to inactivity. Don't worry, we won't close stale issues."
+          days-before-close: -1  # Never closes the issue
+          stale-label: "stale"  # Label to mark issues as stale

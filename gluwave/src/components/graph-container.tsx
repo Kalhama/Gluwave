@@ -14,6 +14,7 @@ import {
   VictoryZoomContainer,
 } from 'victory'
 
+import { Skeleton } from './ui/skeleton'
 import { victoryTheme } from './victory-theme'
 
 interface Props {
@@ -123,3 +124,23 @@ export const GraphContent = ({
 }
 
 export const padding = { top: 10, bottom: 25, left: 27, right: 15 }
+
+interface GraphSkeletonProps {
+  height?: string
+}
+
+export const GraphSkeleton = ({ height }: GraphSkeletonProps) => {
+  return (
+    <GraphContainer>
+      <GraphTitle>
+        <div className="flex flex-col gap-2">
+          <Skeleton className="w-40 h-4" />
+          <Skeleton className="w-20 h-4" />
+        </div>
+      </GraphTitle>
+      <div className={cn('p-4')}>
+        <Skeleton className={cn('w-full h-[250px] rounded-xl', height)} />
+      </div>
+    </GraphContainer>
+  )
+}
