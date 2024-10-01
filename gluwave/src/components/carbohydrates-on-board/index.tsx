@@ -1,5 +1,5 @@
 import { validateRequest } from '@/auth'
-import { Statistics } from '@/lib/sql_utils'
+import { carbs_on_board, carbs_on_board_prediction } from '@/lib/cob'
 import { addHours, differenceInMinutes, subHours } from 'date-fns'
 import { redirect } from 'next/navigation'
 
@@ -16,12 +16,9 @@ export const CarbohydratesOnBoard = async () => {
   const start = subHours(now, 24)
   const end = addHours(now, 6)
 
-  const observed = await Statistics.get_carbs_on_board(user.id, start, end)
-  const predicted = await Statistics.get_carbs_on_board_prediction(
-    user.id,
-    start,
-    end
-  )
+  const observed = await carbs_on_board(user.id, start, end)
+
+  const predicted = await carbs_on_board_prediction(user.id, start, end)
 
   const union = [...observed, ...predicted]
 
