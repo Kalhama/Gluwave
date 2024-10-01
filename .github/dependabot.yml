@@ -11,7 +11,7 @@ updates:
     commit-message:
       prefix: "chore(gluwave)"
     groups:
-      group-updtes:
+      group-updates:
         patterns:
           - "*"
         update-types:
@@ -27,7 +27,7 @@ updates:
     commit-message:
       prefix: "chore(librelinkup-to-gluwave)"
     groups:
-      group-updtes:
+      group-updates:
         patterns:
           - "*"
         update-types:
