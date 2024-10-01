@@ -12,5 +12,5 @@ jobs:
         with:
           days-before-stale: 60  # Number of days of inactivity before marking as stale
           stale-issue-message: "This issue has been marked as stale due to inactivity. Don't worry, we won't close stale issues."
-          days-before-close: false  # Never closes the issue
+          days-before-close: -1  # Never closes the issue
           stale-label: "stale"  # Label to mark issues as stale
