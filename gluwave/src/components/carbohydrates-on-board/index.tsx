@@ -1,6 +1,6 @@
 import { validateRequest } from '@/auth'
 import { carbs_on_board, carbs_on_board_prediction } from '@/lib/cob'
-import { addHours, differenceInMinutes, subHours } from 'date-fns'
+import { addHours, differenceInMinutes, subHours, subMinutes } from 'date-fns'
 import { redirect } from 'next/navigation'
 
 import { GraphContainer, GraphTitle } from '../graph-container'
@@ -14,16 +14,20 @@ export const CarbohydratesOnBoard = async () => {
 
   const now = new Date()
   const start = subHours(now, 24)
-  const end = addHours(now, 6)
+  const end = addHours(now, 10)
 
   const observed = await carbs_on_board(user.id, start, end)
 
   const predicted = await carbs_on_board_prediction(user.id, start, end)
 
-  const union = [...observed, ...predicted]
+  const union = [
+    { timestamp: subMinutes(observed[0]?.timestamp ?? now, 1), cob: 0 }, // start from 0 for nicer plot
+    ...observed,
+    ...predicted,
+  ]
 
   const current =
-    union.find((d) => Math.abs(differenceInMinutes(d.timestamp, now)) < 5)
+    union.find((d) => Math.abs(differenceInMinutes(d.timestamp, now)) < 3)
       ?.cob ?? 0
 
   return (

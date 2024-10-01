@@ -1,61 +1,38 @@
 import { db } from '@/db'
 import { carbs, glucose } from '@/schema'
-import { addHours, addMinutes, differenceInMinutes } from 'date-fns'
+import { addMinutes, differenceInMinutes } from 'date-fns'
 import { and, eq, gte, sql } from 'drizzle-orm'
 
-// Function to get safe start time
+// Function to get safe start time for cob prediction
 async function getSafeStartTime(
   inputTime: Date,
   userId: string
 ): Promise<Date> {
   const data = await db.select({
-    timestamp: sql`timestamp`.mapWith(carbs.timestamp),
+    timestamp: sql`	timestamp
+`.mapWith(glucose.timestamp),
   }).from(sql`(
-    WITH carbs_timeline AS (
-        SELECT 
-            timestamp,
-            -1 AS event_type
-        FROM carbs 
-        WHERE timestamp < ${inputTime.toISOString()}
-        AND user_id = ${userId}
-        
-        UNION ALL
-        
-        SELECT 
-            timestamp + MAKE_INTERVAL(mins => (decay * 1.5)::int) AS timestamp,
-            1 AS event_type
-        FROM carbs 
-        WHERE timestamp < ${inputTime.toISOString()}
-        AND user_id = ${userId}
-    ),
-    cumulative_carbs AS (
-        SELECT 
-            timestamp,
-            SUM(event_type) OVER (ORDER BY timestamp DESC) AS concurrent
-        FROM carbs_timeline
-    ),
-    last_no_carbs AS (
-        SELECT timestamp 
-        FROM cumulative_carbs
-        WHERE concurrent = 0
-        ORDER BY timestamp DESC
-        LIMIT 1
-    )	
-    SELECT timestamp
-    FROM metrics 
-    WHERE timestamp <= (SELECT timestamp FROM last_no_carbs)
-    AND user_id = ${userId}
-    ORDER BY timestamp DESC
-    LIMIT 1
+    SELECT 
+	glucose.timestamp
+FROM (
+	SELECT 
+		timestamp,
+		LEAD(timestamp) OVER (PARTITION BY user_id ORDER BY timestamp) as next_timestamp,
+		user_id
+	FROM glucose
+) as glucose LEFT JOIN carbs
+ON carbs.timestamp <= next_timestamp 
+AND carbs.timestamp + MAKE_INTERVAL(mins => (carbs.decay * 1.5)::integer) >= glucose.timestamp 
+AND carbs.user_id = glucose.user_id
+WHERE glucose.user_id = ${userId}
+AND glucose.timestamp <= ${inputTime.toISOString()}
+GROUP BY glucose.timestamp
+HAVING COUNT(carbs.id) = 0
+ORDER BY glucose.timestamp DESC
+LIMIT 1
     )`)
 
-  // TODO if there are no carbs this returns null
-
-  if (!data[0].timestamp) {
-    throw new Error('Fatal error could not find safe timestamp for predictions')
-  }
-
-  return data[0].timestamp
+  return data[0]?.timestamp ?? inputTime
 }
 
 // Function to check if a meal is active
@@ -69,7 +46,7 @@ function isActive(
   return ts < endTime || (ts < extendedEndTime && attributedCarbs < carbs)
 }
 
-// Function to find comparison step
+// Function to step in time for meal to compare it to
 function findComparisonStep(
   datetimes: Date[],
   attributedCarbs: number[],
@@ -100,7 +77,7 @@ type Meal = {
   attributed_carbs: number[]
 }
 
-// Main function to attribute observed to meals
+// attribute observed carbs to meals
 export async function attributeObservedToMeals(
   filterUserId: string,
   startTime: Date,
@@ -117,17 +94,20 @@ export async function attributeObservedToMeals(
     attributed_carbs: number
   }[] = []
 
+  const sliceLen = lookbackLen
+
   let activeMeals: Meal[] = []
 
   const safeStartTime = await getSafeStartTime(startTime, filterUserId)
 
+  // for every reading in metrics join new_meal entries
   const observations = await db.select({
     glucose_id: sql`glucose_id`.mapWith(glucose.id).as('glucose_id'),
     observed_carbs: sql`observed_carbs`.mapWith(carbs.amount),
     timestamp:
-      sql`ARRAY_AGG(metrics.timestamp) OVER (ORDER BY metrics.timestamp DESC ROWS BETWEEN CURRENT ROW AND 20 FOLLOWING)`.as<
+      sql`ARRAY_AGG(metrics.timestamp) OVER (ORDER BY metrics.timestamp DESC ROWS BETWEEN CURRENT ROW AND ${sliceLen} FOLLOWING)`.as<
         Date[]
-      >('timestamp'), // TODO 20 to param?
+      >('timestamp'),
     new_meals: sql`COALESCE(ARRAY_AGG(
             JSONB_BUILD_OBJECT(
 						'carb_id', carbs.id,
@@ -163,7 +143,7 @@ export async function attributeObservedToMeals(
     `)
 
   for (const observation of observations) {
-    // Filter active meals on current timestamp
+    // Filter active meals on current timestamp, no need to attribute carbs into them
     activeMeals = activeMeals.filter((meal) =>
       isActive(
         observation.timestamp[0],
@@ -174,13 +154,13 @@ export async function attributeObservedToMeals(
       )
     )
 
-    // Calculate total rate
+    // Calculate total rate of active meals
     const totalRate = activeMeals.reduce(
       (sum, meal) => sum + meal.carbs / meal.decay,
       0
     )
 
-    // Attribute carbs to each meal
+    // Attribute observed carbs to each meal
     for (const meal of activeMeals) {
       // meal is pointer, which we want
       const rate = meal.carbs / meal.decay
@@ -211,7 +191,7 @@ export async function attributeObservedToMeals(
       meal.attributed_carbs = [
         newAttributedCarbs,
         ...meal.attributed_carbs,
-      ].slice(0, 20) // TODO slice amount to param?
+      ].slice(0, sliceLen)
     }
 
     // Append new meals from this observation step
@@ -231,6 +211,7 @@ export async function attributeObservedToMeals(
     )
   }
 
+  // return
   return results
 }
 
@@ -239,6 +220,7 @@ export const carbs_on_board = async (
   startTime: Date,
   endTime: Date
 ) => {
+  // get meals with attributed carbs in them
   const attributed = await attributeObservedToMeals(
     filterUserId,
     startTime,
@@ -246,6 +228,7 @@ export const carbs_on_board = async (
     20
   )
 
+  // calculate single carbs on board value over time
   const cob = Object.values(
     attributed.reduce(
       (acc, cur) => {
@@ -273,6 +256,7 @@ export const carbs_on_board_prediction = async (
   startTime: Date,
   endTime: Date
 ) => {
+  // get meals with attributed carbs in them
   const attributed = await attributeObservedToMeals(
     filterUserId,
     startTime,
@@ -280,9 +264,10 @@ export const carbs_on_board_prediction = async (
     20
   )
 
+  // get largest date
   const max_timestsamp = new Date(
     Math.max(...attributed.map((a) => a.timestamp.getTime()))
-  ) // get largest date
+  )
 
   // get only currently active meals
   const active_meals = attributed
@@ -296,6 +281,7 @@ export const carbs_on_board_prediction = async (
       ),
     }))
 
+  // get scheduled meals
   const upcoming_meals = await db
     .select({
       timestamp: carbs.timestamp,
@@ -307,8 +293,11 @@ export const carbs_on_board_prediction = async (
       and(eq(carbs.userId, filterUserId), gte(carbs.timestamp, max_timestsamp))
     )
 
+  // combine active and scheduled meals
   const meals_for_prediction = [...active_meals, ...upcoming_meals]
 
+  // calculate predictions
+  // Do this in SQL not because it's smart here but because it's smart for glucose prediction
   const predictions = await db
     .select({
       timestamp: sql`timestamp`.mapWith(carbs.timestamp).as('timestamp'),
@@ -324,7 +313,7 @@ export const carbs_on_board_prediction = async (
       meals.timestamp as start,
       carbs,
       rate
-    FROM generate_series(${max_timestsamp.toISOString()}::timestamp, ${addHours(max_timestsamp, 6).toISOString()}::timestamp, interval '1 minutes') as timeframe(timestamp)
+    FROM generate_series(${max_timestsamp.toISOString()}::timestamp, ${endTime.toISOString()}::timestamp, interval '1 minutes') as timeframe(timestamp)
     LEFT JOIN (
         VALUES 
 `,
