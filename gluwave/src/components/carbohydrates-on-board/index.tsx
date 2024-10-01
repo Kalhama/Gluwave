@@ -12,10 +12,9 @@ export const CarbohydratesOnBoard = async () => {
     redirect('/login')
   }
 
-  // TODO pick start and end carefully
   const now = new Date()
   const start = subHours(now, 24)
-  const end = addHours(now, 24)
+  const end = addHours(now, 6)
 
   const observed = await Statistics.get_carbs_on_board(user.id, start, end)
   const predicted = await Statistics.get_carbs_on_board_prediction(
@@ -24,16 +23,11 @@ export const CarbohydratesOnBoard = async () => {
     end
   )
 
-  const data = [...observed, ...predicted]
+  const union = [...observed, ...predicted]
 
   const current =
-    data.find((d) => Math.abs(differenceInMinutes(d.timestamp, now)) < 5)
+    union.find((d) => Math.abs(differenceInMinutes(d.timestamp, now)) < 5)
       ?.cob ?? 0
-
-  // TODO adjust domain
-  // TODO interpolate step something
-
-  // TODO stroke prediction with dash
 
   return (
     <GraphContainer>
@@ -52,10 +46,10 @@ export const CarbohydratesOnBoard = async () => {
       <CarbohydratesOnBoardGraph
         domain={{
           x: [start, end],
-          y: [0, Math.max(...data.map((d) => d.cob + 10))],
+          y: [0, Math.max(...union.map((d) => d.cob + 10))],
         }}
         now={now}
-        data={data.map((d) => {
+        data={union.map((d) => {
           return {
             x: d.timestamp,
             y: d.cob,

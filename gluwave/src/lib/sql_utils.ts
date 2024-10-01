@@ -492,53 +492,63 @@ export class Statistics {
     return db
       .select({
         timestamp: sql`timestamp`.mapWith(glucose.timestamp).as('timestamp'),
-        cob: sql`SUM(carbs)`.mapWith(carbs.amount).as('cob'),
+        cob: sql`	SUM(GREATEST(0, carbs - minutes_between(timestamp, start) * rate))`
+          .mapWith(carbs.amount)
+          .as('cob'),
       })
       .from(
         sql`
-(WITH recursive genesis AS (
-	SELECT 
-		carb_id,
-		timestamp,
-		timestamp AS start,
-		GREATEST(
-			1.0 * carbs / decay / 1.5, -- min_rate,	
-			attributed_carbs / minutes_between(timestamp, start) -- observed_rate
-		) as predicted_rate,
-		carbs - attributed_carbs as carbs
-		FROM attribute_observed_to_meals(
+        (
+	WITH start_time AS (
+		SELECT MAX(timestamp) as start_time FROM
+			attribute_observed_to_meals(
+				${userId},
+				${start.toISOString()},
+				${end.toISOString()}
+			)
+	), active_meals AS (
+		SELECT 
+			timestamp, 
+			carbs - attributed_carbs as carbs,
+			GREATEST(
+				1.0 * carbs / extended_decay,
+				attributed_carbs / minutes_between(timestamp, start)
+			) as rate
+		FROM
+		attribute_observed_to_meals(
 			${userId},
 			${start.toISOString()},
 			${end.toISOString()}
-		) 
-	WHERE timestamp = (
-		SELECT MAX(timestamp) FROM attribute_observed_to_meals(
-			${userId},
-			${start.toISOString()},
-			${end.toISOString()}
-		) 
+		)
+		WHERE timestamp = (SELECT * FROM start_time)
+	), scheduled_meals AS (
+		SELECT 
+			timestamp,
+			amount::double precision as carbs,
+			1.0 * amount / decay as rate
+		FROM carbs 
+		WHERE user_id = ${userId}
+		AND timestamp > (SELECT * FROM start_time)
+	), meals AS (
+		SELECT * FROM active_meals
+		UNION ALL
+		SELECT * FROM scheduled_meals
+	), timeframe AS (
+		SELECT timestamp::timestamp as timestamp FROM generate_series(
+			(SELECT * FROM start_time),
+			${end.toISOString()},
+			interval '1 minutes'
+		) AS timestamp
 	)
-), prediction AS (
-	SELECT  
-		carb_id,
-		timestamp,
-		start,
+	SELECT 
+		timeframe.timestamp,
+		meals.timestamp as start,
 		carbs,
-		predicted_rate
-	FROM genesis
-	
-	UNION ALL
-
-	SELECT
-		carb_id,
-		timestamp + interval '1 minutes' as now,
-		start,
-		GREATEST(carbs - predicted_rate, 0) as carbs,
-		predicted_rate
-	FROM prediction
-	WHERE timestamp < start + MAKE_INTERVAL(hours => 6)
+		rate
+	FROM timeframe
+	LEFT JOIN meals
+	ON timeframe.timestamp >= meals.timestamp
 )
-  SELECT * FROM prediction)
         `
       )
       .groupBy(sql`timestamp`)
