@@ -1,6 +1,7 @@
 <img alt="Gluwve" src="gluwave/public/full_transparent.png">
 
 ## Features 🚀
+
 - [x] Smart glucose [prediction algorithm](https://github.com/Kalhama/Gluwave?tab=readme-ov-file#algorithm-)
 - [x] Integrate glucose from Freestyle Libre 2 / 3, or manually input fingerprick results
 - [x] Calculate insulin on board
@@ -136,7 +137,6 @@ POSTGRES_DATA_DIR=./db
 - Formatter: Prettier
 - Misc:
   - Axios
-  - [react-datepicker](https://reactdatepicker.com/)
   - [@tanstack/react-table](https://tanstack.com/table/latest)
   - and other at [package.json](./nextjs/package.json)
 - Authorization: [lucia-auth](https://lucia-auth.com/)
