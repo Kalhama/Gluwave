@@ -17,7 +17,7 @@ import React from 'react'
 
 import { MenuBar } from './menu-bar'
 
-const glucoseTrend = async (last: {
+const glucoseTrend = async (last?: {
   value: number
   id: number
   timestamp: Date
@@ -60,20 +60,22 @@ export const GlucoseBar = async () => {
     redirect('/login')
   }
 
-  const [last] = await db
+  const res = await db
     .select()
     .from(glucose)
     .where(and(eq(glucose.userId, user.id)))
     .orderBy(desc(glucose.timestamp))
     .limit(1)
 
-  if (!last) return null
+  const last = res.find((e) => true) // return first, gain type
 
   const trend = await glucoseTrend(last)
 
-  const minutesDelta = differenceInMinutes(new Date(), last.timestamp)
-  const stale = minutesDelta > 30
-  const veryStale = minutesDelta > 60
+  const minutesDelta = last
+    ? differenceInMinutes(new Date(), last.timestamp)
+    : 99999
+  const stale = minutesDelta > 30 || !last
+  const veryStale = minutesDelta > 60 || !last
   const status = (() => {
     if (stale) return 'bg-slate-300 shadow-slate-300'
     else if (last.value < 3.8) return 'bg-red-600 shadow-red-600'
@@ -121,9 +123,11 @@ export const GlucoseBar = async () => {
           <TooltipContent>
             <p>
               Latest reading{' '}
-              {formatDistance(last.timestamp, new Date(), {
-                includeSeconds: false,
-              })}{' '}
+              {last
+                ? formatDistance(last.timestamp, new Date(), {
+                    includeSeconds: false,
+                  })
+                : 'NA mins'}{' '}
               ago
             </p>
           </TooltipContent>
