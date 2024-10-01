@@ -74,10 +74,10 @@ The algorithm predicts future blood glucose levels based on three factors:
 
 2. **Remaining Carbs**: This represents the amount of carbohydrates from a meal that has not yet been absorbed.
 
-   - It is calculated as the total carbs consumed minus the amount already absorbed.
-   - For remaining carbs, the absorption rate is assumed to continue at the original speed reported for the whole meal.
-     - $rate = carbs / decay$
-   - If there are multiple meals, the algorithm tracks and calculates the remaining carbs for each one individually.
+   - It is calculated by taking the total carbs, and reducing the amount already absorbed. However, the amount already observed is always increased at minimum absorption speed, to ensure that all meals fade out in appropiate time.
+   - For remaining carbs, the absorption rate is assumed to continue at the recently observed pace, or at the minimum rate, whichever is higher.
+     - $rate_{min} = \frac{carbs_{reported}}{decay}\frac{2}{3}$
+   - If there are multiple meals, the algorithm tracks and calculates the remaining carbs for each one individually based on their reported absorption rate.
 
 3. **Remaining Insulin**: This indicates the amount of active insulin in the body and its anticipated reduction over time.
    - Insulin activity diminishes gradually, following a known decay profile based on the type and doses administered.
