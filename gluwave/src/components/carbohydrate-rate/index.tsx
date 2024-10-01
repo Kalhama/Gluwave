@@ -1,11 +1,42 @@
 import { validateRequest } from '@/auth'
-import { Statistics } from '@/lib/sql_utils'
+import { db } from '@/db'
+import { Statistics, Timeframe } from '@/lib/sql_utils'
+import { carbs } from '@/schema'
 import { addHours, addMinutes, setHours, startOfDay, subHours } from 'date-fns'
+import { and, eq, gte, lte, sql } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 import { Tuple } from 'victory'
 
 import { GraphContainer, GraphTitle } from '../graph-container'
 import { CarbsRateGraph } from './carbohydrate-rate-graph'
+
+/**
+ * @returns reported carb rate over time
+ */
+const getReportedCarbRate = (timeframe: Timeframe, userId: string) => {
+  return db
+    .with(timeframe)
+    .select({
+      timestamp: timeframe.timestamp,
+      rate: sql`COALESCE(SUM(${carbs.amount} / ${carbs.decay}), 0)`
+        .mapWith(carbs.amount)
+        .as('rate'),
+    })
+    .from(timeframe)
+    .leftJoin(
+      carbs,
+      and(
+        eq(carbs.userId, userId),
+        gte(
+          sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
+          timeframe.timestamp
+        ),
+        lte(carbs.timestamp, timeframe.timestamp)
+      )
+    )
+    .groupBy(timeframe.timestamp)
+    .orderBy(timeframe.timestamp)
+}
 
 export default async function CarbsRate() {
   const { user } = await validateRequest()
@@ -17,19 +48,15 @@ export default async function CarbsRate() {
   const start = setHours(startOfDay(subHours(now, 4)), 4) // previous 4AM
   const end = addHours(now, 12)
 
-  const tf = Statistics.approximate_timeframe(user.id, start, end)
+  const timeframe = Statistics.approximate_timeframe(user.id, start, end)
 
   const observed = await Statistics.execute(
     Statistics.observed_carbs(
-      tf,
+      timeframe,
       user.id,
       user.carbohydrateRatio,
       user.correctionRatio
     )
-  )
-
-  const reported = await Statistics.execute(
-    Statistics.reported_carb_rate(tf, user.id)
   )
 
   const observedRate = observed.map((o) => {
@@ -39,7 +66,9 @@ export default async function CarbsRate() {
     }
   })
 
-  const reportedRate = reported.map((o) => {
+  const reported_rate = await getReportedCarbRate(timeframe, user.id)
+
+  const reportedRate = reported_rate.map((o) => {
     return {
       x: o.timestamp,
       y: o.rate * 15,

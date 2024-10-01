@@ -31,7 +31,7 @@ async function ListCarbTable({ date }: Props) {
 
   const tf = Statistics.carbs_timeframe(user.id, start, end)
   let carbs = await Statistics.execute(
-    Statistics.observed_carbs_per_meal(
+    Statistics.attributed_carbs_simple(
       tf,
       user.id,
       user.carbohydrateRatio,
@@ -39,12 +39,14 @@ async function ListCarbTable({ date }: Props) {
     )
   )
 
-  carbs = carbs.filter(
-    (carb) =>
-      carb.id !== -1 &&
-      carb.timestamp.getTime() >= start.getTime() &&
-      carb.timestamp.getTime() <= end.getTime()
-  )
+  carbs = carbs
+    .filter(
+      (carb) =>
+        carb.id !== -1 &&
+        carb.timestamp.getTime() >= start.getTime() &&
+        carb.timestamp.getTime() <= end.getTime()
+    )
+    .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
   return (
     <div>

@@ -19,7 +19,7 @@ interface Props {
 
 export const CarbohydratesOnBoardGraph = ({ now, data, domain }: Props) => {
   const initialZoomDomain = {
-    x: [addHours(now, -6), addHours(now, 1)] as Tuple<Date>,
+    x: [addHours(now, -3), addHours(now, 3)] as Tuple<Date>,
   }
 
   return (

@@ -1,6 +1,6 @@
 import { validateRequest } from '@/auth'
-import { Statistics } from '@/lib/sql_utils'
-import { addHours } from 'date-fns'
+import { carbs_on_board, carbs_on_board_prediction } from '@/lib/cob'
+import { addHours, differenceInMinutes, subHours, subMinutes } from 'date-fns'
 import { redirect } from 'next/navigation'
 
 import { GraphContainer, GraphTitle } from '../graph-container'
@@ -11,22 +11,24 @@ export const CarbohydratesOnBoard = async () => {
   if (!user) {
     redirect('/login')
   }
-  const now = new Date()
-  const start = addHours(now, -8)
-  const end = addHours(now, 0.2)
-  const tf = Statistics.range_timeframe(start, end)
-  const carbs_on_board = await Statistics.execute(
-    Statistics.observed_carbs_on_board(
-      tf,
-      user.id,
-      user.carbohydrateRatio,
-      user.correctionRatio
-    )
-  )
 
-  const current = carbs_on_board.find(
-    (d) => Math.abs(d.timestamp.getTime() - now.getTime()) < 1000 * 60 * 1
-  )
+  const now = new Date()
+  const start = subHours(now, 24)
+  const end = addHours(now, 10)
+
+  const observed = await carbs_on_board(user.id, start, end)
+
+  const predicted = await carbs_on_board_prediction(user.id, start, end)
+
+  const union = [
+    { timestamp: subMinutes(observed[0]?.timestamp ?? now, 1), cob: 0 }, // start from 0 for nicer plot
+    ...observed,
+    ...predicted,
+  ]
+
+  const current =
+    union.find((d) => Math.abs(differenceInMinutes(d.timestamp, now)) < 3)
+      ?.cob ?? 0
 
   return (
     <GraphContainer>
@@ -35,7 +37,7 @@ export const CarbohydratesOnBoard = async () => {
           <h2 className="font-semibold">Carbohydrates on board</h2>
           <span className="text-xs">
             Current{' '}
-            {current?.observed_carbs_on_board.toLocaleString([], {
+            {current.toLocaleString([], {
               maximumFractionDigits: 0,
             })}{' '}
             g
@@ -45,18 +47,13 @@ export const CarbohydratesOnBoard = async () => {
       <CarbohydratesOnBoardGraph
         domain={{
           x: [start, end],
-          y: [
-            0,
-            Math.max(
-              ...carbs_on_board.map((d) => d.observed_carbs_on_board + 10)
-            ),
-          ],
+          y: [0, Math.max(...union.map((d) => d.cob + 10))],
         }}
         now={now}
-        data={carbs_on_board.map((d) => {
+        data={union.map((d) => {
           return {
             x: d.timestamp,
-            y: d.observed_carbs_on_board,
+            y: d.cob,
           }
         })}
       />

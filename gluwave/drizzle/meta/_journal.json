@@ -50,6 +50,13 @@
       "when": 1726582995450,
       "tag": "0006_complex_mindworm",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1727714440744,
+      "tag": "0007_metrics",
+      "breakpoints": true
     }
   ]
 }
