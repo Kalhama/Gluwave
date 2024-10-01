@@ -63,8 +63,6 @@ export const sessionTable = pgTable('session', {
   }).notNull(),
 })
 
-// TODO add migration for this
-// TODO total_insulin_absorbed is numeric, not doublePrecision, but type casting works b etter now
 export const metrics = pgView('metrics', {
   glucose_id: integer('glucose_id'),
   next_glucose_id: integer('next_glucose_id'),
@@ -91,7 +89,7 @@ export const metrics = pgView('metrics', {
            FROM ( SELECT glucose.user_id,
                     glucose."timestamp",
                     glucose.id AS glucose_id,
-                    COALESCE(sum(total_insulin_absorbed(t => glucose."timestamp", start => insulin."timestamp", amount => insulin.amount)), 0::numeric) AS total_insulin_absorbed
+                    COALESCE(sum(total_insulin_absorbed(t => glucose."timestamp", start => insulin."timestamp", amount => insulin.amount))::double precision, 0::double precision) AS total_insulin_absorbed
                    FROM glucose
                      LEFT JOIN insulin ON glucose.user_id = insulin.user_id AND insulin."timestamp" <= glucose."timestamp"
                   GROUP BY glucose.id) unnamed_subquery
