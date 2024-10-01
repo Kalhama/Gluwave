@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.3.0](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.2.1...gluwave-v1.3.0) (2024-10-01)
+
+
+### Features
+
+* :sparkles: Backfill GCM data [#33](https://github.com/Kalhama/Gluwave/issues/33) ([80797a1](https://github.com/Kalhama/Gluwave/commit/80797a1c6dc484655c49544292066fcd67a95a27))
+* **gluwave:** :arrow_up: make glucose trend arrow less aggressive and code more robust ([aa17e96](https://github.com/Kalhama/Gluwave/commit/aa17e9608cd867ef1982155af8b2d967baa449be))
+* **gluwave:** :art: show skeleton before charts load ([0f31031](https://github.com/Kalhama/Gluwave/commit/0f31031adf28d974354341f2b19cbaab3692d400))
+* **gluwave:** add top bar with glucose reading to gluocse, carbs and insulin pages ([2e51870](https://github.com/Kalhama/Gluwave/commit/2e51870f2c2ce1d3f40b70423072c83c060b342d))
+* **gluwave:** change order of bottom toolbar ([e4c74bc](https://github.com/Kalhama/Gluwave/commit/e4c74bcba2a90bffda9696e53df515fbc37a778e))
+* **gluwave:** top bra with glucose has a link to main page ([9bd5f19](https://github.com/Kalhama/Gluwave/commit/9bd5f1932125b917d93544d766e2beb3597a5aaf))
+* refactor carbohydrates on board ([#103](https://github.com/Kalhama/Gluwave/issues/103)) ([304024c](https://github.com/Kalhama/Gluwave/commit/304024c4f21367eb60390da445488c04116f467c))
+
+
+### Bug Fixes
+
+* **gluwave:** :bug: login button not always working ([5ae62ed](https://github.com/Kalhama/Gluwave/commit/5ae62ed1d61d0ef63731b001448a3dcaa1eaa104))
+* **gluwave:** hide glucose from html title if data is stale ([564e967](https://github.com/Kalhama/Gluwave/commit/564e967e0873ee9ac73f8f999889486078a798f9))
+* **gluwave:** top bar not visible if there are no glucose readings ([1bf5061](https://github.com/Kalhama/Gluwave/commit/1bf50611a206e4d4026c95b64874ae9d5a012f0c))
+
 ## [1.2.1](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.2.0...gluwave-v1.2.1) (2024-09-23)
 
 
