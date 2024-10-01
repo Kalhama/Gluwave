@@ -265,8 +265,12 @@ export const carbs_on_board_prediction = async (
   )
 
   // get largest date
+  const max_timestsamp_epoch = Math.max(
+    0,
+    ...attributed.map((a) => a.timestamp.getTime())
+  )
   const max_timestsamp = new Date(
-    Math.max(...attributed.map((a) => a.timestamp.getTime()))
+    max_timestsamp_epoch === 0 ? endTime : new Date(max_timestsamp_epoch)
   )
 
   // get only currently active meals
@@ -294,7 +298,24 @@ export const carbs_on_board_prediction = async (
     )
 
   // combine active and scheduled meals
-  const meals_for_prediction = [...active_meals, ...upcoming_meals]
+  let meals_for_prediction = [...active_meals, ...upcoming_meals]
+  const get_meals_table = () => {
+    if (meals_for_prediction.length === 0) {
+      return sql`(null::double precision, null::double precision, null::timestamp)`
+    } else {
+      return sql.join(
+        meals_for_prediction.map((a, i) => {
+          const last = i === meals_for_prediction.length - 1
+          const row =
+            sql`(${a.carbs}::double precision, ${a.rate}::double precision, ${a.timestamp.toISOString()}::timestamp)`.append(
+              last ? sql`` : sql`,`
+            )
+
+          return row
+        })
+      )
+    }
+  }
 
   // calculate predictions
   // Do this in SQL not because it's smart here but because it's smart for glucose prediction
@@ -317,15 +338,7 @@ export const carbs_on_board_prediction = async (
     LEFT JOIN (
         VALUES 
 `,
-        ...meals_for_prediction.map((a, i) => {
-          const last = i === meals_for_prediction.length - 1
-          const row =
-            sql`(${a.carbs}::double precision, ${a.rate}::double precision, ${a.timestamp.toISOString()}::timestamp)`.append(
-              last ? sql`` : sql`,`
-            )
-
-          return row
-        }),
+        get_meals_table(),
         sql`
     ) AS meals(carbs, rate, timestamp) 
     ON timeframe.timestamp >= meals.timestamp
