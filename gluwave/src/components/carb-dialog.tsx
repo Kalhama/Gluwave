@@ -37,7 +37,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { addMinutes, format, parse, set } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
 import * as React from 'react'
-import { PropsWithChildren, useState } from 'react'
+import { PropsWithChildren, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -69,7 +69,10 @@ export function CarbDialog({ carb, children }: PropsWithChildren<Props>) {
 
   async function onSubmit(values: z.infer<typeof upsertCarbSchema>) {
     await action(values)
-    form.reset()
+    if (!editing) {
+      form.reset()
+    }
+
     setOpenChange(false)
   }
 
@@ -80,7 +83,9 @@ export function CarbDialog({ carb, children }: PropsWithChildren<Props>) {
     <Drawer
       open={open}
       onOpenChange={(s) => {
-        form.reset()
+        if (!editing) {
+          form.reset()
+        }
         setOpenChange(s)
       }}
     >
