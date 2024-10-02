@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/Kalhama/Gluwave/compare/librelinkup-to-gluwave-v1.1.0...librelinkup-to-gluwave-v1.1.1) (2024-10-02)
+
+
+### Bug Fixes
+
+* **librelinkup-to-gluwave:** Librelinkup-to-gluwave pnpm install error during CICD [#134](https://github.com/Kalhama/Gluwave/issues/134) ([44ba5ec](https://github.com/Kalhama/Gluwave/commit/44ba5eccb4575749e57c55ccc2cc86e25cd69577))
+
 ## [1.1.0](https://github.com/Kalhama/Gluwave/compare/librelinkup-to-gluwave-v1.0.0...librelinkup-to-gluwave-v1.1.0) (2024-10-01)
 
 

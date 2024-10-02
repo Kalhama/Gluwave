@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.3.0...gluwave-v1.3.1) (2024-10-02)
+
+
+### Bug Fixes
+
+* **gluwave:** :green_heart: Build error [#133](https://github.com/Kalhama/Gluwave/issues/133) ([d0f65c2](https://github.com/Kalhama/Gluwave/commit/d0f65c2ef1680d1b5dc8e807e7d23ec96f433a61))
+
 ## [1.3.0](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.2.1...gluwave-v1.3.0) (2024-10-01)
 
 
