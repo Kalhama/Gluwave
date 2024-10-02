@@ -25,15 +25,15 @@ interface Props {
 export const DeleteDialog = ({ id, action: serverAction }: Props) => {
   const { action, loading } = useServerAction(serverAction)
 
-  if (loading) {
-    return <Loader2 className="w-4 h-4 p-2 animate-spin" />
-  }
-
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="ghost" className="p-2">
-          <Trash2 className="cursor-pointer w-4 h-4" />
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin inline" />
+          ) : (
+            <Trash2 className="cursor-pointer w-4 h-4" />
+          )}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
