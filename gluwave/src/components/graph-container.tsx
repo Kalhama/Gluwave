@@ -5,7 +5,7 @@ import * as d3 from 'd3'
 import { addHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   DomainTuple,
   VictoryAxis,
@@ -15,6 +15,7 @@ import {
 } from 'victory'
 
 import { Skeleton } from './ui/skeleton'
+import { useClient } from './use-client'
 import { victoryTheme } from './victory-theme'
 
 interface Props {
@@ -72,8 +73,6 @@ export const GraphContent = ({
   height: height = 200,
   initialZoomDomain,
 }: ContentProps) => {
-  const [isClient, setIsClient] = useState(false)
-
   if (!initialZoomDomain) {
     initialZoomDomain = {
       x: [addHours(now, -2), addHours(now, 2)] as DomainTuple,
@@ -90,10 +89,7 @@ export const GraphContent = ({
     return [ticks, formatter]
   }, [zoomDomain])
 
-  // force to client because we render timestamps
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
+  const isClient = useClient()
 
   if (!isClient)
     return (

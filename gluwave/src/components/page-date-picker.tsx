@@ -17,6 +17,7 @@ import * as React from 'react'
 import { useEffect, useState } from 'react'
 
 import { Button } from './ui/button'
+import { useClient } from './use-client'
 
 interface Props {
   date: Date
@@ -46,6 +47,8 @@ export function PageDatePicker({ date: defaultValue }: Props) {
     }
   }, [defaultValue, date, route])
 
+  const client = useClient()
+
   return (
     <div className="bg-slate-300 p-2">
       <div className="flex justify-between items-center mx-auto max-w-md">
@@ -55,24 +58,26 @@ export function PageDatePicker({ date: defaultValue }: Props) {
             className="cursor-pointer"
           />
         </Button>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" className="hover:bg-slate-400">
-              <div className="flex items-center text-slate-700 cursor-pointer">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? date.toLocaleDateString() : <span>Pick a date</span>}
-              </div>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(d) => setDate(d || new Date())}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+        {!client ? null : (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" className="hover:bg-slate-400">
+                <div className="flex items-center text-slate-700 cursor-pointer">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? date.toLocaleDateString() : <span>Pick a date</span>}
+                </div>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(d) => setDate(d || new Date())}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        )}
         <Button variant="ghost" className="hover:bg-slate-400">
           <ChevronRight
             onClick={() => setDate(addDays(date, 1))}
