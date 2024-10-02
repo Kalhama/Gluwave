@@ -8,31 +8,44 @@ async function getSafeStartTime(
   inputTime: Date,
   userId: string
 ): Promise<Date> {
-  const data = await db.select({
-    timestamp: sql`	timestamp
-`.mapWith(glucose.timestamp),
-  }).from(sql`(
+  const [data] = await db
+    .select({
+      timestamp: sql`max`.mapWith(glucose.timestamp).as('timestamp'),
+    })
+    .from(
+      sql`
+(
+  WITH timeline AS (
     SELECT 
-	glucose.timestamp
-FROM (
-	SELECT 
-		timestamp,
-		LEAD(timestamp) OVER (PARTITION BY user_id ORDER BY timestamp) as next_timestamp,
-		user_id
-	FROM glucose
-) as glucose LEFT JOIN carbs
-ON carbs.timestamp <= next_timestamp 
-AND carbs.timestamp + MAKE_INTERVAL(mins => (carbs.decay * 1.5)::integer) >= glucose.timestamp 
-AND carbs.user_id = glucose.user_id
-WHERE glucose.user_id = ${userId}
-AND glucose.timestamp <= ${inputTime.toISOString()}
-GROUP BY glucose.timestamp
-HAVING COUNT(carbs.id) = 0
-ORDER BY glucose.timestamp DESC
-LIMIT 1
-    )`)
+      -1 AS direction,
+      timestamp 
+    FROM carbs
+    WHERE carbs.user_id = ${userId}
+    UNION ALL
+    SELECT 
+      1 as direction,
+      timestamp + MAKE_INTERVAL(mins => (carbs.decay * 1.5)::int) as timestamp 
+    FROM carbs
+    WHERE carbs.user_id = ${userId}
+  ), concurrent AS (
+    SELECT
+      SUM(direction) OVER (order by timestamp desc rows between unbounded preceding and current row) as overlapping,
+      timestamp
+    FROM timeline
+  ), non_concurrent AS (
+    SELECT MAX(timestamp) FROM concurrent
+    WHERE overlapping = 0
+    AND timestamp < ${inputTime.toISOString()}
+  )
 
-  return data[0]?.timestamp ?? inputTime
+  SELECT MAX(timestamp) FROM glucose 
+  WHERE timestamp < (SELECT * FROM non_concurrent)
+  AND glucose.user_id = ${userId}
+)
+`
+    )
+
+  return data?.timestamp ?? inputTime
 }
 
 // Function to check if a meal is active
