@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/Kalhama/Gluwave/compare/librelinkup-to-gluwave-v1.1.1...librelinkup-to-gluwave-v1.1.2) (2024-10-02)
+
+
+### Bug Fixes
+
+* **gluwave:** :card_file_box: fix carbs on board performance ([7f1b4f1](https://github.com/Kalhama/Gluwave/commit/7f1b4f1b12c040625d93599b0b0c088adc2b46a7))
+
 ## [1.1.1](https://github.com/Kalhama/Gluwave/compare/librelinkup-to-gluwave-v1.1.0...librelinkup-to-gluwave-v1.1.1) (2024-10-02)
 
 
