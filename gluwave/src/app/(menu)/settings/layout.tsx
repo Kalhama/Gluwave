@@ -1,9 +1,9 @@
+import Typography from '@/components/typography'
 import { Separator } from '@/components/ui/separator'
 import { Metadata } from 'next'
 import React from 'react'
 
 import { SidebarNav } from './sidebar-nav'
-import { Typography } from './typography'
 
 export const metadata: Metadata = {
   title: 'Gluwave - Settings',

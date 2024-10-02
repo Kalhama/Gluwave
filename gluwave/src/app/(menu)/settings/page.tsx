@@ -1,9 +1,9 @@
 import { validateRequest } from '@/auth'
+import Typography from '@/components/typography'
 import { Separator } from '@/components/ui/separator'
 import { redirect } from 'next/navigation'
 
 import { SettingsForm } from './settings-form'
-import { Typography } from './typography'
 
 export default async function Settings() {
   const { user } = await validateRequest()

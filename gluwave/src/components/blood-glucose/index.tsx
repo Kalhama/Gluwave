@@ -57,7 +57,7 @@ export default async function BloodGlucose() {
   const displayedPrediction = predictions.map((p) => {
     return {
       x: p.timestamp,
-      y: p.totalEffect + lastBloodGlucose?.value ?? 0,
+      y: p.totalEffect + (lastBloodGlucose?.value ?? 0),
     }
   })
 

@@ -1,8 +1,7 @@
 import { validateRequest } from '@/auth'
-import { Separator } from '@/components/ui/separator'
+import Typography from '@/components/typography'
 import { redirect } from 'next/navigation'
 
-import { Typography } from '../typography'
 import { ApiKeyForm } from './api-key-form'
 
 export default async function Settings() {
