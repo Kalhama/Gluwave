@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.3.1...gluwave-v1.3.2) (2024-10-02)
+
+
+### Bug Fixes
+
+* **gluwave:** :card_file_box: fix carbs on board performance ([7f1b4f1](https://github.com/Kalhama/Gluwave/commit/7f1b4f1b12c040625d93599b0b0c088adc2b46a7))
+
 ## [1.3.1](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.3.0...gluwave-v1.3.1) (2024-10-02)
 
 
