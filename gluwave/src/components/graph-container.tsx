@@ -5,7 +5,7 @@ import * as d3 from 'd3'
 import { addHours } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   DomainTuple,
   VictoryAxis,
@@ -72,6 +72,8 @@ export const GraphContent = ({
   height: height = 200,
   initialZoomDomain,
 }: ContentProps) => {
+  const [isClient, setIsClient] = useState(false)
+
   if (!initialZoomDomain) {
     initialZoomDomain = {
       x: [addHours(now, -2), addHours(now, 2)] as DomainTuple,
@@ -87,6 +89,18 @@ export const GraphContent = ({
 
     return [ticks, formatter]
   }, [zoomDomain])
+
+  // force to client because we render timestamps
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient)
+    return (
+      <div className={cn('p-4')}>
+        <Skeleton className={cn('w-full h-[250px] rounded-xl')} />
+      </div>
+    )
 
   return (
     <div className={cn('p-2', className)}>
@@ -125,13 +139,9 @@ export const GraphContent = ({
 
 export const padding = { top: 10, bottom: 25, left: 27, right: 15 }
 
-interface GraphSkeletonProps {
-  height?: string
-}
-
-export const GraphSkeleton = ({ height }: GraphSkeletonProps) => {
+export const GraphSkeleton = () => {
   return (
-    <GraphContainer>
+    <div className={cn('border rounded-lg shadow bg-white')}>
       <GraphTitle>
         <div className="flex flex-col gap-2">
           <Skeleton className="w-40 h-4" />
@@ -139,8 +149,8 @@ export const GraphSkeleton = ({ height }: GraphSkeletonProps) => {
         </div>
       </GraphTitle>
       <div className={cn('p-4')}>
-        <Skeleton className={cn('w-full h-[250px] rounded-xl', height)} />
+        <Skeleton className={cn('w-full h-[250px] rounded-xl')} />
       </div>
-    </GraphContainer>
+    </div>
   )
 }

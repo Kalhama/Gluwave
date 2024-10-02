@@ -10,6 +10,9 @@ ENV GITHUB_SECRET=_
 ENV DATABASE_URL=_
 ENV DATABASE_URL_UNPOOLED=_
 
+# Must be UTC
+ENV TZ=UTC
+
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile

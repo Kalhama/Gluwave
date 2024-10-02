@@ -1,6 +1,6 @@
 import { db } from '@/db'
 import { carbs, glucose } from '@/schema'
-import { addMinutes, differenceInMinutes } from 'date-fns'
+import { addMinutes, differenceInMinutes, parseISO } from 'date-fns'
 import { and, eq, gte, sql } from 'drizzle-orm'
 
 // Function to get safe start time for cob prediction
@@ -108,7 +108,7 @@ export async function attributeObservedToMeals(
       sql`ARRAY_AGG(metrics.timestamp) OVER (ORDER BY metrics.timestamp DESC ROWS BETWEEN CURRENT ROW AND ${sliceLen} FOLLOWING)`.as<
         Date[]
       >('timestamp'),
-    new_meals: sql`COALESCE(ARRAY_AGG(
+    new_meals: sql<Meal[]>`COALESCE(ARRAY_AGG(
             JSONB_BUILD_OBJECT(
 						'carb_id', carbs.id,
 						'start', carbs.timestamp,
@@ -119,28 +119,25 @@ export async function attributeObservedToMeals(
 					)
 			    ) FILTER (WHERE carbs.user_id IS NOT NULL), ARRAY[]::jsonb[])`
       .mapWith((value: any) =>
-        value.map((value: any) => ({
-          ...value,
-          start: new Date(value.start),
-        }))
+        value.map((value: any) => {
+          return {
+            ...value,
+            start: new Date(value.start),
+          }
+        })
       )
-      .as<Meal[]>('new_meals'),
+      .as('new_meals'),
   }).from(sql`
-(
-    SELECT 
-      *, 
-      LEAD(metrics.timestamp) OVER (PARTITION BY user_id ORDER BY metrics.timestamp) AS next_timestamp 
-    FROM metrics
-  ) AS metrics
-  LEFT JOIN carbs
-  ON metrics.user_id = carbs.user_id
-  AND metrics.timestamp <= carbs.timestamp AND carbs.timestamp < next_timestamp
-  WHERE metrics.user_id = ${filterUserId}
-  AND ${safeStartTime.toISOString()} <= metrics.timestamp AND metrics.timestamp <= ${endTime.toISOString()}
-  GROUP BY glucose_id, observed_carbs, metrics.timestamp, metrics.user_id
-  ORDER BY metrics.timestamp ASC
-		
-    `)
+    (SELECT * FROM 
+    metrics(${safeStartTime.toISOString()}::timestamp, ${endTime.toISOString()}::timestamp, ${filterUserId})
+    ) AS metrics
+    
+    LEFT JOIN carbs
+      ON metrics.user_id = carbs.user_id
+      AND metrics.timestamp <= carbs.timestamp AND carbs.timestamp < timestamp_next
+      GROUP BY glucose_id, observed_carbs, metrics.timestamp, metrics.user_id
+      ORDER BY metrics.timestamp ASC
+  `)
 
   for (const observation of observations) {
     // Filter active meals on current timestamp, no need to attribute carbs into them

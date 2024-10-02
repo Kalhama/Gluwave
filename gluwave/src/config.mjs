@@ -12,6 +12,7 @@ const schema = z.object({
   GITHUB_SECRET: z.string(),
   DATABASE_URL: z.string(),
   DATABASE_URL_UNPOOLED: z.string(),
+  TZ: z.literal('UTC'),
 })
 const config = schema.parse(process.env)
 export default config
