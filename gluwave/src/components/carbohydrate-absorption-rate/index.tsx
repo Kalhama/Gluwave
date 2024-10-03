@@ -1,44 +1,65 @@
 import { validateRequest } from '@/auth'
 import { db } from '@/db'
-import { Statistics, Timeframe } from '@/lib/sql_utils'
+import { Statistics } from '@/lib/sql_utils'
 import { carbs } from '@/schema'
-import { addHours, addMinutes, setHours, startOfDay, subHours } from 'date-fns'
+import { addHours, setHours, startOfDay, subHours } from 'date-fns'
 import { and, eq, gte, lte, sql } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 import { Tuple } from 'victory'
 
 import { GraphContainer, GraphTitle } from '../graph-container'
-import { CarbsRateGraph } from './carbohydrate-rate-graph'
+import { CarbohydrateAbsorptionRateGraph } from './carbohydrate-absorption-rate-graph'
+
+interface Props {
+  href?: string
+}
 
 /**
  * @returns reported carb rate over time
  */
-const getReportedCarbRate = (timeframe: Timeframe, userId: string) => {
+const getReportedCarbRate = (userId: string, start: Date, end: Date) => {
   return db
-    .with(timeframe)
     .select({
-      timestamp: timeframe.timestamp,
+      timestamp: sql`timeframe.timestamp`
+        .mapWith(carbs.timestamp)
+        .as('timestamp'),
       rate: sql`COALESCE(SUM(${carbs.amount} / ${carbs.decay}), 0)`
         .mapWith(carbs.amount)
         .as('rate'),
     })
-    .from(timeframe)
+    .from(
+      sql`(
+      SELECT timestamp 
+      FROM carbs
+      WHERE user_id = ${userId}
+      AND ${start.toISOString()} <= timestamp 
+      AND timestamp <= ${end.toISOString()}
+
+      UNION ALL
+
+      SELECT timestamp + MAKE_INTERVAL(mins => carbs.decay) AS timestamp
+      FROM carbs
+      WHERE user_id = ${userId}
+      AND ${start.toISOString()} <= timestamp + MAKE_INTERVAL(mins => carbs.decay) 
+      AND timestamp + MAKE_INTERVAL(mins => carbs.decay) <= ${end.toISOString()}
+) AS timeframe`
+    )
     .leftJoin(
       carbs,
       and(
         eq(carbs.userId, userId),
         gte(
           sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
-          timeframe.timestamp
+          sql`timeframe.timestamp`
         ),
-        lte(carbs.timestamp, timeframe.timestamp)
+        lte(carbs.timestamp, sql`timeframe.timestamp`)
       )
     )
-    .groupBy(timeframe.timestamp)
-    .orderBy(timeframe.timestamp)
+    .groupBy(sql`timeframe.timestamp`)
+    .orderBy(sql`timeframe.timestamp`)
 }
 
-export default async function CarbsRate() {
+export default async function CarbohydrateAbsorptionRate({ href }: Props) {
   const { user } = await validateRequest()
   if (!user) {
     redirect('/login')
@@ -48,11 +69,11 @@ export default async function CarbsRate() {
   const start = setHours(startOfDay(subHours(now, 4)), 4) // previous 4AM
   const end = addHours(now, 12)
 
-  const timeframe = Statistics.approximate_timeframe(user.id, start, end)
+  const tf = Statistics.approximate_timeframe(user.id, start, end)
 
   const observed = await Statistics.execute(
     Statistics.observed_carbs(
-      timeframe,
+      tf,
       user.id,
       user.carbohydrateRatio,
       user.correctionRatio
@@ -66,12 +87,12 @@ export default async function CarbsRate() {
     }
   })
 
-  const reported_rate = await getReportedCarbRate(timeframe, user.id)
+  const reported_rate = await getReportedCarbRate(user.id, start, end)
 
   const reportedRate = reported_rate.map((o) => {
     return {
       x: o.timestamp,
-      y: o.rate * 15,
+      y: o.rate * 15, // bring to same scale with observed
     }
   })
 
@@ -91,12 +112,13 @@ export default async function CarbsRate() {
 
   return (
     <GraphContainer>
-      <GraphTitle href="/carbs/list" className="flex justify-between">
+      <GraphTitle href={href} className="flex justify-between">
         <div>
           <h2 className="font-semibold">Carbohydrate absorption rate</h2>
+          <span className="text-xs text-slate-600">~15 min period</span>
         </div>
       </GraphTitle>
-      <CarbsRateGraph
+      <CarbohydrateAbsorptionRateGraph
         now={now}
         observed={observedRate}
         reported={reportedRate}

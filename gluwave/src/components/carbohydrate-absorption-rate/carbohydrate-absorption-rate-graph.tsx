@@ -20,7 +20,12 @@ interface Props {
   }
 }
 
-export const CarbsRateGraph = ({ now, observed, reported, domain }: Props) => {
+export const CarbohydrateAbsorptionRateGraph = ({
+  now,
+  observed,
+  reported,
+  domain,
+}: Props) => {
   // for visual purposes
   observed.push({
     y: 0,

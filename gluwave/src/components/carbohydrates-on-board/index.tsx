@@ -6,7 +6,11 @@ import { redirect } from 'next/navigation'
 import { GraphContainer, GraphTitle } from '../graph-container'
 import { CarbohydratesOnBoardGraph } from './carbohydrates-on-board-graph'
 
-export const CarbohydratesOnBoard = async () => {
+interface Props {
+  href?: string
+}
+
+export const CarbohydratesOnBoard = async ({ href }: Props) => {
   const { user } = await validateRequest()
   if (!user) {
     redirect('/login')
@@ -32,7 +36,7 @@ export const CarbohydratesOnBoard = async () => {
 
   return (
     <GraphContainer>
-      <GraphTitle href="/carbs/list" className="flex justify-between">
+      <GraphTitle href={href} className="flex justify-between">
         <div>
           <h2 className="font-semibold">Carbohydrates on board</h2>
           <span className="text-xs">

@@ -57,6 +57,7 @@ export function PageDatePicker({ date: defaultValue, baseUrl }: Props) {
   }, [defaultValue, date, baseUrl])
 
   const client = useClient()
+
   const now = new Date()
 
   return (

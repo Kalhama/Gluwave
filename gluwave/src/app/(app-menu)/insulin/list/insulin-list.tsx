@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table'
 import { db } from '@/db'
 import { insulin } from '@/schema'
-import { addHours, parseISO, subHours } from 'date-fns'
+import { addHours, subHours } from 'date-fns'
 import { and, asc, eq, gte, lt } from 'drizzle-orm'
 import { Pencil } from 'lucide-react'
 import { redirect } from 'next/navigation'

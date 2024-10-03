@@ -57,7 +57,7 @@ export default async function App() {
         <InsulinOnBoard />
       </Suspense>
       <Suspense fallback={<GraphSkeleton />}>
-        <CarbohydratesOnBoard />
+        <CarbohydratesOnBoard href="/carbs/list" />
       </Suspense>
     </div>
   )
