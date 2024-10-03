@@ -3,7 +3,7 @@ import { db } from '@/db'
 import { Statistics } from '@/lib/sql_utils'
 import { carbs } from '@/schema'
 import { addHours, setHours, startOfDay, subHours } from 'date-fns'
-import { and, eq, gte, lte, sql } from 'drizzle-orm'
+import { and, eq, gte, lt, sql } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 import { Tuple } from 'victory'
 
@@ -52,7 +52,7 @@ const getReportedCarbRate = (userId: string, start: Date, end: Date) => {
           sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
           sql`timeframe.timestamp`
         ),
-        lte(carbs.timestamp, sql`timeframe.timestamp`)
+        lt(carbs.timestamp, sql`timeframe.timestamp`)
       )
     )
     .groupBy(sql`timeframe.timestamp`)
