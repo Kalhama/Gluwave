@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.4.0](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.3.2...gluwave-v1.4.0) (2024-10-03)
+
+
+### Features
+
+* **gluwave:** Rework carbs graph [#75](https://github.com/Kalhama/Gluwave/issues/75) ([63d1b57](https://github.com/Kalhama/Gluwave/commit/63d1b57074000f6bd330f8fbf43c0933703c67ad))
+* **gluwave:** show recent entries lists ([94c12c6](https://github.com/Kalhama/Gluwave/commit/94c12c6a90315357339b10c6e1a655fbfad99905))
+
+
+### Bug Fixes
+
+* **gluwave:** :zap: improve sql query performance ([19d5524](https://github.com/Kalhama/Gluwave/commit/19d5524899f022fe1dec2dcad267164da311f76a))
+* **gluwave:** Edit entry dialog does not show updated information update when opened second time [#106](https://github.com/Kalhama/Gluwave/issues/106) ([549d8e8](https://github.com/Kalhama/Gluwave/commit/549d8e82d0e24178d8e1342a7dbffd35a1ecd412))
+* **gluwave:** entry delete loading icon not visible ([192447f](https://github.com/Kalhama/Gluwave/commit/192447f5c520779d90445bb5249ec408573811aa))
+* **gluwave:** hydration errors on dates ([9824dbd](https://github.com/Kalhama/Gluwave/commit/9824dbd72d958b0a254caf48e513111ed0ceb6ae))
+
+
+### Reverts
+
+* **gluwave:** carb list style ([128ac0a](https://github.com/Kalhama/Gluwave/commit/128ac0aa6c24eae65b7d9d200eedb87dc28842bf))
+
 ## [1.3.2](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.3.1...gluwave-v1.3.2) (2024-10-02)
 
 
