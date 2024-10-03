@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Statistics } from '@/lib/sql_utils'
-import { addHours, parseISO, subHours } from 'date-fns'
+import { addHours, subHours } from 'date-fns'
 import { Pencil } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import * as React from 'react'
@@ -48,13 +48,13 @@ export async function CarbsList({ params }: Props) {
         carb.timestamp.getTime() >= start.getTime() &&
         carb.timestamp.getTime() <= end.getTime()
     )
-    .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
 
   return (
     <>
       <PageDatePicker baseUrl="/carbs/list" date={date} />
-      <div className="space-y-4 border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
-        <div>
+      <div className="p-2">
+        <div className=" border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
           {carbs.map((carb, i, arr) => {
             const over = carb.observedCarbs > carb.carbs
 
@@ -96,7 +96,7 @@ export async function CarbsList({ params }: Props) {
                     />
                   )}
                 </div>
-                {arr.length - 1 !== i && <Separator />}
+                {arr.length - 1 !== i && <Separator className="my-2" />}
               </div>
             )
           })}
