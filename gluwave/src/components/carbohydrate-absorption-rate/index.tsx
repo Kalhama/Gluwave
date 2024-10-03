@@ -3,7 +3,7 @@ import { db } from '@/db'
 import { Statistics } from '@/lib/sql_utils'
 import { carbs } from '@/schema'
 import { addHours, setHours, startOfDay, subHours } from 'date-fns'
-import { and, eq, gte, lt, sql } from 'drizzle-orm'
+import { and, eq, gte, lt, lte, sql } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 import { Tuple } from 'victory'
 
@@ -37,7 +37,7 @@ const getReportedCarbRate = (userId: string, start: Date, end: Date) => {
 
       UNION ALL
 
-      SELECT timestamp + MAKE_INTERVAL(mins => carbs.decay) AS timestamp
+      SELECT timestamp + MAKE_INTERVAL(mins => carbs.decay + 1)  AS timestamp
       FROM carbs
       WHERE user_id = ${userId}
       AND ${start.toISOString()} <= timestamp + MAKE_INTERVAL(mins => carbs.decay) 
@@ -52,7 +52,7 @@ const getReportedCarbRate = (userId: string, start: Date, end: Date) => {
           sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
           sql`timeframe.timestamp`
         ),
-        lt(carbs.timestamp, sql`timeframe.timestamp`)
+        lte(carbs.timestamp, sql`timeframe.timestamp`)
       )
     )
     .groupBy(sql`timeframe.timestamp`)
@@ -86,8 +86,15 @@ export default async function CarbohydrateAbsorptionRate({ href }: Props) {
       y: (o.observedCarbs / (o.interval ?? 1)) * (15 * 60),
     }
   })
+  const d = await db.execute(sql`SELECT timestamp 
+    FROM carbs
+      WHERE timestamp <= ${end.toISOString()}`)
+  console.log('d', d.rows)
 
   const reported_rate = await getReportedCarbRate(user.id, start, end)
+  console.log(start, end)
+
+  console.log(reported_rate)
 
   const reportedRate = reported_rate.map((o) => {
     return {
