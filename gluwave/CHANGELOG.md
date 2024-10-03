@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.4.0...gluwave-v1.4.1) (2024-10-03)
+
+
+### Bug Fixes
+
+* **gluwave:** carb rate dit not end at correct time ([a9fdef8](https://github.com/Kalhama/Gluwave/commit/a9fdef833328663a85372c0cf50b28c86e3503d1))
+
 ## [1.4.0](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.3.2...gluwave-v1.4.0) (2024-10-03)
 
 
