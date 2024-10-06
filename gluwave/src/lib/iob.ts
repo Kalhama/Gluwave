@@ -60,24 +60,30 @@ export const inuslin_on_board = async (
     )
     .withColumn(
       pl
-        .col('insulin')
-        .minus(
-          pl
-            .col('minutes_diff')
-            .div(55)
-            .add(1)
-            .mul(pl.col('minutes_diff').div(-55).exp())
-            .mul(-1)
-            .add(1)
-            .mul(pl.col('insulin'))
-        )
-        .as('iob')
+        .col('minutes_diff')
+        .div(55)
+        .add(1)
+        .mul(pl.col('minutes_diff').div(-55).exp())
+        .mul(-1)
+        .add(1)
+        .mul(pl.col('insulin'))
+        .as('cumulative_insulin_decay')
+    )
+    .withColumn(
+      pl.col('insulin').minus(pl.col('cumulative_insulin_decay')).as('iob')
     )
     .groupBy('timestamp')
-    .agg(pl.col('iob').sum().alias('iob'))
+    .agg(
+      pl.col('iob').sum().alias('iob'),
+      pl.col('cumulative_insulin_decay').sum().alias('cumulative_insulin_decay')
+    )
     .sort('timestamp')
-
-  console.log(iob)
+    .withColumn(
+      pl
+        .col('cumulative_insulin_decay')
+        .minus(pl.col('cumulative_insulin_decay').first())
+        .as('cumulative_insulin_decay')
+    )
 
   return iob
 }

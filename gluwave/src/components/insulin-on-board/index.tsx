@@ -1,6 +1,5 @@
 import { validateRequest } from '@/auth'
 import { inuslin_on_board } from '@/lib/iob'
-import { calculateUserInsulinData } from '@/lib/sql_utils'
 import { addHours, addMinutes, startOfMinute, subHours } from 'date-fns'
 import { redirect } from 'next/navigation'
 

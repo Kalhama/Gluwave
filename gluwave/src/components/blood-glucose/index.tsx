@@ -1,6 +1,6 @@
 import { validateRequest } from '@/auth'
 import { db } from '@/db'
-import { Statistics } from '@/lib/sql_utils'
+import { glucose_prediction } from '@/lib/glucose'
 import { glucose } from '@/schema'
 import { addHours, subHours } from 'date-fns'
 import { and, eq, gte, lte } from 'drizzle-orm'
@@ -44,20 +44,17 @@ export default async function BloodGlucose() {
 
   const lastBloodGlucose = glucose[glucose.length - 1]
 
-  const predictions = await Statistics.execute(
-    Statistics.predict_glucose(
-      lastBloodGlucose?.timestamp ?? now,
-      addHours(now, 6),
-      user.id,
-      user.carbohydrateRatio,
-      user.correctionRatio
-    )
+  const r = await glucose_prediction(
+    user.id,
+    lastBloodGlucose.timestamp,
+    addHours(now, 6)
   )
+  const predictions = r.toRecords()
 
   const displayedPrediction = predictions.map((p) => {
     return {
       x: p.timestamp,
-      y: p.totalEffect + (lastBloodGlucose?.value ?? 0),
+      y: p.prediction + (lastBloodGlucose?.value ?? 0),
     }
   })
 

@@ -1,6 +1,5 @@
 'use client'
 
-import { calculateUserInsulinData } from '@/lib/sql_utils'
 import { DomainTuple, VictoryArea, VictoryLine } from 'victory'
 
 import { GraphContent } from '../graph-container'

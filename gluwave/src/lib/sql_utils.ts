@@ -14,67 +14,6 @@ import {
 } from 'drizzle-orm'
 import { PgColumn, WithSubqueryWithSelection } from 'drizzle-orm/pg-core'
 
-// TODO remove / use Statistics class
-export const calculateUserInsulinData = async (
-  from: Date,
-  to: Date,
-  userId: string
-) => {
-  const minutes = db.$with('minutes').as(
-    db
-      .select({
-        timestamp: sql<Date>`timestamp`
-          .mapWith(insulin.timestamp)
-          .as('timestamp'),
-      })
-      .from(
-        sql`
-    generate_series(${from}, ${to}, '00:01:00'::interval) AS "timestamp"
-  `
-      )
-  )
-
-  const insulin_on_board = await db
-    .with(minutes)
-    .select({
-      timestamp: sql`minutes.timestamp`.mapWith(
-        insulin.timestamp
-      ) /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */,
-      insulinOnBoard: sql`SUM(
-             CASE
-                 WHEN minutes."timestamp" >= insulin."timestamp" AND minutes."timestamp" < (insulin."timestamp" + '08:00:00'::interval) 
-                 THEN insulin.amount::numeric * (EXTRACT(epoch FROM minutes."timestamp" - insulin."timestamp") / 60.0 / 55::numeric + 1::numeric) * exp((- (EXTRACT(epoch FROM minutes."timestamp" - insulin."timestamp") / 60.0)) / 55::numeric)
-                 ELSE 0::numeric
-             END)`
-        .mapWith(insulin.amount)
-        .as('insulin_on_board'),
-      insulinEffect: sql`
-        sum(
-             CASE
-                 WHEN minutes."timestamp" >= insulin."timestamp" AND minutes."timestamp" < (insulin."timestamp" + '08:00:00'::interval) 
-                 THEN insulin.amount::numeric * 0.000331 * (EXTRACT(epoch FROM minutes."timestamp" - insulin."timestamp") / 60.0) * exp((- (EXTRACT(epoch FROM minutes."timestamp" - insulin."timestamp") / 60.0)) / 55::numeric)
-                 ELSE 0::numeric
-             END)
-        `
-        .mapWith(insulin.amount)
-        .as('insulin_on_board'),
-    })
-    .from(minutes)
-    .leftJoin(
-      insulin,
-      and(
-        sql`minutes."timestamp" >= insulin."timestamp"`,
-        eq(insulin.userId, userId)
-      )
-    )
-    .groupBy(
-      sql`minutes.timestamp` /* using sql because using 'minutes.timestamp' returns only 'timestamp' which is ambiguous */
-    )
-    .orderBy(minutes.timestamp)
-
-  return insulin_on_board
-}
-
 export type Timeframe = WithSubqueryWithSelection<
   {
     timestamp: PgColumn<
@@ -326,87 +265,6 @@ export class Statistics {
   }
 
   /**
-   * @returns prediction of glucose based on future insulin and carbohydrates on board
-   */
-  public static predict_glucose(
-    start: Date,
-    end: Date,
-    userId: string,
-    ISF: number,
-    ICR: number
-  ) {
-    const range_tf = Statistics.range_timeframe(start, end)
-    const cumulativeInsulin = Statistics.cumulative_insulin(range_tf, userId)
-
-    const carbs_tf = Statistics.carbs_timeframe(
-      userId,
-      subHours(start, 12), // make sure that we catch all observed carbs on currently active meals
-      end
-    )
-    const carbs_observed = Statistics.attributed_carbs_simple(
-      carbs_tf,
-      userId,
-      ISF,
-      ICR
-    )
-
-    const predictedCarbs = db.$with('predicted_carbs').as(
-      db
-        .with(range_tf, carbs_observed)
-        .select({
-          timestamp: range_tf.timestamp,
-          // todo don't really like how we come up with decay but whatever
-          predicted_carbs: sql`SUM(
-            total_carbs_absorbed(
-              t => ${range_tf.timestamp},
-              start => GREATEST(${start.toISOString()}::timestamp, ${carbs_observed.timestamp}),
-              amount => (GREATEST(${carbs_observed.carbs} - ${carbs_observed.observedCarbs}, 0))::integer,
-              decay => ((GREATEST(${carbs_observed.carbs} - ${carbs_observed.observedCarbs}, 0)) / (${carbs_observed.carbs} / ${carbs_observed.decay}))::integer
-            )
-          )`
-            .mapWith(carbs.amount)
-            .as('carbEffect'),
-        })
-        .from(range_tf)
-        .leftJoin(
-          carbs_observed,
-          and(
-            gte(range_tf.timestamp, carbs_observed.timestamp),
-            sql`${carbs_observed.timestamp} + MAKE_INTERVAL(mins => ${carbs_observed.decay}) >= ${start.toISOString()}::timestamp` // esxclude carbs that are not active
-          )
-        )
-        .groupBy(range_tf.timestamp)
-        .orderBy(range_tf.timestamp)
-    )
-
-    const cte = db.$with('predict_glucose').as(
-      db
-        .with(predictedCarbs, cumulativeInsulin)
-        .select({
-          timestamp: predictedCarbs.timestamp,
-          carbEffect: sql`${predictedCarbs.predicted_carbs} / ${ISF} * ${ICR}`
-            .mapWith(glucose.value)
-            .as('carbEffect'),
-          insulinEffect:
-            sql`${cumulativeInsulin.cumulativeInsulin} * ${ICR} * -1`
-              .mapWith(glucose.value)
-              .as('insulinEffect'),
-          totalEffect:
-            sql`(${predictedCarbs.predicted_carbs} / ${ISF} * ${ICR}) + (${cumulativeInsulin.cumulativeInsulin} * ${ICR} * -1)`
-              .mapWith(glucose.value)
-              .as('totalEffect'),
-        })
-        .from(predictedCarbs)
-        .leftJoin(
-          cumulativeInsulin,
-          eq(cumulativeInsulin.timestamp, predictedCarbs.timestamp)
-        )
-    )
-
-    return cte
-  }
-
-  /**
    * @returns timeframe of every time meal starts or ends, as well as lates glucose reading
    */
   public static carbs_timeframe(userId: string, start: Date, end: Date) {
@@ -448,36 +306,6 @@ export class Statistics {
             .where(eq(glucose.userId, userId))
             .orderBy(desc(glucose.timestamp))
             .limit(1)
-        )
-    )
-
-    return tf
-  }
-
-  /**
-   *
-   * @param step in minutes
-   * @returns timeframe with one minute step
-   */
-  public static range_timeframe(start: Date, end: Date, step = 1) {
-    /* need to use a real table where we union the series, because otherwise tf.timestamp will refer to timestamp, not timeframe.timestamp */
-    const tf = db.$with('timeframe').as(
-      db
-        .select({
-          timestamp: carbs.timestamp,
-        })
-        .from(carbs)
-        .limit(0)
-        .union(
-          db
-            .select({
-              timestamp: sql`timestamp`
-                .mapWith(glucose.timestamp)
-                .as('timestamp'),
-            })
-            .from(
-              sql`generate_series(${startOfMinute(start).toISOString()}::timestamp, ${startOfMinute(end).toISOString()}::timestamp, MAKE_INTERVAL(mins => ${step})) as timestamp`
-            )
         )
     )
 

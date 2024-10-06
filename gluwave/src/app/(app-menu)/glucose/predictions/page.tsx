@@ -1,7 +1,7 @@
 import { validateRequest } from '@/auth'
 import { AdjustGlucosePrediction } from '@/components/blood-glucose-prediction/adjust-glucose-prediction'
 import { db } from '@/db'
-import { Statistics } from '@/lib/sql_utils'
+import { glucose_prediction } from '@/lib/glucose'
 import { glucose } from '@/schema'
 import { addHours, subHours } from 'date-fns'
 import { and, eq, gte, lte } from 'drizzle-orm'
@@ -46,15 +46,18 @@ export default async function Predictions() {
 
   const lastBloodGlucose = glucose[glucose.length - 1]
 
-  const predictions = await Statistics.execute(
-    Statistics.predict_glucose(
-      lastBloodGlucose.timestamp ?? now,
-      addHours(now, 6),
-      user.id,
-      user.carbohydrateRatio,
-      user.correctionRatio
-    )
+  const r = await glucose_prediction(
+    user.id,
+    lastBloodGlucose.timestamp,
+    addHours(now, 6)
   )
+
+  const predictions = r.toRecords() as {
+    timestamp: Date
+    carbohydrate_prediction: number
+    insulin_prediction: number
+    prediction: number
+  }[]
 
   return (
     <div className="mt-2 mx-auto max-w-2xl min-[420px]:px-2 md:px-4 space-y-6">

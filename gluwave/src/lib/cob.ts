@@ -368,13 +368,27 @@ export const carbs_on_board_prediction = async (
     )
     .withColumn(
       pl
-        .col('carbs')
-        .sub(pl.col('minutes_diff').mul(pl.col('rate')))
-        .clip(0, 99999)
-        .as('cob')
+        .when(
+          pl
+            .col('minutes_diff')
+            .mul(pl.col('rate'))
+            .greaterThanEquals(pl.col('carbs'))
+        )
+        .then(pl.col('carbs'))
+        .otherwise(pl.col('minutes_diff').mul(pl.col('rate')))
+        .as('cumulative_carbohydrate_decay')
+    )
+    .withColumn(
+      pl.col('carbs').sub(pl.col('cumulative_carbohydrate_decay')).as('cob')
     )
     .groupBy('timestamp')
-    .agg(pl.col('cob').sum().alias('cob'))
+    .agg(
+      pl.col('cob').sum().alias('cob'),
+      pl
+        .col('cumulative_carbohydrate_decay')
+        .sum()
+        .alias('cumulative_carbohydrate_decay')
+    )
     .sort('timestamp')
 
   return withCOB

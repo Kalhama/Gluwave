@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 import { GraphContainer, GraphTitle } from '../graph-container'
-import { Button, buttonVariants } from '../ui/button'
+import { buttonVariants } from '../ui/button'
 import { Separator } from '../ui/separator'
 import { GlucoseChartContent } from './glucose-chart-content'
 
@@ -23,9 +23,9 @@ interface Props {
 
 type Prediction = {
   timestamp: Date
-  carbEffect: number
-  insulinEffect: number
-  totalEffect: number
+  carbohydrate_prediction: number
+  insulin_prediction: number
+  prediction: number
 }
 
 export const AdjustGlucosePrediction = ({
@@ -39,9 +39,9 @@ export const AdjustGlucosePrediction = ({
 
   const displayed = (() => {
     if (!includeCarbs && !includeInsulin) return 'none'
-    else if (!includeCarbs) return 'insulinEffect'
-    else if (!includeInsulin) return 'carbEffect'
-    else return 'totalEffect'
+    else if (!includeCarbs) return 'insulin_prediction'
+    else if (!includeInsulin) return 'carbohydrate_prediction'
+    else return 'prediction'
   })()
 
   const displayedPrediction = prediction.map((p) => {
