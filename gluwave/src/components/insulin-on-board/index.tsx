@@ -1,4 +1,5 @@
 import { validateRequest } from '@/auth'
+import { inuslin_on_board } from '@/lib/iob'
 import { calculateUserInsulinData } from '@/lib/sql_utils'
 import { addHours, addMinutes, startOfMinute, subHours } from 'date-fns'
 import { redirect } from 'next/navigation'
@@ -13,11 +14,14 @@ export default async function InsulinOnBoardProvider() {
   }
 
   const now = startOfMinute(new Date())
-  const data = await calculateUserInsulinData(
+
+  const res = await inuslin_on_board(
+    user.id,
     subHours(now, 24),
-    addHours(now, 12),
-    user.id
+    addHours(now, 24)
   )
+
+  const data = res.toRecords()
 
   const current = data.find(
     (insulin) =>
@@ -31,7 +35,7 @@ export default async function InsulinOnBoardProvider() {
           <h2 className="font-semibold">Insulin on board</h2>
 
           <span className="text-xs text-slate-700">
-            {(current?.insulinOnBoard ?? 0).toLocaleString(undefined, {
+            {(current?.iob ?? 0).toLocaleString(undefined, {
               maximumFractionDigits: 2,
               minimumFractionDigits: 1,
             })}{' '}
@@ -39,7 +43,13 @@ export default async function InsulinOnBoardProvider() {
           </span>
         </div>
       </GraphTitle>
-      <InsulinOnBoardContent data={data} now={now} />
+      <InsulinOnBoardContent
+        data={data.map((d) => ({
+          x: d.timestamp,
+          y: d.iob,
+        }))}
+        now={now}
+      />
     </GraphContainer>
   )
 }

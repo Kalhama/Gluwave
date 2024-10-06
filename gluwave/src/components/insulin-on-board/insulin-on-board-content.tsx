@@ -5,10 +5,11 @@ import { DomainTuple, VictoryArea, VictoryLine } from 'victory'
 
 import { GraphContent } from '../graph-container'
 
-type InsulinData = Awaited<ReturnType<typeof calculateUserInsulinData>>
-
 interface Props {
-  data: InsulinData
+  data: {
+    x: Date
+    y: number
+  }[]
   now: Date
 }
 
@@ -16,11 +17,11 @@ export const InsulinOnBoardContent = ({ data, now }: Props) => {
   const domain = {
     y: [
       0,
-      Math.max(5.5, ...data.map((insulin) => insulin.insulinOnBoard)) + 2,
+      Math.max(5.5, ...data.map((insulin) => insulin.y)) + 2,
     ] as DomainTuple,
     x: [
-      new Date(Math.min(...data.map((d) => d.timestamp.getTime()))),
-      new Date(Math.max(...data.map((d) => d.timestamp.getTime()))),
+      new Date(Math.min(...data.map((d) => d.x.getTime()))),
+      new Date(Math.max(...data.map((d) => d.x.getTime()))),
     ] as DomainTuple,
   }
 
@@ -46,8 +47,6 @@ export const InsulinOnBoardContent = ({ data, now }: Props) => {
           parent: { border: '1px solid #ccc', padding: 0 },
         }}
         data={data}
-        x="timestamp"
-        y="insulinOnBoard"
       />
     </GraphContent>
   )

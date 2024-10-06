@@ -1,8 +1,13 @@
 import { db } from '@/db'
 import { carbs, glucose } from '@/schema'
-import { addMinutes, differenceInMinutes, eachMinuteOfInterval } from 'date-fns'
+import {
+  addMinutes,
+  differenceInMinutes,
+  eachMinuteOfInterval,
+  startOfMinute,
+} from 'date-fns'
 import { and, eq, gte, sql } from 'drizzle-orm'
-import pl from 'nodejs-polars'
+import pl, { Datetime, Float64 } from 'nodejs-polars'
 
 // Function to get safe start time for cob prediction
 async function getSafeStartTime(
@@ -318,16 +323,35 @@ export const carbs_on_board_prediction = async (
   ]
 
   // Create a date range for the timeframe
-  const timeframe = pl.DataFrame({
-    timestamp: eachMinuteOfInterval({ start: max_timestsamp, end: endTime }),
-  })
+  const timeframe = pl.DataFrame(
+    {
+      timestamp: eachMinuteOfInterval({
+        start: startOfMinute(max_timestsamp),
+        end: endTime,
+      }),
+    },
+    {
+      schema: {
+        timestamp: Datetime('ms'),
+      },
+    }
+  )
 
   // Convert meals array to a Polars DataFrame
-  const mealsDF = pl.DataFrame({
-    timestamp: meals_for_prediction.map((m) => m.timestamp),
-    carbs: meals_for_prediction.map((m) => m.carbs),
-    rate: meals_for_prediction.map((m) => m.rate),
-  })
+  const mealsDF = pl.DataFrame(
+    {
+      timestamp: meals_for_prediction.map((m) => m.timestamp),
+      carbs: meals_for_prediction.map((m) => m.carbs),
+      rate: meals_for_prediction.map((m) => m.rate),
+    },
+    {
+      schema: {
+        timestamp: Datetime('ms'),
+        carbs: Float64,
+        rate: Float64,
+      },
+    }
+  )
 
   const crossJoined = timeframe
     .join(mealsDF, { how: 'cross' })
