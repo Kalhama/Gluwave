@@ -78,7 +78,7 @@ export function PageDatePicker({ date: defaultValue, baseUrl }: Props) {
                   {date ? (
                     date.toLocaleDateString()
                   ) : (
-                    <span>Showing recent</span>
+                    <span>Last 24 hours</span>
                   )}
                 </div>
               </Button>

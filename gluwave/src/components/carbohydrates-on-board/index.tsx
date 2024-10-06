@@ -27,7 +27,7 @@ export const CarbohydratesOnBoard = async ({ href }: Props) => {
   const union = [
     { timestamp: subMinutes(observed[0]?.timestamp ?? now, 1), cob: 0 }, // start from 0 for nicer plot
     ...observed,
-    ...predicted,
+    ...predicted.toRecords(),
   ]
 
   const current =

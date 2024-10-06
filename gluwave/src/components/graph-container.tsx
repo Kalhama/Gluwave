@@ -94,7 +94,7 @@ export const GraphContent = ({
   if (!isClient)
     return (
       <div className={cn('p-4')}>
-        <Skeleton className={cn('w-full h-[250px] rounded-xl')} />
+        <Skeleton className={cn('w-full h-[255px]  rounded-xl')} />
       </div>
     )
 
@@ -139,9 +139,9 @@ export const GraphSkeleton = () => {
   return (
     <div className={cn('border rounded-lg shadow bg-white')}>
       <GraphTitle>
-        <div className="flex flex-col gap-2">
-          <Skeleton className="w-40 h-4" />
-          <Skeleton className="w-20 h-4" />
+        <div className="p-1">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="w-16 h-3 mt-2" />
         </div>
       </GraphTitle>
       <div className={cn('p-4')}>

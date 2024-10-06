@@ -1,7 +1,8 @@
 import { db } from '@/db'
 import { carbs, glucose } from '@/schema'
-import { addMinutes, differenceInMinutes, parseISO } from 'date-fns'
+import { addMinutes, differenceInMinutes, eachMinuteOfInterval } from 'date-fns'
 import { and, eq, gte, sql } from 'drizzle-orm'
+import pl from 'nodejs-polars'
 
 // Function to get safe start time for cob prediction
 async function getSafeStartTime(
@@ -45,7 +46,9 @@ async function getSafeStartTime(
 `
     )
 
-  return data?.timestamp ?? inputTime
+  const ret = data?.timestamp ?? inputTime
+
+  return ret
 }
 
 // Function to check if a meal is active
@@ -308,56 +311,47 @@ export const carbs_on_board_prediction = async (
     )
 
   // combine active and scheduled meals
-  let meals_for_prediction = [...active_meals, ...upcoming_meals]
-  const get_meals_table = () => {
-    if (meals_for_prediction.length === 0) {
-      return sql`(null::double precision, null::double precision, null::timestamp)`
-    } else {
-      return sql.join(
-        meals_for_prediction.map((a, i) => {
-          const last = i === meals_for_prediction.length - 1
-          const row =
-            sql`(${a.carbs}::double precision, ${a.rate}::double precision, ${a.timestamp.toISOString()}::timestamp)`.append(
-              last ? sql`` : sql`,`
-            )
+  let meals_for_prediction = [
+    { timestamp: max_timestsamp, carbs: 0, rate: 0 },
+    ...active_meals,
+    ...upcoming_meals,
+  ]
 
-          return row
-        })
-      )
-    }
-  }
+  // Create a date range for the timeframe
+  const timeframe = pl.DataFrame({
+    timestamp: eachMinuteOfInterval({ start: max_timestsamp, end: endTime }),
+  })
 
-  // calculate predictions
-  // Do this in SQL not because it's smart here but because it's smart for glucose prediction
-  const predictions = await db
-    .select({
-      timestamp: sql`timestamp`.mapWith(carbs.timestamp).as('timestamp'),
-      cob: sql`	SUM(GREATEST(0, carbs - minutes_between(timestamp, start) * rate))`
-        .mapWith(carbs.amount)
-        .as('cob'),
-    })
-    .from(
-      sql.join([
-        sql`(
-    SELECT 
-      timeframe.timestamp,
-      meals.timestamp as start,
-      carbs,
-      rate
-    FROM generate_series(${max_timestsamp.toISOString()}::timestamp, ${endTime.toISOString()}::timestamp, interval '1 minutes') as timeframe(timestamp)
-    LEFT JOIN (
-        VALUES 
-`,
-        get_meals_table(),
-        sql`
-    ) AS meals(carbs, rate, timestamp) 
-    ON timeframe.timestamp >= meals.timestamp
-    
-        )`,
-      ])
+  // Convert meals array to a Polars DataFrame
+  const mealsDF = pl.DataFrame({
+    timestamp: meals_for_prediction.map((m) => m.timestamp),
+    carbs: meals_for_prediction.map((m) => m.carbs),
+    rate: meals_for_prediction.map((m) => m.rate),
+  })
+
+  const crossJoined = timeframe
+    .join(mealsDF, { how: 'cross' })
+    .filter(pl.col('timestamp').gt(pl.col('timestamp_right')))
+
+  const withCOB = crossJoined
+    .withColumn(
+      pl
+        .col('timestamp')
+        .sub(pl.col('timestamp_right'))
+        .cast(pl.Int64)
+        .div(60 * 1000)
+        .as('minutes_diff')
     )
-    .groupBy(sql`timestamp`)
-    .orderBy(sql`timestamp`)
+    .withColumn(
+      pl
+        .col('carbs')
+        .sub(pl.col('minutes_diff').mul(pl.col('rate')))
+        .clip(0, 99999)
+        .as('cob')
+    )
+    .groupBy('timestamp')
+    .agg(pl.col('cob').sum().alias('cob'))
+    .sort('timestamp')
 
-  return predictions
+  return withCOB
 }

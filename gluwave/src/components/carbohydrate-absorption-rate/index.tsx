@@ -89,12 +89,8 @@ export default async function CarbohydrateAbsorptionRate({ href }: Props) {
   const d = await db.execute(sql`SELECT timestamp 
     FROM carbs
       WHERE timestamp <= ${end.toISOString()}`)
-  console.log('d', d.rows)
 
   const reported_rate = await getReportedCarbRate(user.id, start, end)
-  console.log(start, end)
-
-  console.log(reported_rate)
 
   const reportedRate = reported_rate.map((o) => {
     return {
