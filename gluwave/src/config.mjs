@@ -13,6 +13,7 @@ const schema = z.object({
   DATABASE_URL: z.string(),
   DATABASE_URL_UNPOOLED: z.string(),
   TZ: z.literal('UTC'),
+  NEXT_PUBLIC_URL: z.string(),
 })
 const config = schema.parse(process.env)
 export default config

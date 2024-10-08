@@ -1,4 +1,6 @@
+import { validateRequest } from '@/auth'
 import { cn } from '@/lib/utils'
+import { redirect } from 'next/navigation'
 import React from 'react'
 
 import { BurgerMenu } from './burger-menu'
@@ -9,6 +11,11 @@ interface Props {
 }
 
 export const MenuBar = async ({ children, className }: Props) => {
+  const { session } = await validateRequest()
+  if (!session) {
+    return redirect('/login')
+  }
+
   return (
     <div
       className={cn(

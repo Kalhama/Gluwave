@@ -1,3 +1,3 @@
-import { GlucoseList } from '../glucose-list'
+import { GlucosePage } from '../glucose-page'
 
-export default GlucoseList
+export default GlucosePage

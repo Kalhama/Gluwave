@@ -1,3 +1,3 @@
-import { CarbsList } from './carbs-list'
+import { CarbsPage } from './carbs-page'
 
-export default CarbsList
+export default CarbsPage

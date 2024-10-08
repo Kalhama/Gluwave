@@ -1,6 +1,7 @@
 import { inter } from '@/components/inter'
 import type { Metadata, Viewport } from 'next'
 
+import { TRPCProvider } from '../lib/trcp/client'
 import './globals.sass'
 
 export const metadata: Metadata = {
@@ -24,7 +25,9 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`bg-slate-200 ${inter.className}`}>
-        <main>{children}</main>
+        <main>
+          <TRPCProvider>{children}</TRPCProvider>
+        </main>
       </body>
     </html>
   )

@@ -1,6 +1,5 @@
 'use client'
 
-import { updateSettings } from '@/actions/update-settings'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -13,27 +12,34 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { parseCommaFloat } from '@/lib/parse-comma-float'
-import { useServerAction } from '@/lib/use-server-action'
-import { updateSettingsSchema } from '@/schemas/updateSettingsSchema'
+import { trpc } from '@/lib/trcp/client'
+import { ZPostProfileSchema } from '@/server/routes/post-profile.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 interface Props {
-  defaultValues: z.infer<typeof updateSettingsSchema>
+  defaultValues: z.infer<typeof ZPostProfileSchema>
 }
 
 export function SettingsForm({ defaultValues }: Props) {
-  const { action, loading } = useServerAction(updateSettings)
-
-  const form = useForm<z.infer<typeof updateSettingsSchema>>({
-    resolver: zodResolver(updateSettingsSchema),
+  const form = useForm<z.infer<typeof ZPostProfileSchema>>({
+    resolver: zodResolver(ZPostProfileSchema),
     defaultValues,
   })
 
-  async function onSubmit(values: z.infer<typeof updateSettingsSchema>) {
-    action(values)
+  const post = trpc.user.postProfile.useMutation()
+  const utils = trpc.useUtils()
+
+  async function onSubmit(values: z.infer<typeof ZPostProfileSchema>) {
+    post.mutate(values, {
+      onSuccess() {
+        utils.user.invalidate()
+        utils.analysis.invalidate()
+        form.reset(values)
+      },
+    })
   }
 
   return (
@@ -129,7 +135,7 @@ export function SettingsForm({ defaultValues }: Props) {
           >
             Cancel
           </Button>
-          <Button disabled={loading} type="submit">
+          <Button disabled={post.isPending} type="submit">
             Submit
           </Button>
         </form>

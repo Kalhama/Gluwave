@@ -1,3 +1,3 @@
-import { InsulinList } from '../insulin-list'
+import { InsulinPage } from '../insulin-page'
 
-export default InsulinList
+export default InsulinPage

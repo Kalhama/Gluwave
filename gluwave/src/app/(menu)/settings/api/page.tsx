@@ -19,7 +19,7 @@ export default async function Settings() {
       </div>
 
       <div>
-        <ApiKeyForm current={user.apikey} />
+        <ApiKeyForm defaultValue={user.apikey ?? undefined} />
       </div>
     </div>
   )

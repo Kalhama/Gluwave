@@ -1,6 +1,5 @@
 'use client'
 
-import { upsertInsulinAction } from '@/actions/upsert-insulin'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -22,9 +21,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useServerAction } from '@/lib/use-server-action'
+import { trpc } from '@/lib/trcp/client'
 import { cn } from '@/lib/utils'
-import { upsertInsulinSchema } from '@/schemas/upsertInsulinSchema'
+import { ZPostInsulinSchema } from '@/server/routes/post-insulin.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addMinutes, format, parse, set } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
@@ -45,10 +44,8 @@ interface Props {
 }
 
 export function InsulinDialog({ insulin, children }: PropsWithChildren<Props>) {
-  const { action, loading, data, message } =
-    useServerAction(upsertInsulinAction)
-  const form = useForm<z.infer<typeof upsertInsulinSchema>>({
-    resolver: zodResolver(upsertInsulinSchema),
+  const form = useForm<z.infer<typeof ZPostInsulinSchema>>({
+    resolver: zodResolver(ZPostInsulinSchema),
     defaultValues: {
       amount: insulin?.amount ?? 0,
       timestamp: insulin?.timestamp ?? new Date(),
@@ -57,8 +54,17 @@ export function InsulinDialog({ insulin, children }: PropsWithChildren<Props>) {
   })
   const editing = !!insulin?.id
 
-  async function onSubmit(values: z.infer<typeof upsertInsulinSchema>) {
-    await action(values)
+  const post = trpc.insulin.post.useMutation()
+  const utils = trpc.useUtils()
+
+  async function onSubmit(values: z.infer<typeof ZPostInsulinSchema>) {
+    post.mutate(values, {
+      onSuccess(input) {
+        utils.insulin.invalidate()
+        utils.analysis.invalidate()
+      },
+    })
+
     form.reset()
     setOpenChange(false)
   }
@@ -224,7 +230,7 @@ export function InsulinDialog({ insulin, children }: PropsWithChildren<Props>) {
                 </FormItem>
               )}
             />
-            <Button disabled={loading} type="submit" className="w-full">
+            <Button disabled={post.isPending} type="submit" className="w-full">
               Submit
             </Button>
           </form>

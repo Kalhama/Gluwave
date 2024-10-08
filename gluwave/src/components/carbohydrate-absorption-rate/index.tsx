@@ -1,98 +1,49 @@
-import { validateRequest } from '@/auth'
-import { db } from '@/db'
-import { Statistics } from '@/lib/sql_utils'
-import { carbs } from '@/schema'
-import { addHours, setHours, startOfDay, subHours } from 'date-fns'
-import { and, eq, gte, lt, lte, sql } from 'drizzle-orm'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { trpc } from '@/lib/trcp/client'
 import { Tuple } from 'victory'
 
-import { GraphContainer, GraphTitle } from '../graph-container'
+import { GraphContainer, GraphSkeleton, GraphTitle } from '../graph-container'
 import { CarbohydrateAbsorptionRateGraph } from './carbohydrate-absorption-rate-graph'
 
 interface Props {
   href?: string
+  start: Date
+  end: Date
 }
 
-/**
- * @returns reported carb rate over time
- */
-const getReportedCarbRate = (userId: string, start: Date, end: Date) => {
-  return db
-    .select({
-      timestamp: sql`timeframe.timestamp`
-        .mapWith(carbs.timestamp)
-        .as('timestamp'),
-      rate: sql`COALESCE(SUM(${carbs.amount} / ${carbs.decay}), 0)`
-        .mapWith(carbs.amount)
-        .as('rate'),
-    })
-    .from(
-      sql`(
-      SELECT timestamp 
-      FROM carbs
-      WHERE user_id = ${userId}
-      AND ${start.toISOString()} <= timestamp 
-      AND timestamp <= ${end.toISOString()}
+export default function CarbohydrateAbsorptionRate({
+  href,
+  start,
+  end,
+}: Props) {
+  const now = new Date()
 
-      UNION ALL
+  const r = trpc.carbohydrate.getReportedRate.useQuery({
+    start,
+    end,
+  })
+  const o = trpc.analysis.getCarbohydratesRateObserved.useQuery({
+    start,
+    end,
+  })
 
-      SELECT timestamp + MAKE_INTERVAL(mins => carbs.decay + 1)  AS timestamp
-      FROM carbs
-      WHERE user_id = ${userId}
-      AND ${start.toISOString()} <= timestamp + MAKE_INTERVAL(mins => carbs.decay) 
-      AND timestamp + MAKE_INTERVAL(mins => carbs.decay) <= ${end.toISOString()}
-) AS timeframe`
-    )
-    .leftJoin(
-      carbs,
-      and(
-        eq(carbs.userId, userId),
-        gte(
-          sql`${carbs.timestamp} + MAKE_INTERVAL(mins => ${carbs.decay})`,
-          sql`timeframe.timestamp`
-        ),
-        lte(carbs.timestamp, sql`timeframe.timestamp`)
-      )
-    )
-    .groupBy(sql`timeframe.timestamp`)
-    .orderBy(sql`timeframe.timestamp`)
-}
-
-export default async function CarbohydrateAbsorptionRate({ href }: Props) {
-  const { user } = await validateRequest()
-  if (!user) {
-    redirect('/login')
+  if (r.isPending || o.isPending) {
+    return <GraphSkeleton />
   }
 
-  const now = new Date()
-  const start = setHours(startOfDay(subHours(now, 4)), 4) // previous 4AM
-  const end = addHours(now, 12)
+  if (r.isLoadingError || o.isLoadingError) {
+    return 'Error'
+  }
 
-  const tf = Statistics.approximate_timeframe(user.id, start, end)
-
-  const observed = await Statistics.execute(
-    Statistics.observed_carbs(
-      tf,
-      user.id,
-      user.carbohydrateRatio,
-      user.correctionRatio
-    )
-  )
-
-  const observedRate = observed.map((o) => {
+  const observedRate = o.data.map((o) => {
     return {
       x: o.timestamp,
       y: (o.observedCarbs / (o.interval ?? 1)) * (15 * 60),
     }
   })
-  const d = await db.execute(sql`SELECT timestamp 
-    FROM carbs
-      WHERE timestamp <= ${end.toISOString()}`)
 
-  const reported_rate = await getReportedCarbRate(user.id, start, end)
-
-  const reportedRate = reported_rate.map((o) => {
+  const reportedRate = r.data.map((o) => {
     return {
       x: o.timestamp,
       y: o.rate * 15, // bring to same scale with observed

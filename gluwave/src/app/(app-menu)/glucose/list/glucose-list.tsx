@@ -1,9 +1,8 @@
-import { deleteGlucose } from '@/actions/delete-glucose'
-import { validateRequest } from '@/auth'
-import { BloodGlucoseDialog } from '@/components/bloodglucose-dialog'
+'use client'
+
 import { ClientDateTime } from '@/components/client-datetime'
-import { DeleteDialog } from '@/components/delete-dialog'
-import { PageDatePicker } from '@/components/page-date-picker'
+import { DeleteDialogMutation } from '@/components/delete-dialog-mutation'
+import { GlucoseDialog } from '@/components/glucose-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -13,47 +12,49 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { db } from '@/db'
-import { glucose } from '@/schema'
-import { addHours, parseISO, subHours } from 'date-fns'
-import { and, asc, eq, gte, lt } from 'drizzle-orm'
+import { trpc } from '@/lib/trcp/client'
 import { Pencil } from 'lucide-react'
-import { redirect } from 'next/navigation'
 import * as React from 'react'
 
-interface Props {
-  params: {
-    date?: string
-  }
+const GlucoseDeleteDialog = ({ id }: { id: number }) => {
+  const del = trpc.glucose.delete.useMutation()
+  const utils = trpc.useUtils()
+  return (
+    <DeleteDialogMutation
+      loading={del.isPending}
+      onDelete={() => {
+        del.mutate(
+          { id },
+          {
+            onSuccess() {
+              utils.analysis.invalidate()
+              utils.glucose.invalidate()
+            },
+          }
+        )
+      }}
+    />
+  )
 }
 
-export const GlucoseList = async ({ params }: Props) => {
-  const date = params?.date ? new Date(Number(params.date)) : undefined
+interface Props {
+  end: Date
+  start: Date
+}
 
-  const { user } = await validateRequest()
-  if (!user) {
-    redirect('/login')
+export const GlucoseList = ({ start, end }: Props) => {
+  const g = trpc.glucose.get.useQuery({ start, end })
+
+  if (g.isPending) {
+    return 'loading'
   }
 
-  const now = new Date()
-  const start = subHours(date ?? now, date ? 0 : 24)
-  const end = addHours(date ?? now, 24)
-
-  const results = await db
-    .select()
-    .from(glucose)
-    .where(
-      and(
-        gte(glucose.timestamp, start),
-        lt(glucose.timestamp, end),
-        eq(glucose.userId, user.id)
-      )
-    )
-    .orderBy(asc(glucose.timestamp))
+  if (g.isError) {
+    return 'Error'
+  }
 
   return (
     <>
-      <PageDatePicker baseUrl="/glucose/list" date={date} />
       <div className="space-y-4 border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
         <div>
           <Table>
@@ -65,28 +66,28 @@ export const GlucoseList = async ({ params }: Props) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {results.map((glucose) => (
-                <TableRow key={glucose.id}>
+              {g.data.map((g) => (
+                <TableRow key={g.id}>
                   <TableCell className="font-medium">
-                    <ClientDateTime timestamp={glucose.timestamp} />
+                    <ClientDateTime timestamp={g.timestamp} />
                   </TableCell>
-                  <TableCell>{glucose.value} mmol/l</TableCell>
+                  <TableCell>{g.value} mmol/l</TableCell>
                   <TableCell className="text-right flex justify-end">
-                    <BloodGlucoseDialog
+                    <GlucoseDialog
                       glucose={{
-                        ...glucose,
-                        glucose: glucose.value,
+                        ...g,
+                        glucose: g.value,
                       }}
                     >
                       <Button variant="ghost" className="p-2">
                         <Pencil className="cursor-pointer w-4 h-4" />
                       </Button>
-                    </BloodGlucoseDialog>
-                    <DeleteDialog action={deleteGlucose} id={glucose.id} />
+                    </GlucoseDialog>
+                    <GlucoseDeleteDialog id={g.id} />
                   </TableCell>
                 </TableRow>
               ))}
-              {results.length === 0 && (
+              {g.data.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-slate-400">
                     No entries
