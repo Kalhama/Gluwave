@@ -36,7 +36,7 @@ export const inuslin_on_board = async (
   // Convert meals array to a Polars DataFrame
   const insulinDF = pl.DataFrame(
     {
-      timestamp: i.map((m) => m.timestamp).concat([new Date()]), // push dummy element to ensure there is always at least one
+      timestamp: i.map((m) => m.timestamp).concat([start]), // push dummy element to ensure there is always at least one
       insulin: i.map((m) => m.amount).concat([0]),
     },
     {
