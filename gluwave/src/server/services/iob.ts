@@ -11,7 +11,7 @@ export const inuslin_on_board = async (
   start: Date,
   end: Date
 ) => {
-  const insunlin = await db
+  const i = await db
     .select()
     .from(insulin)
     .where(
@@ -36,8 +36,8 @@ export const inuslin_on_board = async (
   // Convert meals array to a Polars DataFrame
   const insulinDF = pl.DataFrame(
     {
-      timestamp: insunlin.map((m) => m.timestamp),
-      insulin: insunlin.map((m) => m.amount),
+      timestamp: i.map((m) => m.timestamp).concat([new Date()]), // push dummy element to ensure there is always at least one
+      insulin: i.map((m) => m.amount).concat([0]),
     },
     {
       schema: {
