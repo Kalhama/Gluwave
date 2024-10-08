@@ -105,7 +105,7 @@ export const CarbohydratesOnBoard = ({ start, end, href }: Props) => {
             /* tailwind green-700 */
             data: { fill: '#15803d88' },
           }}
-          interpolation="stepAfter"
+          interpolation="linear"
           data={union}
           x="timestamp"
           y="cob"

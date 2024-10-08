@@ -39,7 +39,7 @@ export const GlucoseAdjustPrediction = ({ start, end }: Props) => {
 
   const glucose = g.data
 
-  const lastBloodGlucose = glucose[glucose.length - 1]?.value
+  const lastBloodGlucose = glucose[glucose.length - 1]?.value ?? 7
 
   const displayed = (() => {
     if (!includeCarbs && !includeInsulin) return 'none'

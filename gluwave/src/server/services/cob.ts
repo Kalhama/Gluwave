@@ -157,23 +157,12 @@ export async function attributeObservedToMeals(
     
     LEFT JOIN carbs
       ON metrics.user_id = carbs.user_id
-      AND metrics.timestamp <= carbs.timestamp AND carbs.timestamp < timestamp_next
+      AND metrics.timestamp <= carbs.timestamp AND carbs.timestamp < metrics.timestamp_next
       GROUP BY glucose_id, observed_carbs, metrics.timestamp, metrics.user_id
       ORDER BY metrics.timestamp ASC
   `)
 
   for (const observation of observations) {
-    // Filter active meals on current timestamp, no need to attribute carbs into them
-    activeMeals = activeMeals.filter((meal) =>
-      isActive(
-        observation.timestamp[0],
-        addMinutes(meal.start, meal.decay),
-        addMinutes(meal.start, meal.extended_decay),
-        meal.attributed_carbs[0],
-        meal.carbs
-      )
-    )
-
     // Calculate total rate of active meals
     const totalRate = activeMeals.reduce(
       (sum, meal) => sum + meal.carbs / meal.decay,
@@ -228,6 +217,17 @@ export async function attributeObservedToMeals(
         extended_decay: meal.extended_decay,
         attributed_carbs: meal.attributed_carbs[0],
       }))
+    )
+
+    // Filter active meals on current timestamp, no need to attribute carbs into them
+    activeMeals = activeMeals.filter((meal) =>
+      isActive(
+        observation.timestamp[0],
+        addMinutes(meal.start, meal.decay),
+        addMinutes(meal.start, meal.extended_decay),
+        meal.attributed_carbs[0],
+        meal.carbs
+      )
     )
   }
 

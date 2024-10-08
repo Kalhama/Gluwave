@@ -64,6 +64,13 @@
       "when": 1727835817312,
       "tag": "0008_optimized_metrics_function",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1728414874083,
+      "tag": "0009_metrics_lag",
+      "breakpoints": true
     }
   ]
 }
