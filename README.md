@@ -1,8 +1,11 @@
 <img alt="Gluwve" src="gluwave/public/full_transparent.png">
 
-## Features 🚀
+Gluwave is a diabetes management app for MDI therapy users that takes many ideas from closed and open loopinng into MDI treatment. Gluwave is designed to work with either CGM such as Libre 2/3, or traditional fingerpricking.
+
+## Key features 🚀
 
 - [x] Smart glucose [prediction algorithm](https://github.com/Kalhama/Gluwave?tab=readme-ov-file#algorithm-)
+- [x] 100% web based. No app installation or building from soruce.
 - [x] Integrate glucose from Freestyle Libre 2 / 3, or manually input fingerprick results
 - [x] Calculate insulin on board
 - [x] Log meals
