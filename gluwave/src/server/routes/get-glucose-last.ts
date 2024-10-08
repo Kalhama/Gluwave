@@ -45,7 +45,7 @@ export const getGlucoseLast = async ({
 
   if (!first) {
     return {
-      last: null,
+      last: last,
       trend: null,
     }
   }
