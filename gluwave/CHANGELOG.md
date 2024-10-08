@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.2](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.4.1...gluwave-v1.4.2) (2024-10-08)
+
+
+### Bug Fixes
+
+* carbs on board is invisible if there are no glucose readings [#168](https://github.com/Kalhama/Gluwave/issues/168) ([8070dd9](https://github.com/Kalhama/Gluwave/commit/8070dd973f5d703b00ddc5c3f76096ff9cb7aa91))
+* cob returns nan when carbs start on latest measurement / COB graph needs two glucose measurements for every meal before it displays meaningful data [#160](https://github.com/Kalhama/Gluwave/issues/160) ([6a78692](https://github.com/Kalhama/Gluwave/commit/6a7869222121f51bcb4bed0695822dbb378fdfa3))
+* **gluwave:** :adhesive_bandage: no prediction if no recent insulin data [#172](https://github.com/Kalhama/Gluwave/issues/172) ([2d12e60](https://github.com/Kalhama/Gluwave/commit/2d12e60e18715fd084c08ecb6dc2b4ba93dc44d3))
+* **gluwave:** :art: carb page padding ([ced17cc](https://github.com/Kalhama/Gluwave/commit/ced17cc83f0c25f1089039e09d67ddf20de9ef8a))
+* **gluwave:** carb rate did not end at correct time ([8c2bd3d](https://github.com/Kalhama/Gluwave/commit/8c2bd3de936e557ae77f017ebf4404911f00c2f6))
+* **gluwave:** glucose bar not showing value if there was no trend available ([2e67478](https://github.com/Kalhama/Gluwave/commit/2e6747844355e71b8c2a16acbc2ae84118ffa0d5))
+* **gluwave:** Meal does not get attributed any carbs when metrics are sparse [#162](https://github.com/Kalhama/Gluwave/issues/162) ([6a78692](https://github.com/Kalhama/Gluwave/commit/6a7869222121f51bcb4bed0695822dbb378fdfa3))
+* **gluwave:** prediction starting from wrong timestamp in certain situations ([4d66f6d](https://github.com/Kalhama/Gluwave/commit/4d66f6df80289b03fc73ead3ec9ba98d6a6f3bf8))
+* **gluwave:** remove unused env var ([82385d2](https://github.com/Kalhama/Gluwave/commit/82385d201e6f6415fe64ba288fad37b6f623a729))
+
 ## [1.4.1](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.4.0...gluwave-v1.4.1) (2024-10-03)
 
 
