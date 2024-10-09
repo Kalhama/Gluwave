@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.4.2...gluwave-v1.4.3) (2024-10-09)
+
+
+### Bug Fixes
+
+* **gluwave:** cob linear interpolation ([1a0d2b2](https://github.com/Kalhama/Gluwave/commit/1a0d2b291b95e7fbc333bb8493959e0807d81177))
+
 ## [1.4.2](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.4.1...gluwave-v1.4.2) (2024-10-08)
 
 
