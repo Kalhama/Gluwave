@@ -157,12 +157,26 @@ export async function attributeObservedToMeals(
     
     LEFT JOIN carbs
       ON metrics.user_id = carbs.user_id
-      AND metrics.timestamp <= carbs.timestamp AND carbs.timestamp < metrics.timestamp_next
+      AND metrics.timestamp_prev < carbs.timestamp AND carbs.timestamp <= metrics.timestamp
       GROUP BY glucose_id, observed_carbs, metrics.timestamp, metrics.user_id
       ORDER BY metrics.timestamp ASC
   `)
 
   for (const observation of observations) {
+    // Filter active meals on current timestamp, no need to attribute carbs into them
+    activeMeals = activeMeals.filter((meal) =>
+      isActive(
+        observation.timestamp[0],
+        addMinutes(meal.start, meal.decay),
+        addMinutes(meal.start, meal.extended_decay),
+        meal.attributed_carbs[0],
+        meal.carbs
+      )
+    )
+
+    // Append new meals from this observation step
+    activeMeals.push(...observation.new_meals)
+
     // Calculate total rate of active meals
     const totalRate = activeMeals.reduce(
       (sum, meal) => sum + meal.carbs / meal.decay,
@@ -203,9 +217,6 @@ export async function attributeObservedToMeals(
       ].slice(0, sliceLen)
     }
 
-    // Append new meals from this observation step
-    activeMeals.push(...observation.new_meals)
-
     // Push current active meals to result set
     results.push(
       ...activeMeals.map((meal) => ({
@@ -217,17 +228,6 @@ export async function attributeObservedToMeals(
         extended_decay: meal.extended_decay,
         attributed_carbs: meal.attributed_carbs[0],
       }))
-    )
-
-    // Filter active meals on current timestamp, no need to attribute carbs into them
-    activeMeals = activeMeals.filter((meal) =>
-      isActive(
-        observation.timestamp[0],
-        addMinutes(meal.start, meal.decay),
-        addMinutes(meal.start, meal.extended_decay),
-        meal.attributed_carbs[0],
-        meal.carbs
-      )
     )
   }
 
@@ -296,14 +296,23 @@ export const carbs_on_board_prediction = async (
   // get only currently active meals
   const active_meals = attributed
     .filter((a) => a.timestamp.getTime() === max_timestsamp.getTime())
-    .map((c) => ({
-      timestamp: c.timestamp,
-      carbs: c.carbs - c.attributed_carbs,
-      rate: Math.max(
-        c.carbs / c.extended_decay,
-        c.attributed_carbs / differenceInMinutes(c.timestamp, c.start)
-      ),
-    }))
+    .map((c) => {
+      const diff = differenceInMinutes(c.timestamp, c.start)
+      return {
+        timestamp: c.timestamp,
+        carbs: c.carbs - c.attributed_carbs,
+        rate: Math.max(
+          c.carbs / c.extended_decay,
+          diff === 0
+            ? 0
+            : c.attributed_carbs / differenceInMinutes(c.timestamp, c.start)
+        ),
+      }
+    })
+
+  console.log(
+    attributed.filter((a) => a.timestamp.getTime() === max_timestsamp.getTime())
+  )
 
   // get scheduled meals
   const upcoming_meals = await db

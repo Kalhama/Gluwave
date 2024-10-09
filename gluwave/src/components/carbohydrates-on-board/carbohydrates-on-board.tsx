@@ -52,9 +52,12 @@ export const CarbohydratesOnBoard = ({ start, end, href }: Props) => {
     ...predicted,
   ]
 
+  // latest past value
   const current =
-    union.find((d) => Math.abs(differenceInMinutes(d.timestamp, now)) < 3)
-      ?.cob ?? 0
+    union
+      .filter((u) => differenceInMinutes(u.timestamp, now) < 0)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .find((u) => u)?.cob ?? 0
 
   const domain = {
     y: [

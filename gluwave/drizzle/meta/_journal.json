@@ -71,6 +71,13 @@
       "when": 1728414874083,
       "tag": "0009_metrics_lag",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1728477295668,
+      "tag": "0010_metrics_next_timestamp_fix",
+      "breakpoints": true
     }
   ]
 }
