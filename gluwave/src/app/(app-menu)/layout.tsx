@@ -1,16 +1,33 @@
 import { validateRequest } from '@/auth'
 import { GlucoseBar } from '@/components/glucose-bar'
 import { Toolbar } from '@/components/toolbar'
-import { trpc } from '@/lib/trcp/server'
+import { db } from '@/db'
+import { glucose } from '@/schema'
+import { subHours } from 'date-fns'
+import { and, desc, eq, gte } from 'drizzle-orm'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const d = await trpc.glucose.getLast()
+  const { user } = await validateRequest()
 
-  if (d.last?.value) {
+  if (!user) return {}
+
+  const [last] = await db
+    .select()
+    .from(glucose)
+    .where(
+      and(
+        eq(glucose.userId, user.id),
+        gte(glucose.timestamp, subHours(new Date(), 1))
+      )
+    )
+    .orderBy(desc(glucose.timestamp))
+    .limit(1)
+
+  if (last?.value) {
     return {
-      title: `${d.last.value.toLocaleString(undefined, {
+      title: `${last.value.toLocaleString(undefined, {
         minimumFractionDigits: 1,
         maximumFractionDigits: 1,
       })} mmol/l`,

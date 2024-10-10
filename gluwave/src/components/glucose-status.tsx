@@ -27,6 +27,8 @@ export const GlucoseStatus = () => {
           minimumFractionDigits: 1,
           maximumFractionDigits: 1,
         })} mmol/l`
+      } else {
+        document.title = 'Gluwave'
       }
     }
   }, [d?.data?.last])
