@@ -22,12 +22,12 @@ export const GlucoseStatus = () => {
 
   useEffect(() => {
     if (d?.data?.last) {
-      document.title = `${d.data.last.value.toLocaleString(undefined, {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      })} mmol/l`
-    } else {
-      document.title = `Gluwave`
+      if (differenceInMinutes(new Date(), d.data.last.timestamp) < 60) {
+        document.title = `${d.data.last.value.toLocaleString(undefined, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        })} mmol/l`
+      }
     }
   }, [d?.data?.last])
 
@@ -43,9 +43,9 @@ export const GlucoseStatus = () => {
     return 'Error'
   }
 
-  const last = d.data.last
   const trend = d.data.trend
 
+  const last = d.data.last
   const minutesDelta = last
     ? differenceInMinutes(new Date(), new Date(last.timestamp))
     : 99999

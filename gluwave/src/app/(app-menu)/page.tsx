@@ -1,26 +1,7 @@
 import { CarbohydratesOnBoard } from '@/components/carbohydrates-on-board/carbohydrates-on-board'
 import { Glucose } from '@/components/glucose/glucose'
 import { InsulinOnBoard } from '@/components/insulin-on-board/insulin-on-board'
-import { db } from '@/db'
-import { glucose } from '@/schema'
-import { addHours, addMinutes, startOfHour, subHours } from 'date-fns'
-import { and, desc, eq, gte } from 'drizzle-orm'
-
-const getLastGlucose = async (userId: string): Promise<number | undefined> => {
-  const [last] = await db
-    .select()
-    .from(glucose)
-    .where(
-      and(
-        eq(glucose.userId, userId),
-        gte(glucose.timestamp, addMinutes(new Date(), -60))
-      )
-    )
-    .orderBy(desc(glucose.timestamp))
-    .limit(1)
-
-  return last?.value
-}
+import { addHours, startOfHour, subHours } from 'date-fns'
 
 export default async function App() {
   const now = new Date()
