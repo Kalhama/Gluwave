@@ -1,15 +1,50 @@
 import { db } from '@/db'
 import { carbs, glucose } from '@/schema'
 import {
+  Interval,
   addMinutes,
   differenceInMinutes,
+  differenceInSeconds,
   eachMinuteOfInterval,
+  interval,
+  max,
+  min,
   startOfMinute,
 } from 'date-fns'
 import { and, eq, gte, sql } from 'drizzle-orm'
 import pl, { Datetime, Float64 } from 'nodejs-polars'
 
 import { DataFrameTypes } from './dataframe-with-type'
+
+function range(size: number, startAt = 0) {
+  return [...Array(size).keys()].map((i) => i + startAt)
+}
+
+const intervalIntersectionInSeconds = (
+  interval1: Interval,
+  interval2: Interval
+) => {
+  const start = max([interval1.start, interval2.start])
+  const end = min([interval1.end, interval2.end])
+
+  return differenceInSeconds(end, start)
+}
+
+const calculateWeight = (
+  meal: Meal,
+  observation: Awaited<ReturnType<typeof getObservations>>[0]
+) => {
+  const rate = meal.carbs / meal.decay
+  const activeTime = intervalIntersectionInSeconds(
+    interval(
+      observation.timestamp[0],
+      observation.timestamp[1] ?? observation.timestamp[0]
+    ),
+    interval(meal.start, addMinutes(meal.start, meal.extended_decay))
+  )
+
+  return rate * activeTime
+}
 
 // Function to get safe start time for cob prediction
 async function getSafeStartTime(
@@ -72,22 +107,30 @@ function isActive(
 // Function to step in time for meal to compare it to
 function findComparisonStep(
   datetimes: Date[],
-  attributedCarbs: number[],
+  meal: Meal,
   lookbackLen: number
 ): { datetime: Date; attributedCarbs: number } {
   const now = datetimes[0]
-  const len = Math.min(attributedCarbs.length, datetimes.length)
+  const len = Math.min(meal.attributed_carbs.length, datetimes.length)
 
-  for (let i = 0; i < len; i++) {
-    if (differenceInMinutes(now, datetimes[i]) > lookbackLen) {
-      return { datetime: datetimes[i], attributedCarbs: attributedCarbs[i] }
+  let index =
+    range(len).find((i) => {
+      if (differenceInMinutes(now, datetimes[i]) > lookbackLen) {
+        return i
+      }
+    }) ?? len - 1
+
+  // If we're taking the first observed carbs the timestamp is carb.start
+  if (index === meal.attributed_carbs.length - 1) {
+    return {
+      datetime: meal.start,
+      attributedCarbs: meal.attributed_carbs[index],
     }
-  }
-
-  // If no matches, return last
-  return {
-    datetime: datetimes[len - 1],
-    attributedCarbs: attributedCarbs[len - 1],
+  } else {
+    return {
+      datetime: datetimes[len - 1],
+      attributedCarbs: meal.attributed_carbs[len - 1],
+    }
   }
 }
 
@@ -100,31 +143,13 @@ type Meal = {
   attributed_carbs: number[]
 }
 
-// attribute observed carbs to meals
-export async function attributeObservedToMeals(
-  filterUserId: string,
-  startTime: Date,
+const getObservations = async (
+  safeStartTime: Date,
+  sliceLen: number,
   endTime: Date,
-  lookbackLen: number
-) {
-  const results: {
-    carb_id: number
-    timestamp: Date
-    start: Date
-    carbs: number
-    decay: number
-    extended_decay: number
-    attributed_carbs: number
-  }[] = []
-
-  const sliceLen = lookbackLen
-
-  let activeMeals: Meal[] = []
-
-  const safeStartTime = await getSafeStartTime(startTime, filterUserId)
-
-  // for every reading in metrics join new_meal entries
-  const observations = await db.select({
+  filterUserId: string
+) => {
+  return await db.select({
     glucose_id: sql`glucose_id`.mapWith(glucose.id).as('glucose_id'),
     observed_carbs: sql`observed_carbs`.mapWith(carbs.amount),
     timestamp:
@@ -161,15 +186,47 @@ export async function attributeObservedToMeals(
       GROUP BY glucose_id, observed_carbs, metrics.timestamp, metrics.user_id
       ORDER BY metrics.timestamp ASC
   `)
+}
+
+// attribute observed carbs to meals
+export async function attributeObservedToMeals(
+  filterUserId: string,
+  startTime: Date,
+  endTime: Date,
+  lookbackLen: number
+) {
+  const results: {
+    carb_id: number
+    timestamp: Date
+    start: Date
+    carbs: number
+    decay: number
+    extended_decay: number
+    attributed_carbs: number
+  }[] = []
+
+  const sliceLen = lookbackLen
+
+  let activeMeals: Meal[] = []
+
+  const safeStartTime = await getSafeStartTime(startTime, filterUserId)
+
+  // for every reading in metrics join new_meal entries
+  const observations = await getObservations(
+    safeStartTime,
+    sliceLen,
+    endTime,
+    filterUserId
+  )
 
   for (const observation of observations) {
     // Filter active meals on current timestamp, no need to attribute carbs into them
     activeMeals = activeMeals.filter((meal) =>
       isActive(
-        observation.timestamp[0],
+        observation.timestamp[1] ?? observation.timestamp[0], // previous
         addMinutes(meal.start, meal.decay),
         addMinutes(meal.start, meal.extended_decay),
-        meal.attributed_carbs[0],
+        meal.attributed_carbs[0], // after previous step
         meal.carbs
       )
     )
@@ -178,33 +235,30 @@ export async function attributeObservedToMeals(
     activeMeals.push(...observation.new_meals)
 
     // Calculate total rate of active meals
-    const totalRate = activeMeals.reduce(
-      (sum, meal) => sum + meal.carbs / meal.decay,
-      0
-    )
+    let totalWeight = activeMeals.reduce((sum, meal) => {
+      return sum + calculateWeight(meal, observation)
+    }, 0)
+    if (totalWeight === 0) totalWeight = 1
 
     // Attribute observed carbs to each meal
+    // meal is pointer, which we want
     for (const meal of activeMeals) {
-      // meal is pointer, which we want
-      const rate = meal.carbs / meal.decay
+      const weight = calculateWeight(meal, observation)
+
       let observedAttributedCarbs =
-        (rate / totalRate) * observation.observed_carbs +
+        (weight / totalWeight) * observation.observed_carbs +
         meal.attributed_carbs[0]
 
       const {
         datetime: comparisonTimestamp,
         attributedCarbs: comparisonAttributed,
-      } = findComparisonStep(
-        observation.timestamp,
-        meal.attributed_carbs,
-        lookbackLen
-      )
+      } = findComparisonStep(observation.timestamp, meal, lookbackLen)
 
+      const min_rate = meal.carbs / meal.extended_decay
       const minAttributedCarbs =
         comparisonAttributed +
-        (differenceInMinutes(observation.timestamp[0], comparisonTimestamp) *
-          rate) /
-          1.5
+        differenceInMinutes(observation.timestamp[0], comparisonTimestamp) *
+          min_rate
 
       const newAttributedCarbs = Math.min(
         Math.max(observedAttributedCarbs, minAttributedCarbs),
@@ -309,10 +363,6 @@ export const carbs_on_board_prediction = async (
         ),
       }
     })
-
-  console.log(
-    attributed.filter((a) => a.timestamp.getTime() === max_timestsamp.getTime())
-  )
 
   // get scheduled meals
   const upcoming_meals = await db
