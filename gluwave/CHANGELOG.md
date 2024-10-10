@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.5.0](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.4.3...gluwave-v1.5.0) (2024-10-10)
+
+
+### Features
+
+* **gluwave:** :art: progressive web app ([a70832d](https://github.com/Kalhama/Gluwave/commit/a70832d309ade15662ee854b8539862945df2b59))
+
+
+### Bug Fixes
+
+* **gluwave:** &lt;title&gt; [#180](https://github.com/Kalhama/Gluwave/issues/180) ([efe2ed5](https://github.com/Kalhama/Gluwave/commit/efe2ed504815aced03cb3474c6a9c8cd2ae913a2))
+* **gluwave:** attributed_carbs should be weighed by active_time [#129](https://github.com/Kalhama/Gluwave/issues/129) ([401e7ea](https://github.com/Kalhama/Gluwave/commit/401e7ea75f11a3bea7bc754bd52a611439793abb))
+* **gluwave:** build error ([56354b5](https://github.com/Kalhama/Gluwave/commit/56354b5773194c154d37c1ec26ca49e7c8776948))
+* **gluwave:** Entry input datetime is in past when using previously opened tab [#185](https://github.com/Kalhama/Gluwave/issues/185) ([44f1f8c](https://github.com/Kalhama/Gluwave/commit/44f1f8c6d8c15a8b5f3c2720856102bcb5cd28d4))
+* **gluwave:** Settings profile typo [#177](https://github.com/Kalhama/Gluwave/issues/177) ([8640168](https://github.com/Kalhama/Gluwave/commit/86401689c8348748c824e7004a639144da28cacf))
+* **gluwave:** skeleton flicker [#181](https://github.com/Kalhama/Gluwave/issues/181) ([a012401](https://github.com/Kalhama/Gluwave/commit/a012401d9bf4c031c72d27cc5a1540488e8c7409))
+* **gluwave:** Table padding [#178](https://github.com/Kalhama/Gluwave/issues/178) ([e6a90a3](https://github.com/Kalhama/Gluwave/commit/e6a90a31fcb86f9fbe52aa779d023070eb8d3ae8))
+
 ## [1.4.3](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.4.2...gluwave-v1.4.3) (2024-10-09)
 
 
