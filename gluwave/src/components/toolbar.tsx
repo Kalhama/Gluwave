@@ -16,7 +16,10 @@ export const Toolbar = ({ authenticated }: Props) => {
   }
 
   return (
-    <div className="fixed bottom-0 bg-white w-full flex p-4 gap-2 border-t-2 justify-center rounded-t-xl shadow-[0_0_25px] shadow-slate-300">
+    <div
+      style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+      className="fixed bottom-0 bg-white w-full flex p-4 gap-2 border-t-2 justify-center rounded-t-xl shadow-[0_0_25px] shadow-slate-300"
+    >
       <CarbohydrateDialog>
         <Button variant="ghost">
           <UtensilsCrossed />
