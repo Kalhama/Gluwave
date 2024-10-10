@@ -44,13 +44,14 @@ interface Props {
 }
 
 export function InsulinDialog({ insulin, children }: PropsWithChildren<Props>) {
+  const defaultValues = {
+    amount: insulin?.amount ?? 0,
+    timestamp: insulin?.timestamp ?? new Date(),
+    id: insulin?.id,
+  }
   const form = useForm<z.infer<typeof ZPostInsulinSchema>>({
     resolver: zodResolver(ZPostInsulinSchema),
-    defaultValues: {
-      amount: insulin?.amount ?? 0,
-      timestamp: insulin?.timestamp ?? new Date(),
-      id: insulin?.id,
-    },
+    defaultValues,
   })
   const editing = !!insulin?.id
 
@@ -76,7 +77,10 @@ export function InsulinDialog({ insulin, children }: PropsWithChildren<Props>) {
     <Drawer
       open={open}
       onOpenChange={(s) => {
-        form.reset()
+        form.reset({
+          ...defaultValues,
+          timestamp: insulin?.timestamp ?? new Date(),
+        })
         setOpenChange(s)
       }}
     >

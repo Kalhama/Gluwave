@@ -56,14 +56,15 @@ export function CarbohydrateDialog({
   carb,
   children,
 }: PropsWithChildren<Props>) {
+  const defaultValues = {
+    carbs: carb?.carbs ?? 0,
+    timestamp: carb?.timestamp ?? new Date(),
+    decay: carb?.decay ?? 60,
+    id: carb?.id,
+  }
   const form = useForm<z.infer<typeof ZPostCarbohydrateSchema>>({
     resolver: zodResolver(ZPostCarbohydrateSchema),
-    defaultValues: {
-      carbs: carb?.carbs ?? 0,
-      timestamp: carb?.timestamp ?? new Date(),
-      decay: carb?.decay ?? 60,
-      id: carb?.id,
-    },
+    defaultValues,
   })
   const editing = !!carb?.id
 
@@ -91,7 +92,10 @@ export function CarbohydrateDialog({
       open={open}
       onOpenChange={(s) => {
         if (!editing) {
-          form.reset()
+          form.reset({
+            ...defaultValues,
+            timestamp: carb?.timestamp ?? new Date(),
+          })
         }
         setOpenChange(s)
       }}

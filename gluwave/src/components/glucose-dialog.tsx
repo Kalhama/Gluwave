@@ -44,13 +44,14 @@ interface Props {
 }
 
 export function GlucoseDialog({ glucose, children }: PropsWithChildren<Props>) {
+  const defaultValues = {
+    value: glucose?.glucose ?? 7,
+    timestamp: glucose?.timestamp ?? new Date(),
+    id: glucose?.id,
+  }
   const form = useForm<z.infer<typeof ZPostGlucoseSchema>>({
     resolver: zodResolver(ZPostGlucoseSchema),
-    defaultValues: {
-      value: glucose?.glucose ?? 7,
-      timestamp: glucose?.timestamp ?? new Date(),
-      id: glucose?.id,
-    },
+    defaultValues,
   })
   const editing = !!glucose?.id
   const post = trpc.glucose.post.useMutation()
@@ -73,7 +74,10 @@ export function GlucoseDialog({ glucose, children }: PropsWithChildren<Props>) {
     <Drawer
       open={open}
       onOpenChange={(s) => {
-        form.reset()
+        form.reset({
+          ...defaultValues,
+          timestamp: glucose?.timestamp ?? new Date(),
+        })
         setOpenChange(s)
       }}
     >
