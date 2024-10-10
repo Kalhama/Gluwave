@@ -89,14 +89,7 @@ export const GraphContent = ({
     return [ticks, formatter]
   }, [zoomDomain])
 
-  const isClient = useClient()
-
-  if (!isClient)
-    return (
-      <div className={cn('p-4')}>
-        <Skeleton className={cn('w-full h-[255px]  rounded-xl')} />
-      </div>
-    )
+  useClient()
 
   return (
     <div className={cn('p-2', className)}>
