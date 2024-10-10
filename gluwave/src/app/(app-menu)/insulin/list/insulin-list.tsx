@@ -55,8 +55,8 @@ export function InsulinList({ start, end }: Props) {
   }
 
   return (
-    <div className="space-y-4 border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
-      <div>
+    <div className="p-2">
+      <div className="space-y-4 border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
         <Table>
           <TableHeader>
             <TableRow>

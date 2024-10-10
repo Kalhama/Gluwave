@@ -54,50 +54,48 @@ export const GlucoseList = ({ start, end }: Props) => {
   }
 
   return (
-    <>
+    <div className="p-2">
       <div className="space-y-4 border bg-white max-w-5xl mx-auto rounded-md shadow p-2 mt-4">
-        <div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead className="text-right"></TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Timestamp</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead className="text-right"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {g.data.map((g) => (
+              <TableRow key={g.id}>
+                <TableCell className="font-medium">
+                  <ClientDateTime timestamp={g.timestamp} />
+                </TableCell>
+                <TableCell>{g.value} mmol/l</TableCell>
+                <TableCell className="text-right flex justify-end">
+                  <GlucoseDialog
+                    glucose={{
+                      ...g,
+                      glucose: g.value,
+                    }}
+                  >
+                    <Button variant="ghost" className="p-2">
+                      <Pencil className="cursor-pointer w-4 h-4" />
+                    </Button>
+                  </GlucoseDialog>
+                  <GlucoseDeleteDialog id={g.id} />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {g.data.map((g) => (
-                <TableRow key={g.id}>
-                  <TableCell className="font-medium">
-                    <ClientDateTime timestamp={g.timestamp} />
-                  </TableCell>
-                  <TableCell>{g.value} mmol/l</TableCell>
-                  <TableCell className="text-right flex justify-end">
-                    <GlucoseDialog
-                      glucose={{
-                        ...g,
-                        glucose: g.value,
-                      }}
-                    >
-                      <Button variant="ghost" className="p-2">
-                        <Pencil className="cursor-pointer w-4 h-4" />
-                      </Button>
-                    </GlucoseDialog>
-                    <GlucoseDeleteDialog id={g.id} />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {g.data.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-slate-400">
-                    No entries
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+            {g.data.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={3} className="text-slate-400">
+                  No entries
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
-    </>
+    </div>
   )
 }
