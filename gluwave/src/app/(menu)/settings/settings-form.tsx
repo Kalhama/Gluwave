@@ -51,7 +51,7 @@ export function SettingsForm({ defaultValues }: Props) {
             name="carbohydrateRatio"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Carbohydrate ratio (g/U)</FormLabel>
+                <FormLabel>Carbohydrate ratio</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
@@ -60,7 +60,7 @@ export function SettingsForm({ defaultValues }: Props) {
                     onChange={(val) => field.onChange(val.target.value)}
                   />
                 </FormControl>
-                <FormDescription />
+                <FormDescription>g / U</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -70,9 +70,7 @@ export function SettingsForm({ defaultValues }: Props) {
             name="correctionRatio"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  Correction ratio for high blood glucose (mmol/l / U)
-                </FormLabel>
+                <FormLabel>Correction ratio for high blood glucose</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
@@ -81,16 +79,13 @@ export function SettingsForm({ defaultValues }: Props) {
                     onChange={(val) => field.onChange(val.target.value)}
                   />
                 </FormControl>
-                <FormDescription />
+                <FormDescription>mmol/l / U</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
           <FormItem>
-            <FormLabel>
-              Carbs to glucose increase ratio based on above (g / mmol/l).
-              (Based on above ICR and ISF)
-            </FormLabel>
+            <FormLabel>Carbs to glucose ratio</FormLabel>
             <FormControl>
               <Input
                 type="text"
@@ -105,7 +100,10 @@ export function SettingsForm({ defaultValues }: Props) {
                 disabled
               />
             </FormControl>
-            <FormDescription />
+            <FormDescription>
+              <div>g / mmol/l</div>
+              <div>Based on above ICR and ISF</div>
+            </FormDescription>
             <FormMessage />
           </FormItem>
           <FormField
