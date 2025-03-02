@@ -1,11 +1,11 @@
 import { db } from '@/db'
-import { sessionTable, userTable } from '@/schema'
+import { userTable } from '@/schema'
 import { OAuth2RequestError } from 'arctic'
 import { eq } from 'drizzle-orm'
-import { generateIdFromEntropySize } from 'lucia'
+import { nanoid } from 'nanoid'
 import { cookies } from 'next/headers'
 
-import { github, lucia } from '../../../../auth'
+import { createSession, github, setSessionCookie } from '../../../../auth'
 
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url)
@@ -33,21 +33,18 @@ export async function GET(request: Request): Promise<Response> {
     })
     const githubUser: GitHubUser = await githubUserResponse.json()
 
-    // Replace this with your own DB client.
+    // Check if user exists
     const [existingUser] = await db
       .select()
       .from(userTable)
       .where(eq(userTable.githubId, githubUser.id))
 
     if (existingUser) {
-      const session = await lucia.createSession(existingUser.id, {})
-      const sessionCookie = lucia.createSessionCookie(session.id)
+      // Create a new session
+      const session = await createSession(existingUser.id)
 
-      cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes
-      )
+      // Set the session cookie
+      setSessionCookie(session.id, session.expiresAt)
 
       return new Response(null, {
         status: 302,
@@ -57,21 +54,19 @@ export async function GET(request: Request): Promise<Response> {
       })
     }
 
-    const userId = generateIdFromEntropySize(10) // 16 characters long
+    // Create a new user
+    const userId = nanoid()
 
     await db.insert(userTable).values({
       id: userId,
       githubId: githubUser.id,
     })
 
-    const session = await lucia.createSession(userId, {})
-    const sessionCookie = lucia.createSessionCookie(session.id)
+    // Create a new session
+    const session = await createSession(userId)
 
-    cookies().set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes
-    )
+    // Set the session cookie
+    setSessionCookie(session.id, session.expiresAt)
 
     return new Response(null, {
       status: 302,

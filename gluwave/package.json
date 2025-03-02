@@ -41,7 +41,6 @@
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.36.0",
     "fs": "0.0.1-security",
-    "lucia": "^3.2.2",
     "lucide-react": "^0.454.0",
     "nanoid": "^5.0.8",
     "next": "14.2.14",

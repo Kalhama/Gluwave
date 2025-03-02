@@ -1,19 +1,14 @@
-import { lucia, validateRequest } from '@/auth'
-import { cookies } from 'next/headers'
+import { clearSessionCookie, invalidateSession, validateRequest } from '@/auth'
 import { redirect } from 'next/navigation'
 
 export async function GET(): Promise<Response> {
   const { session } = await validateRequest()
 
-  if (!session) redirect('/login')
+  clearSessionCookie()
 
-  await lucia.invalidateSession(session.id)
+  if (session) {
+    await invalidateSession(session.id)
+  }
 
-  const sessionCookie = lucia.createBlankSessionCookie()
-  cookies().set(
-    sessionCookie.name,
-    sessionCookie.value,
-    sessionCookie.attributes
-  )
   return redirect('/login')
 }

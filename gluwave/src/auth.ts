@@ -1,8 +1,7 @@
-import { DrizzlePostgreSQLAdapter } from '@lucia-auth/adapter-drizzle'
 import { GitHub } from 'arctic'
-import { InferSelectModel } from 'drizzle-orm'
-import { Lucia } from 'lucia'
-import type { Session, User } from 'lucia'
+import { InferSelectModel, gte } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { nanoid } from 'nanoid'
 import { cookies } from 'next/headers'
 import { cache } from 'react'
 
@@ -10,45 +9,76 @@ import config from './config.mjs'
 import { db } from './db'
 import { sessionTable, userTable } from './schema'
 
-const adapter = new DrizzlePostgreSQLAdapter(db, sessionTable, userTable)
+// Session cookie name
+const SESSION_COOKIE_NAME = 'auth_session'
 
-export const lucia = new Lucia(adapter, {
-  sessionCookie: {
-    expires: false,
-    attributes: {
-      secure: process.env.NODE_ENV === 'production',
-    },
-  },
-  getUserAttributes: (attributes) => {
-    return {
-      // attributes has the type of DatabaseUserAttributes
-      githubId: attributes.githubId,
-      id: attributes.id,
-      carbohydrateRatio: attributes.carbohydrateRatio,
-      correctionRatio: attributes.correctionRatio,
-      target: attributes.target,
-      insulinOnBoardOffset: attributes.insulinOnBoardOffset,
-      apikey: attributes.apikey,
-    }
-  },
-})
+// Create GitHub OAuth provider
+export const github = new GitHub(config.GITHUB_ID, config.GITHUB_SECRET)
 
-declare module 'lucia' {
-  interface Register {
-    Lucia: typeof lucia
-    DatabaseUserAttributes: DatabaseUserAttributes
+// Type for user attributes from the database
+export type DatabaseUserAttributes = InferSelectModel<typeof userTable>
+export type Session = InferSelectModel<typeof sessionTable>
+
+// Function to create a new session
+export async function createSession(
+  userId: string,
+  expiresIn: number = 60 * 60 * 24 * 30
+) {
+  // Generate a random session ID
+  const sessionId = nanoid()
+
+  // Calculate expiration date (default: 30 days)
+  const expiresAt = new Date(Date.now() + expiresIn * 1000)
+
+  // Insert session into database
+  await db.insert(sessionTable).values({
+    id: sessionId,
+    userId: userId,
+    expiresAt: expiresAt,
+  })
+
+  return {
+    id: sessionId,
+    userId,
+    expiresAt,
   }
 }
 
-export const github = new GitHub(config.GITHUB_ID!, config.GITHUB_SECRET!)
+// Function to set session cookie
+export function setSessionCookie(sessionId: string, expires?: Date) {
+  cookies().set(SESSION_COOKIE_NAME, sessionId, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    expires: expires,
+    sameSite: 'lax',
+  })
+}
 
-type DatabaseUserAttributes = InferSelectModel<typeof userTable>
+// Function to clear session cookie
+export function clearSessionCookie() {
+  cookies().set(SESSION_COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 0,
+    sameSite: 'lax',
+  })
+}
 
+// Function to invalidate a session
+export async function invalidateSession(sessionId: string) {
+  await db.delete(sessionTable).where(eq(sessionTable.id, sessionId))
+}
+
+// Function to validate request and get user
 export const validateRequest = cache(
   async (): Promise<
-    { user: User; session: Session } | { user: null; session: null }
+    | { user: DatabaseUserAttributes; session: Session }
+    | { user: null; session: null }
   > => {
-    const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null
+    const sessionId = cookies().get(SESSION_COOKIE_NAME)?.value ?? null
+
     if (!sessionId) {
       return {
         user: null,
@@ -56,26 +86,44 @@ export const validateRequest = cache(
       }
     }
 
-    const result = await lucia.validateSession(sessionId)
-    // next.js throws when you attempt to set cookie when rendering page
-    try {
-      if (result.session && result.session.fresh) {
-        const sessionCookie = lucia.createSessionCookie(result.session.id)
-        cookies().set(
-          sessionCookie.name,
-          sessionCookie.value,
-          sessionCookie.attributes
+    // Get session from database
+    const [session] = await db
+      .select()
+      .from(sessionTable)
+      .where(
+        and(
+          eq(sessionTable.id, sessionId),
+          gte(sessionTable.expiresAt, new Date())
         )
+      )
+
+    // If session doesn't exist or is expired, clear cookie and return null
+    if (!session) {
+      clearSessionCookie()
+      return {
+        user: null,
+        session: null,
       }
-      if (!result.session) {
-        const sessionCookie = lucia.createBlankSessionCookie()
-        cookies().set(
-          sessionCookie.name,
-          sessionCookie.value,
-          sessionCookie.attributes
-        )
+    }
+
+    // Get user from database
+    const [user] = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, session.userId))
+
+    // If user doesn't exist, clear cookie and return null
+    if (!user) {
+      clearSessionCookie()
+      return {
+        user: null,
+        session: null,
       }
-    } catch {}
-    return result
+    }
+
+    return {
+      user,
+      session,
+    }
   }
 )
