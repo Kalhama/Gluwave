@@ -9,6 +9,8 @@ export const ZDeleteInsulinSchema = z.object({
   id: z.number(),
 })
 
+export const ZDeleteInsulinOutputSchema = z.number()
+
 export const deleteInsulin = async ({
   ctx: { user },
   input: { id },

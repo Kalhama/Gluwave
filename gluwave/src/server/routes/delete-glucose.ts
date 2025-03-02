@@ -9,6 +9,8 @@ export const ZDeleteGlucoseSchema = z.object({
   id: z.number(),
 })
 
+export const ZDeleteGlucoseOutputSchema = z.number()
+
 export const deleteGlucose = async ({
   ctx: { user },
   input: { id },

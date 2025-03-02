@@ -1,6 +1,7 @@
 import { db } from '@/db'
 import { glucose } from '@/schema'
 import { and, eq, gte, lte } from 'drizzle-orm'
+import { createSelectSchema } from 'drizzle-zod'
 import { z } from 'zod'
 
 import { RouteProps } from './RouteProps'
@@ -9,6 +10,8 @@ export const ZGetGlucoseSchema = z.object({
   start: z.date(),
   end: z.date(),
 })
+
+export const ZGetGlucoseOutputSchema = z.array(createSelectSchema(glucose))
 
 export const getGlucose = async ({
   ctx: { user },

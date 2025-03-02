@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { RouteProps } from './RouteProps'
 
 export const ZPostApiKeySchema = z.undefined()
+export const ZPostApiKeyOutputSchema = z.string()
 
 export const postApiKey = async ({
   ctx: { user },

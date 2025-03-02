@@ -8,6 +8,16 @@ export const ZGetCarbohydrateAttributedSchema = z.object({
   end: z.date(),
 })
 
+export const ZGetCarbohydrateAttributedOutputSchema = z.array(
+  z.object({
+    id: z.number(),
+    timestamp: z.date(),
+    carbs: z.number(),
+    decay: z.number(),
+    observedCarbs: z.number(),
+  })
+)
+
 export const getCarbohydrateAttributed = async ({
   ctx: { user },
   input: { start, end },

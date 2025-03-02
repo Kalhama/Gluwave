@@ -7,3 +7,5 @@ export const ZPostCarbohydrateSchema = z.object({
   decay: z.number().gt(0).lte(720),
   id: z.number().optional(),
 })
+
+export const ZPostCarbohydrateOutputSchema = z.void()

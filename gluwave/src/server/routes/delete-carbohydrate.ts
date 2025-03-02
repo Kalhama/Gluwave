@@ -9,6 +9,8 @@ export const ZDeteleCarbohydrateSchema = z.object({
   id: z.number(),
 })
 
+export const ZDeteleCarbohydrateOutputSchema = z.number()
+
 export const deleteCarbohydrate = async ({
   ctx: { user },
   input: { id },
