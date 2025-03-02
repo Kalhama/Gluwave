@@ -1,7 +1,5 @@
 import CarbohydrateAbsorptionRate from '@/components/carbohydrate-absorption-rate'
-import { CarbohydratesOnBoard } from '@/components/carbohydrates-on-board/carbohydrates-on-board'
 import { PageDatePicker } from '@/components/page-date-picker'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createSSRHelper } from '@/server'
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
 import { addHours, startOfHour, subHours } from 'date-fns'
@@ -28,23 +26,10 @@ export async function CarbsPage({ params }: Props) {
     <>
       <PageDatePicker date={date} baseUrl="/carbs/list" />
       <div className="max-w-5xl mx-auto p-2">
-        <div className="hidden md:grid grid-cols-2 gap-2">
-          <CarbohydratesOnBoard start={start} end={end} href="/carbs/list" />
+        <div className="md:grid grid-cols-2 gap-2">
           <CarbohydrateAbsorptionRate start={start} end={end} />
         </div>
 
-        <Tabs defaultValue="cob" className="md:hidden">
-          <TabsList>
-            <TabsTrigger value="cob">On board</TabsTrigger>
-            <TabsTrigger value="rate">Absorption rate</TabsTrigger>
-          </TabsList>
-          <TabsContent value="cob">
-            <CarbohydratesOnBoard start={start} end={end} href="/carbs/list" />
-          </TabsContent>
-          <TabsContent value="rate">
-            <CarbohydrateAbsorptionRate start={start} end={end} />
-          </TabsContent>
-        </Tabs>
         <HydrationBoundary state={dehydrate(helpers.queryClient)}>
           <CarbsList start={start} end={end} />
         </HydrationBoundary>

@@ -14,14 +14,6 @@ import {
   getCarbohydrateAttributed,
 } from './routes/get-carbohydrate-attributed'
 import {
-  ZGetCarbohydratesOnBoardObservedSchema,
-  getCarbohydratesOnBoardObserved,
-} from './routes/get-carbohydrates-on-board-observed'
-import {
-  ZGetCarbohydratesOnBoardPredictedSchema,
-  getCarbohydratesOnBoardPredicted,
-} from './routes/get-carbohydrates-on-board-predicted'
-import {
   ZGetCarbohydratesRateObservedSchema,
   getCarbohydratesRateObserved,
 } from './routes/get-carbohydrates-rate-observed'
@@ -34,10 +26,6 @@ import {
   ZGetGlucoseLastSchema,
   getGlucoseLast,
 } from './routes/get-glucose-last'
-import {
-  ZGetGlucosePredictionSchema,
-  getGlucosePrediction,
-} from './routes/get-glucose-prediction'
 import { ZGetInsulinSchema, getInsulin } from './routes/get-insulin'
 import {
   ZGetInsulinOnBoard,
@@ -67,15 +55,6 @@ export const appRouter = router({
       .mutation(postProfile),
   }),
   analysis: router({
-    getGlucosePrediction: protectedProcedure
-      .input(ZGetGlucosePredictionSchema)
-      .query(getGlucosePrediction),
-    getCarbohydratesOnBoardObserved: protectedProcedure
-      .input(ZGetCarbohydratesOnBoardObservedSchema)
-      .query(getCarbohydratesOnBoardObserved),
-    getCarbohydratesOnBoardPredicted: protectedProcedure
-      .input(ZGetCarbohydratesOnBoardPredictedSchema)
-      .query(getCarbohydratesOnBoardPredicted),
     getCarbohydratesRateObserved: protectedProcedure
       .input(ZGetCarbohydratesRateObservedSchema)
       .query(getCarbohydratesRateObserved),

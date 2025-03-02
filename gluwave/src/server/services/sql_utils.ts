@@ -1,6 +1,5 @@
 import { db } from '@/db'
 import { carbs, glucose, insulin } from '@/schema'
-import { startOfMinute, subHours } from 'date-fns'
 import {
   ColumnsSelection,
   and,

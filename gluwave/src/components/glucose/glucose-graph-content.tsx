@@ -10,40 +10,19 @@ interface Props {
     timestamp: Date
     value: number
   }[]
-  prediction: {
-    x: Date
-    y: number
-  }[]
+
   now: Date
 }
 
-export const GlucoseGraphContent = ({ glucose, prediction, now }: Props) => {
+export const GlucoseGraphContent = ({ glucose, now }: Props) => {
   const domain = {
     y: [
-      Math.min(
-        1,
-        ...glucose.map((bg) => bg.value),
-        ...prediction.map((p) => p.y)
-      ) - 1,
-      Math.max(
-        10,
-        ...glucose.map((bg) => bg.value),
-        ...prediction.map((p) => p.y)
-      ) + 2,
+      Math.min(1, ...glucose.map((bg) => bg.value)) - 1,
+      Math.max(10, ...glucose.map((bg) => bg.value)) + 2,
     ] as DomainTuple,
     x: [
-      new Date(
-        Math.min(
-          ...glucose.map((d) => d.timestamp.getTime()),
-          ...prediction.map((d) => d.x.getTime())
-        )
-      ),
-      new Date(
-        Math.max(
-          ...glucose.map((d) => d.timestamp.getTime()),
-          ...prediction.map((d) => d.x.getTime())
-        )
-      ),
+      new Date(Math.min(...glucose.map((d) => d.timestamp.getTime()))),
+      new Date(Math.max(...glucose.map((d) => d.timestamp.getTime()))),
     ] as DomainTuple,
   }
 
@@ -74,18 +53,6 @@ export const GlucoseGraphContent = ({ glucose, prediction, now }: Props) => {
             { x: now, y: -100 },
             { x: now, y: 100 },
           ]}
-        />
-        <VictoryLine
-          style={{
-            /* tailwind sky-600 */
-            data: {
-              stroke: '#0284c7aa',
-              strokeDasharray: '3 3',
-              strokeWidth: 3,
-            },
-            parent: { border: '1px solid #ccc', padding: 0 },
-          }}
-          data={prediction}
         />
 
         {/* empty chart in case there is no other data, so that x axis remains stable */}

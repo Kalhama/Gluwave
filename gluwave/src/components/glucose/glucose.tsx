@@ -14,39 +14,28 @@ interface Props {
 export const Glucose = ({ start, end }: Props) => {
   const now = useNow()
   const g = trpc.glucose.get.useQuery({ start, end })
-  const p = trpc.analysis.getGlucosePrediction.useQuery({ start, end })
 
-  if (g.isPending || p.isPending) {
+  if (g.isPending) {
     return <GraphSkeleton />
   }
 
-  if (g.isLoadingError || p.isLoadingError) {
+  if (g.isLoadingError) {
     return 'Error'
   }
-
-  const prediction = p.data
 
   const glucose = g.data
 
   const lastBloodGlucose = glucose[glucose.length - 1]
 
-  const displayedPrediction = prediction.map((p) => {
-    return {
-      x: p.timestamp,
-      y: p.prediction + (lastBloodGlucose?.value ?? 7),
-    }
-  })
-
-  const eventually = displayedPrediction[
-    displayedPrediction.length - 1
-  ]?.y.toLocaleString(undefined, {
+  // TODO
+  const eventually = NaN.toLocaleString(undefined, {
     maximumFractionDigits: 1,
     minimumFractionDigits: 1,
   })
 
   return (
     <GraphContainer>
-      <GraphTitle href="/glucose/predictions">
+      <GraphTitle href="/glucose/list">
         <div>
           <h2 className="font-semibold">Blood glucose</h2>
           <span className="text-xs text-slate-600">
@@ -54,11 +43,7 @@ export const Glucose = ({ start, end }: Props) => {
           </span>
         </div>
       </GraphTitle>
-      <GlucoseGraphContent
-        now={now}
-        glucose={glucose}
-        prediction={displayedPrediction}
-      />
+      <GlucoseGraphContent now={now} glucose={glucose} />
     </GraphContainer>
   )
 }
