@@ -1,5 +1,5 @@
 import { appRouter } from '@/server'
-import { createContext } from '@/server/context'
+import { createApiContext } from '@/server/context'
 import { NextRequest } from 'next/server'
 import { createOpenApiFetchHandler } from 'trpc-to-openapi'
 
@@ -10,7 +10,7 @@ const handler = (req: NextRequest) => {
   return createOpenApiFetchHandler({
     endpoint: '/api',
     router: appRouter,
-    createContext: () => createContext(),
+    createContext: () => createApiContext(),
     req,
   })
 }

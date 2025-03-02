@@ -11,8 +11,8 @@ interface Props {
 }
 
 export const MenuBar = async ({ children, className }: Props) => {
-  const { session } = await validateRequest()
-  if (!session) {
+  const { user } = await validateRequest()
+  if (!user) {
     return redirect('/login')
   }
 

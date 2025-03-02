@@ -9,7 +9,9 @@ export const ZDeleteApiKeySchema = z.object({
   key: z.string(),
 })
 
-export const ZDeleteApiKeyOutputSchema = z.null()
+export const ZDeleteApiKeyOutputSchema = z.object({
+  key: z.string(),
+})
 
 export const deleteApiKey = async ({
   ctx: { user },
@@ -19,5 +21,7 @@ export const deleteApiKey = async ({
     .delete(apiKeyTable)
     .where(and(eq(apiKeyTable.key, input.key), eq(apiKeyTable.userId, user.id)))
 
-  return null
+  return {
+    key: input.key,
+  }
 }

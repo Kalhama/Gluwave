@@ -6,11 +6,7 @@ import { z } from 'zod'
 
 import { RouteProps } from './RouteProps'
 
-export const ZGetApiKeySchema = z
-  .object({
-    id: z.string(),
-  })
-  .optional()
+export const ZGetApiKeySchema = z.void()
 
 export const ZGetApiKeyOutputSchema = z.array(createSelectSchema(apiKeyTable))
 

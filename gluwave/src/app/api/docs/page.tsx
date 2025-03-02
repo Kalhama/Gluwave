@@ -1,3 +1,4 @@
+import { API_KEY_HEADER_NAME } from '@/auth'
 import config from '@/config.mjs'
 import { appRouter } from '@/server'
 import SwaggerUI from 'swagger-ui-react'
@@ -9,11 +10,13 @@ const App = () => {
     title: 'Gluwvave OpenAPI',
     description: '',
     version: '0.1.0',
-    baseUrl: config.HOST ?? 'http://localhost:3000',
+    baseUrl: new URL('/api', config.HOST).toString(),
     docsUrl: '/api/docs',
     securitySchemes: {
-      apiKey: {
+      [API_KEY_HEADER_NAME]: {
         type: 'apiKey',
+        in: 'header',
+        name: API_KEY_HEADER_NAME,
       },
     },
   })

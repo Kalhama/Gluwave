@@ -121,7 +121,7 @@ export const appRouter = router({
       .meta({
         openapi: {
           method: 'DELETE',
-          path: '/user/api-key/{id}',
+          path: '/user/api-key/{key}',
           protect: true,
           summary: 'Delete an API key',
           description: 'Delete a specific API key by ID',
