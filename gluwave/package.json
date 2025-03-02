@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "next lint",
     "prettier": "prettier src/ --write",
-    "prepare": "husky",
     "migrate": "drizzle-kit migrate",
     "migrate-and-build": "pnpm run migrate && pnpm run build",
     "migrate-and-start": "pnpm run migrate && pnpm run start",
