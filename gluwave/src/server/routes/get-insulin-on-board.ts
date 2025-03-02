@@ -8,6 +8,14 @@ export const ZGetInsulinOnBoard = z.object({
   end: z.date(),
 })
 
+export const ZGetInsulinOOutputnBoard = z.array(
+  z.object({
+    timestamp: z.date(),
+    iob: z.number(),
+    cumulative_insulin_decay: z.number(),
+  })
+)
+
 export const getInsulinOnBoard = async ({
   ctx: { user },
   input: { start, end },

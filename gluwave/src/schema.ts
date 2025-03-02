@@ -49,7 +49,6 @@ export const userTable = pgTable('user', {
   insulinOnBoardOffset: doublePrecision('insulinOnBoardOffset')
     .notNull()
     .default(0),
-  apikey: text('apikey'),
 })
 
 export const sessionTable = pgTable('session', {
@@ -61,4 +60,11 @@ export const sessionTable = pgTable('session', {
     withTimezone: true,
     mode: 'date',
   }).notNull(),
+})
+
+export const apiKeyTable = pgTable('apikey', {
+  key: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => userTable.id),
 })

@@ -2,11 +2,17 @@ import { db } from '@/db'
 import { glucose } from '@/schema'
 import { differenceInMinutes, subMinutes } from 'date-fns'
 import { and, desc, eq, gte, lte, ne, sql } from 'drizzle-orm'
+import { createSelectSchema } from 'drizzle-zod'
 import { z } from 'zod'
 
 import { RouteProps } from './RouteProps'
 
 export const ZGetGlucoseLastSchema = z.undefined()
+
+export const ZGetGlucoseLastOutputSchema = z.object({
+  last: createSelectSchema(glucose).nullable().optional(),
+  trend: z.number().nullable(),
+})
 
 export const getGlucoseLast = async ({
   ctx: { user },

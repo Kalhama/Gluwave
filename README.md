@@ -127,6 +127,15 @@ POSTGRES_DATA_DIR=./db
 
 4. `docker compose up -d`
 
+
+## OpenAPI Integration
+
+Gluwave provides a comprehensive REST API that follows the OpenAPI specification, making it easy to integrate with other applications and services. The API documentation is available at [https://gluwave.com/api/docs](https://gluwave.com/api/docs). This interactive documentation is generated using [Swagger UI](https://swagger.io/tools/swagger-ui/) and provides a user-friendly interface to explore and test all available endpoints.
+
+### Authentication
+
+API access requires authentication using API keys. You can create and manage API keys through the settings menu.
+
 ## Technology stack 💻
 
 - Framework: [Next.js](https://nextjs.org/docs)

@@ -2,15 +2,16 @@ import { GitHub } from 'arctic'
 import { InferSelectModel, gte } from 'drizzle-orm'
 import { and, eq } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
 
 import config from './config.mjs'
 import { db } from './db'
-import { sessionTable, userTable } from './schema'
+import { apiKeyTable, sessionTable, userTable } from './schema'
 
 // Session cookie name
 const SESSION_COOKIE_NAME = 'auth_session'
+export const API_KEY_HEADER_NAME = 'apikey'
 
 // Create GitHub OAuth provider
 export const github = new GitHub(config.GITHUB_ID, config.GITHUB_SECRET)
@@ -70,6 +71,32 @@ export function clearSessionCookie() {
 export async function invalidateSession(sessionId: string) {
   await db.delete(sessionTable).where(eq(sessionTable.id, sessionId))
 }
+
+export const validateApiRequest = cache(async () => {
+  const key = headers().get(API_KEY_HEADER_NAME)
+
+  if (!key) {
+    return {
+      user: null,
+    }
+  }
+
+  const [res] = await db
+    .select()
+    .from(apiKeyTable)
+    .leftJoin(userTable, eq(userTable.id, apiKeyTable.userId))
+    .where(eq(apiKeyTable.key, key))
+
+  if (!res?.apikey || !res?.user) {
+    return {
+      user: null,
+    }
+  }
+
+  return {
+    user: res.user,
+  }
+})
 
 // Function to validate request and get user
 export const validateRequest = cache(

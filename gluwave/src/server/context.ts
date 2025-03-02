@@ -1,6 +1,10 @@
-import { validateRequest } from '@/auth'
+import { validateApiRequest, validateRequest } from '@/auth'
 
 export async function createContext() {
   return validateRequest()
 }
-export type Context = Awaited<ReturnType<typeof createContext>>
+
+export async function createApiContext() {
+  return validateApiRequest()
+}
+export type ApiContext = Awaited<ReturnType<typeof createApiContext>>

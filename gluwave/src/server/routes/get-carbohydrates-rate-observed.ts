@@ -8,6 +8,16 @@ export const ZGetCarbohydratesRateObservedSchema = z.object({
   end: z.date(),
 })
 
+export const ZGetCarbohydratesRateObservedOutputSchema = z.array(
+  z.object({
+    timestamp: z.date(),
+    glucose: z.number(),
+    cumulativeInsulin: z.number(),
+    observedCarbs: z.number(),
+    interval: z.number(),
+  })
+)
+
 export const getCarbohydratesRateObserved = async ({
   ctx: { user },
   input: { start, end },

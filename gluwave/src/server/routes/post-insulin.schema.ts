@@ -6,3 +6,5 @@ export const ZPostInsulinSchema = z.object({
   amount: z.preprocess((v) => parseCommaFloat(v), z.number().gt(0).lt(50)),
   id: z.number().optional(),
 })
+
+export const ZPostInsulinOutputSchema = z.void()

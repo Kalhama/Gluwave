@@ -10,6 +10,13 @@ export const ZGetCarbohydratesRateReportedSchema = z.object({
   end: z.date(),
 })
 
+export const ZGetCarbohydratesRateReportedOutputSchema = z.array(
+  z.object({
+    timestamp: z.date(),
+    rate: z.number(),
+  })
+)
+
 export const getCarbohydratesRateReported = async ({
   ctx: { user },
   input: { start, end },
