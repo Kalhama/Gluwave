@@ -23,6 +23,11 @@ import {
   deleteInsulin,
 } from './routes/delete-insulin'
 import {
+  ZGetApiKeyOutputSchema,
+  ZGetApiKeySchema,
+  getApiKey,
+} from './routes/get-api-key'
+import {
   ZGetCarbohydrateAttributedOutputSchema,
   ZGetCarbohydrateAttributedSchema,
   getCarbohydrateAttributed,
@@ -85,8 +90,21 @@ import {
 import { protectedProcedure, router } from './trpc'
 
 export const appRouter = router({
-  user: router({
-    postApiKey: protectedProcedure
+  apikey: router({
+    get: protectedProcedure
+      .meta({
+        openapi: {
+          method: 'GET',
+          path: '/user/api-key',
+          protect: true,
+          summary: 'Get all user api keys',
+          description: 'Get all api keys for the authenticated user',
+        },
+      })
+      .input(ZGetApiKeySchema)
+      .output(ZGetApiKeyOutputSchema)
+      .query(getApiKey),
+    post: protectedProcedure
       .meta({
         openapi: {
           method: 'POST',
@@ -99,7 +117,7 @@ export const appRouter = router({
       .input(ZPostApiKeySchema)
       .output(ZPostApiKeyOutputSchema)
       .mutation(postApiKey),
-    deleteApiKey: protectedProcedure
+    delete: protectedProcedure
       .meta({
         openapi: {
           method: 'DELETE',
@@ -112,6 +130,8 @@ export const appRouter = router({
       .input(ZDeleteApiKeySchema)
       .output(ZDeleteApiKeyOutputSchema)
       .mutation(deleteApiKey),
+  }),
+  user: router({
     postProfile: protectedProcedure
       .meta({
         openapi: {
