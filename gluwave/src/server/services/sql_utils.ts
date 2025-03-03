@@ -347,15 +347,4 @@ export class Statistics {
 
     return tf
   }
-
-  /**
-   * @returns selects and returns given CTE (common table expression)
-   */
-  public static execute<T extends ColumnsSelection, K extends string>(
-    cte: WithSubqueryWithSelection<T, K>
-  ) {
-    const query = db.with(cte).select().from(cte)
-    // console.log(query.toSQL())
-    return query
-  }
 }
