@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.6.0...gluwave-v1.6.1) (2025-03-03)
+
+
+### Bug Fixes
+
+* CTE execution after upgrading to dirzzle 0.4, remove unused legacy api route ([730b3dc](https://github.com/Kalhama/Gluwave/commit/730b3dcbecbb153cb08f7934bfb022ffef5918e5))
+
 ## [1.6.0](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.5.0...gluwave-v1.6.0) (2025-03-02)
 
 
