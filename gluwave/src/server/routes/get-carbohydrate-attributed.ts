@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { Statistics } from '../services/sql_utils'
 import { RouteProps } from './RouteProps'
+import { db } from '@/db'
 
 export const ZGetCarbohydrateAttributedSchema = z.object({
   start: z.date(),
@@ -23,14 +24,15 @@ export const getCarbohydrateAttributed = async ({
   input: { start, end },
 }: RouteProps<z.infer<typeof ZGetCarbohydrateAttributedSchema>>) => {
   const tf = Statistics.carbs_timeframe(user.id, start, end)
-  let carbs = await Statistics.execute(
-    Statistics.attributed_carbs_simple(
+  const sq = Statistics.attributed_carbs_simple(
       tf,
       user.id,
       user.carbohydrateRatio,
       user.correctionRatio
     )
-  )
+
+  let carbs = await db.with(sq).select().from(sq)
+  
 
   carbs = carbs
     .filter(
