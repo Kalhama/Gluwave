@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.5.0...gluwave-v1.6.0) (2025-03-02)
+
+
+### Features
+
+* **gluwave:** Publish API as Open API ([b387843](https://github.com/Kalhama/Gluwave/commit/b387843eb5022c1746453252ce202bd2038a8934))
+
 ## [1.5.0](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.4.3...gluwave-v1.5.0) (2024-10-10)
 
 
