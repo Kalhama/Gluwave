@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.6.1...gluwave-v1.6.2) (2025-03-03)
+
+
+### Bug Fixes
+
+* **gluwave:** set cookies in normal function causes crash ([3a5af70](https://github.com/Kalhama/Gluwave/commit/3a5af7077294ffd47241f24aa02b8688c4bf4399))
+
 ## [1.6.1](https://github.com/Kalhama/Gluwave/compare/gluwave-v1.6.0...gluwave-v1.6.1) (2025-03-03)
 
 
