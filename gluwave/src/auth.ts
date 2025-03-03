@@ -126,7 +126,6 @@ export const validateRequest = cache(
 
     // If session doesn't exist or is expired, clear cookie and return null
     if (!session) {
-      clearSessionCookie()
       return {
         user: null,
         session: null,
@@ -141,7 +140,6 @@ export const validateRequest = cache(
 
     // If user doesn't exist, clear cookie and return null
     if (!user) {
-      clearSessionCookie()
       return {
         user: null,
         session: null,
